@@ -53,9 +53,9 @@
         <style>
             :root {
                 @if(($settings->theme_name ?? 'stealth') === 'modern-light')
-                    /* JCG Electrónica Primary Color: Tailwind red-600 */
-                    --color-primary: #DC2626;
-                    --color-primary-hover: #B91C1C; /* red-700 */
+                    /* G3 Tecnología Primary Color: Tailwind blue-500 */
+                    --color-primary: #3B82F6;
+                    --color-primary-hover: #2563EB; /* blue-600 */
                 @else
                     /* Default Blue Primary Color */
                     --color-primary: #2563EB;
@@ -68,9 +68,9 @@
             }
             [x-cloak] { display: none !important; }
             @keyframes writeReveal {
-                0% { clip-path: inset(0 100% 0 0); opacity: 0; filter: drop-shadow(0 0 0 rgba(220,38,38,0)); }
-                30% { opacity: 1; filter: drop-shadow(0 0 10px rgba(220,38,38,0.5)); }
-                100% { clip-path: inset(0 0 0 0); opacity: 1; filter: drop-shadow(0 10px 20px rgba(220,38,38,0.3)); }
+                0% { clip-path: inset(0 100% 0 0); opacity: 0; filter: drop-shadow(0 0 0 rgba(59,130,246,0)); }
+                30% { opacity: 1; filter: drop-shadow(0 0 10px rgba(59,130,246,0.5)); }
+                100% { clip-path: inset(0 0 0 0); opacity: 1; filter: drop-shadow(0 10px 20px rgba(59,130,246,0.3)); }
             }
         </style>
     </head>
@@ -94,9 +94,9 @@
             <div class="flex flex-col items-center w-full animate-fade-in-up z-20 my-auto py-12">
                 <a href="/" wire:navigate class="-mb-6 sm:-mb-8 -translate-y-8 sm:-translate-y-10 block transition-transform hover:scale-105 hover:-translate-y-8 sm:hover:-translate-y-10 duration-300 relative z-20">
                     @if($logoUrl)
-                        <img src="{{ asset('storage/' . $logoUrl) }}" alt="Logo" class="w-56 sm:w-72 h-auto object-contain drop-shadow-[0_10px_20px_rgba(220,38,38,0.2)]" style="animation: writeReveal 2.5s ease-out 0.2s both;" />
+                        <img src="{{ asset('storage/' . $logoUrl) }}" alt="Logo" class="w-56 sm:w-72 h-auto object-contain drop-shadow-[0_10px_20px_rgba(59,130,246,0.2)]" style="animation: writeReveal 2.5s ease-out 0.2s both;" />
                     @else
-                        <x-application-logo class="w-32 h-auto fill-current text-gray-800 dark:text-white transition-colors" style="animation: writeReveal 2.5s ease-out 0.2s both;" />
+                        <x-application-logo class="w-80 sm:w-96 md:w-[26rem] h-auto text-white fill-current transition-colors drop-shadow-[0_10px_20px_rgba(59,130,246,0.2)]" style="animation: writeReveal 2.5s ease-out 0.2s both;" />
                     @endif
                 </a>
 

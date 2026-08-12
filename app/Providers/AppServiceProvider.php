@@ -30,11 +30,19 @@ class AppServiceProvider extends ServiceProvider
         app()->singleton('activeTheme', fn() => $theme);
 
         // Fix for Laragon subdirectories: Force Laravel to generate URLs with the correct base path
-        if (config('app.url') && ! app()->environment('testing')) {
-            URL::forceRootUrl(config('app.url'));
-
-            if (config('app.tunnel_active') || str_starts_with(config('app.url'), 'https://')) {
+        if (! app()->environment('testing')) {
+            $host = request()->getHost();
+            
+            if (str_contains($host, 'loca.lt') || str_contains($host, 'ngrok') || str_starts_with(config('app.url'), 'https://') || config('app.tunnel_active')) {
                 URL::forceScheme('https');
+            } else if (config('app.url')) {
+                URL::forceRootUrl(config('app.url'));
+            }
+            
+            // Fix dynamic Google Redirect URI for tunnels
+            $googleRedirect = config('services.google.redirect');
+            if ($googleRedirect && str_starts_with($googleRedirect, '/')) {
+                config(['services.google.redirect' => url($googleRedirect)]);
             }
 
             $path = parse_url(config('app.url'), PHP_URL_PATH) ?? '';

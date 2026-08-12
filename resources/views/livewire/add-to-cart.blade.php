@@ -43,8 +43,8 @@ new class extends Component {
     @if($product->stock > 0)
         <div class="flex {{ $compact ? 'flex-col items-center gap-2' : 'items-center gap-4' }} w-full">
             <!-- Selector de cantidad -->
-            <div x-data="{ qty: @entangle('quantity') }" class="flex items-center border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 p-1 flex-shrink-0 {{ $compact ? 'w-full' : 'w-32 sm:w-36' }} justify-between">
-                <button @click="if(qty > 1) qty--" type="button" class="{{ $compact ? 'w-8 h-8' : 'w-10 h-10' }} flex items-center justify-center rounded-lg bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="qty <= 1">
+            <div x-data="{ qty: @entangle('quantity') }" class="flex items-center border border-zinc-800 rounded-xl bg-zinc-900 p-1 flex-shrink-0 {{ $compact ? 'w-full' : 'w-32 sm:w-36' }} justify-between">
+                <button @click="if(qty > 1) qty--" type="button" class="{{ $compact ? 'w-8 h-8' : 'w-10 h-10' }} flex items-center justify-center rounded-lg bg-zinc-800 text-gray-300 hover:text-white hover:bg-zinc-700 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed" :disabled="qty <= 1">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>
                 </button>
                 <input type="text"
@@ -52,8 +52,8 @@ new class extends Component {
                        pattern="[0-9]*"
                        x-model.number="qty"
                        @change="if(!qty || qty < 1) qty = 1; if(qty > {{ $product->stock }}) qty = {{ $product->stock }}"
-                       class="{{ $compact ? 'w-12 text-sm px-0' : 'w-16 text-base px-1' }} text-center font-bold text-gray-900 dark:text-white bg-transparent border-0 border-transparent outline-none focus:ring-0 focus:border-transparent focus:outline-none shadow-none p-0 m-0">
-                <button @click="if(qty < {{ $product->stock }}) { qty++ } else { $dispatch('notify', {message: 'Límite de stock disponible ('+{{ $product->stock }}+') alcanzado', type: 'error'}) }" type="button" class="{{ $compact ? 'w-8 h-8' : 'w-10 h-10' }} flex items-center justify-center rounded-lg bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 shadow-sm transition-colors" :class="{ 'opacity-50 cursor-not-allowed': qty >= {{ $product->stock }} }">
+                       class="{{ $compact ? 'w-12 text-sm px-0' : 'w-16 text-base px-1' }} text-center font-bold text-white bg-transparent border-0 border-transparent outline-none focus:ring-0 focus:border-transparent focus:outline-none shadow-none p-0 m-0">
+                <button @click="if(qty < {{ $product->stock }}) { qty++ } else { $dispatch('notify', {message: 'Límite de stock disponible ('+{{ $product->stock }}+') alcanzado', type: 'error'}) }" type="button" class="{{ $compact ? 'w-8 h-8' : 'w-10 h-10' }} flex items-center justify-center rounded-lg bg-zinc-800 text-gray-300 hover:text-white hover:bg-zinc-700 shadow-sm transition-colors" :class="{ 'opacity-50 cursor-not-allowed': qty >= {{ $product->stock }} }">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
                 </button>
             </div>
@@ -107,7 +107,7 @@ new class extends Component {
             </button>
         </div>
     @else
-        <button disabled class="w-full py-3.5 px-4 bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-xl font-bold tracking-wide cursor-not-allowed">
+        <button disabled class="w-full py-3.5 px-4 bg-zinc-800 text-gray-500 rounded-xl font-bold tracking-wide cursor-not-allowed border border-zinc-700">
             Sin Stock
         </button>
     @endif

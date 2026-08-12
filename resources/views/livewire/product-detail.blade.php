@@ -66,7 +66,7 @@ new #[Layout('layouts.app')] class extends Component {
       "sku": "PRD-{{ $product->id }}",
       "brand": {
         "@@type": "Brand",
-        "name": "{{ config('app.name', 'JCG Electrónica') }}"
+        "name": "{{ config('app.name', 'G3 Tecnología') }}"
       },
       "offers": {
         "@@type": "Offer",

@@ -429,7 +429,7 @@
     <livewire:layout.footer />
 
     <!-- Botón Flotante de WhatsApp Global -->
-    <a href="https://wa.me/5493705075839" target="_blank" 
+    <a href="https://wa.me/5493704022685" target="_blank" 
        class="fixed bottom-6 right-6 z-[100] w-14 h-14 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 hover:scale-110 transition-all duration-300"
        aria-label="Contactar por WhatsApp">
         <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
