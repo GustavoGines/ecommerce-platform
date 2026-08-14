@@ -134,13 +134,13 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="login" class="space-y-4">
         <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="__('Email')" />
+            <x-input-label for="email" :value="__('Correo Electrónico')" />
             <x-text-input wire:model="form.email" id="email" class="block mt-1 w-full py-2.5 px-4" type="email" name="email" required autofocus autocomplete="username" />
             <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
         </div>
 
         <div>
-            <x-input-label for="password" :value="__('Password')" />
+            <x-input-label for="password" :value="__('Contraseña')" />
             <x-password-input wire:model="form.password" id="password" name="password" required autocomplete="current-password" />
 
             <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
@@ -150,7 +150,7 @@ new #[Layout('layouts.guest')] class extends Component
         <div class="block">
             <label for="remember" class="inline-flex items-center">
                 <input wire:model="form.remember" id="remember" type="checkbox" class="rounded border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-[var(--color-primary)] shadow-sm focus:ring-[var(--color-primary)] dark:focus:ring-[var(--color-primary)]" name="remember">
-                <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Remember me') }}</span>
+                <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Recordarme') }}</span>
             </label>
         </div>
 
@@ -173,12 +173,12 @@ new #[Layout('layouts.guest')] class extends Component
         <div class="flex items-center justify-between pt-1">
             @if (Route::has('password.request'))
                 <a class="text-sm font-medium text-[var(--color-primary)] hover:opacity-80 transition-opacity" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
+                    {{ __('¿Olvidaste tu contraseña?') }}
                 </a>
             @endif
 
             <x-primary-button>
-                {{ __('Log in') }}
+                {{ __('Iniciar Sesión') }}
             </x-primary-button>
         </div>
         

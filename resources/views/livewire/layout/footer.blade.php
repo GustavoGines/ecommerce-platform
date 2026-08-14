@@ -50,6 +50,7 @@ new class extends Component {
                         @php
                             $waNumber = preg_replace('/[^0-9]/', '', $this->social['whatsapp']);
                             $waLink = $waNumber ? 'https://wa.me/' . $waNumber : '#';
+                            $waDisplay = preg_replace('/^549?/', '', $waNumber);
                         @endphp
                         <div class="flex flex-col items-center justify-center p-4 min-w-[250px] snap-center bg-zinc-950 md:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none border md:border-none border-zinc-900">
                             <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-zinc-900 border border-zinc-800 text-g3-green flex items-center justify-center mb-3 md:mb-4 shadow-[0_0_10px_rgba(126,211,33,0.2)]">
@@ -59,7 +60,7 @@ new class extends Component {
                             </div>
                             <h4 class="text-xs md:text-sm font-black text-white uppercase tracking-widest mb-1">¿Dudas? Consultanos</h4>
                             <a href="{{ $waLink }}" target="_blank" class="text-[10px] md:text-xs font-bold text-g3-green hover:text-white hover:underline transition-colors">
-                                {{ $this->social['whatsapp'] }}
+                                {{ $waDisplay }}
                             </a>
                         </div>
                     @endif
@@ -93,12 +94,8 @@ new class extends Component {
                 <div class="lg:col-span-1 flex flex-col items-center md:items-start text-center md:text-left">
                     <div class="mb-6 w-full flex justify-center md:justify-start items-center">
                         <a href="{{ url('/') }}" wire:navigate class="flex items-center gap-2 group pointer-events-auto mb-2">
-                            <!-- G3 Logo SVG -->
-                            <svg width="220" height="40" viewBox="0 0 320 60" xmlns="http://www.w3.org/2000/svg" class="group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-                              <path d="M 40,10 L 15,10 C 5,10 0,15 0,25 L 0,45 C 0,55 5,60 15,60 L 40,60 L 40,35 L 20,35 L 20,45 L 25,45 L 25,50 L 12,50 L 12,20 L 40,20 Z" fill="#3B82F6"/>
-                              <path d="M 45,10 L 70,10 C 80,10 85,15 85,25 L 85,30 C 85,35 80,37.5 75,37.5 C 80,37.5 85,40 85,45 L 85,50 C 85,60 80,60 70,60 L 45,60 L 45,50 L 70,50 C 75,50 75,47.5 75,45 C 75,42.5 75,40 70,40 L 55,40 L 55,30 L 70,30 C 75,30 75,27.5 75,25 C 75,22.5 75,20 70,20 L 45,20 Z" fill="#7ED321"/>
-                              <text x="95" y="42" font-family="Inter, sans-serif" font-size="28" font-weight="900" fill="#ffffff" letter-spacing="1">TECNOLOGÍA</text>
-                            </svg>
+                            <!-- G3 Logo -->
+                            <x-application-logo class="h-20 w-auto group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(126,211,33,0.5)]" />
                         </a>
                     </div>
                     <p class="text-gray-400 text-xs md:text-sm mb-6 leading-relaxed">
@@ -149,6 +146,7 @@ new class extends Component {
                             @php
                                 $waNumber = preg_replace('/[^0-9]/', '', $this->social['whatsapp']);
                                 $waLink = $waNumber ? 'https://wa.me/' . $waNumber : '#';
+                                $waDisplay = preg_replace('/^549?/', '', $waNumber);
                             @endphp
                             <a href="{{ $waLink }}" target="_blank" class="flex items-center gap-2 text-gray-400 hover:text-green-400 transition-colors group">
                                 <div class="w-8 h-8 shrink-0 rounded-full bg-white/5 border border-white/10 group-hover:bg-green-500/20 group-hover:border-green-500/30 flex items-center justify-center transition-colors">
@@ -156,7 +154,7 @@ new class extends Component {
                                 </div>
                                 <div class="text-left">
                                     <span class="block text-[9px] font-bold uppercase tracking-widest text-gray-500">WhatsApp</span>
-                                    <span class="text-xs sm:text-sm font-bold text-gray-300">{{ $this->social['whatsapp'] }}</span>
+                                    <span class="text-xs sm:text-sm font-bold text-gray-300">{{ $waDisplay }}</span>
                                 </div>
                             </a>
                         @endif

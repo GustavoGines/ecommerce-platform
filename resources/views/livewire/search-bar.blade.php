@@ -131,7 +131,7 @@ new class extends Component {
                                     </p>
                                 </div>
                                 <div class="ml-2 text-right">
-                                    <span class="text-sm font-black text-gray-900 dark:text-white">${{ number_format($product->retail_price, 2) }}</span>
+                                    <span class="text-sm font-black text-gray-900 dark:text-white">${{ number_format($product->retail_price, 0, ',', '.') }}</span>
                                 </div>
                             </a>
                         </li>

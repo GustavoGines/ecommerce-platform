@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use App\Models\Order;
 
 class OrderPaid extends Mailable implements ShouldQueue
 {
@@ -19,9 +20,10 @@ class OrderPaid extends Mailable implements ShouldQueue
     /**
      * Create a new message instance.
      */
-    public function __construct(\App\Models\Order $order)
+    public function __construct(Order $order)
     {
-        $this->order = $order;
+        // BUG-15 FIX: Asegurar que se carguen las relaciones para evitar consultas N+1 en la vista o fallos en la cola
+        $this->order = $order->loadMissing('items.product', 'user');
     }
 
     /**

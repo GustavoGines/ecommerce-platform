@@ -107,8 +107,21 @@ new class extends Component {
             </button>
         </div>
     @else
-        <button disabled class="w-full py-3.5 px-4 bg-zinc-800 text-gray-500 rounded-xl font-bold tracking-wide cursor-not-allowed border border-zinc-700">
-            Sin Stock
-        </button>
+        <div class="flex {{ $compact ? 'flex-col items-center gap-2' : 'items-center gap-4' }} w-full opacity-60">
+            <!-- Selector inactivo para mantener la misma altura y diseño -->
+            <div class="flex items-center border border-zinc-800/50 rounded-xl bg-zinc-900/50 p-1 flex-shrink-0 {{ $compact ? 'w-full' : 'w-32 sm:w-36' }} justify-between">
+                <button disabled type="button" class="{{ $compact ? 'w-8 h-8' : 'w-10 h-10' }} flex items-center justify-center rounded-lg bg-zinc-800/30 text-zinc-600 cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>
+                </button>
+                <input disabled type="text" value="0" class="{{ $compact ? 'w-12 text-sm px-0' : 'w-16 text-base px-1' }} text-center font-bold text-zinc-600 bg-transparent border-0 p-0 m-0 cursor-not-allowed">
+                <button disabled type="button" class="{{ $compact ? 'w-8 h-8' : 'w-10 h-10' }} flex items-center justify-center rounded-lg bg-zinc-800/30 text-zinc-600 cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                </button>
+            </div>
+            
+            <button disabled class="w-full sm:flex-1 flex items-center justify-center {{ $compact ? 'py-2.5 px-2' : 'py-3.5 px-4' }} bg-zinc-800/50 text-zinc-500 rounded-xl font-bold tracking-wide cursor-not-allowed border border-zinc-700/50">
+                Agotado
+            </button>
+        </div>
     @endif
 </div>

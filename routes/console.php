@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('carts:purge')->daily();
+
+Schedule::command('g3:sync-prices')->dailyAt('03:00')->withoutOverlapping();
+

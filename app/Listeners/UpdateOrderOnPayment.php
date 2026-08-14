@@ -30,9 +30,13 @@ class UpdateOrderOnPayment implements ShouldQueue
     public function handle(PaymentApproved $event): void
     {
         $payment = $event->payment;
-        $dataId = $event->dataId;
+        $dataId  = $event->dataId;
+        $order   = null;
 
-        DB::transaction(function () use ($payment, $dataId) {
+        // BUG-02 FIX: La transacción solo hace trabajo de DB.
+        // El email se envía FUERA del closure para evitar que un fallo del mail
+        // haga rollback del estado de la orden (dejándola sin marcar como pagada).
+        DB::transaction(function () use ($payment, $dataId, &$order) {
             $orderId = $payment->external_reference ?? null;
             if (! $orderId) {
                 Log::warning('Webhook MP: pago sin external_reference', ['payment_id' => $dataId]);
@@ -45,46 +49,47 @@ class UpdateOrderOnPayment implements ShouldQueue
                 return;
             }
 
-            // FIX BUG-02: Idempotencia para evitar múltiples correos y actualizaciones
+            // Idempotencia: ignorar si la orden ya fue procesada.
+            // $order = null es la señal para NO enviar el email fuera de la transacción.
             if (in_array($order->status, ['pagado', 'completado'])) {
                 Log::info('Webhook MP: orden ya procesada, ignorando webhook', ['order_id' => $orderId]);
+                $order = null;
                 return;
             }
 
-            // Guardar el ID del pago en la orden
             $order->mp_payment_id = $dataId;
 
-            // Mapear el estado de MP a nuestros estados internos
             $order->status = match ($payment->status) {
-                'approved' => 'pagado',
-                'pending',
-                'in_process' => 'pendiente',
-                'rejected',
-                'cancelled' => 'cancelado',
-                default => $order->status, // no cambiar si es estado desconocido
+                'approved'              => 'pagado',
+                'pending', 'in_process' => 'pendiente',
+                'rejected', 'cancelled' => 'cancelado',
+                default                 => $order->status,
             };
 
             $order->save();
-            
-            // Refrescar caché de wholesale status si aplica (M-03)
+
+            // Invalidar caché de mayorista cuando se confirma un pago
             if ($order->user_id) {
                 Cache::forget("user.{$order->user_id}.wholesale");
             }
 
-            // Enviar email transaccional (M-01)
-            if ($order->user && $order->user->email) {
-                try {
-                    Mail::to($order->user->email)->send(new OrderPaid($order));
-                } catch (\Exception $e) {
-                    Log::error('No se pudo enviar email de OrderPaid', ['error' => $e->getMessage()]);
-                }
-            }
-            
             Log::info('Evento: orden actualizada', [
-                'order_id' => $orderId,
+                'order_id'   => $orderId,
                 'payment_id' => $dataId,
                 'new_status' => $order->status,
             ]);
         });
+
+        // BUG-02 FIX: Email fuera de la transacción.
+        // BUG-15 FIX: Eager load de relaciones antes de pasar la orden al Mailable.
+        if ($order && $order->user?->email) {
+            try {
+                Mail::to($order->user->email)->send(
+                    new OrderPaid($order->load('items.product', 'user'))
+                );
+            } catch (\Exception $e) {
+                Log::error('No se pudo enviar email de OrderPaid', ['error' => $e->getMessage()]);
+            }
+        }
     }
 }

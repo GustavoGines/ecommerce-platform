@@ -47,7 +47,10 @@ class MercadoPagoService
             }
 
             $product = $products[$productId];
-            $unitPrice = $pricingService->unitPrice($product, (int) $quantity, $user);
+            // DRY-01 FIX: Calcular la cantidad total del carrito para aplicar descuentos por volumen.
+            // Sin este argumento, un cliente con 10+ unidades en carrito pagaba precio de lista en MP.
+            $cartTotalQuantity = array_sum($cartItems);
+            $unitPrice = $pricingService->unitPrice($product, (int) $quantity, $user, $cartTotalQuantity);
 
             $items[] = [
                 'id'          => (string) $product->id,
@@ -102,11 +105,15 @@ class MercadoPagoService
                 'sandbox_init_point' => $preference->sandbox_init_point,
             ];
         } catch (MPApiException $e) {
-            Log::error('MercadoPago API Error al crear preferencia', [
-                'order_id' => $order->id,
+            $errorData = $e->getApiResponse()->getContent();
+            Log::error('Error creating MercadoPago preference', [
+                'error' => $errorData,
                 'status' => $e->getApiResponse()->getStatusCode(),
-                'content' => $e->getApiResponse()->getContent(),
+                'request' => $requestData
             ]);
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('General error creating MercadoPago preference: ' . $e->getMessage());
             throw $e;
         }
     }

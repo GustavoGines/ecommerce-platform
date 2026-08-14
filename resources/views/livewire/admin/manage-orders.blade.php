@@ -70,16 +70,10 @@ new #[Layout('layouts.app')] class extends Component {
             // Si se marca como pagado/completado manualmente (WhatsApp o pago externo)
             if ($oldStatus === 'pendiente' && in_array($status, ['pagado', 'completado'])) {
                 if ($order->user) {
-                    // Lógica para convertir a mayorista de por vida si compra 10+ de algo
-                    $shouldUpgradeToWholesale = false;
-                    foreach ($order->items as $item) {
-                        if ($item->quantity >= 10) {
-                            $shouldUpgradeToWholesale = true;
-                            break;
-                        }
-                    }
+                    // Lógica para convertir a mayorista de por vida si compra 10+ unidades totales
+                    $totalUnits = $order->items->sum('quantity');
 
-                    if ($shouldUpgradeToWholesale && $order->user->role !== 'mayorista') {
+                    if ($totalUnits >= \App\Services\PricingService::GLOBAL_WHOLESALE_MIN && $order->user->role !== 'mayorista') {
                         $order->user->role = 'mayorista';
                         $order->user->save();
                         // Opcional: enviar correo avisando que ahora es mayorista VIP
@@ -102,6 +96,27 @@ new #[Layout('layouts.app')] class extends Component {
 
             $this->loadOrders();
             $this->dispatch('notify', message: 'Estado actualizado correctamente');
+        }
+    }
+
+    public function recalculateToWholesale($orderId)
+    {
+        $order = Order::with('items.product')->find($orderId);
+        if ($order && $order->status === 'pendiente') {
+            $newTotal = 0;
+            foreach ($order->items as $item) {
+                if ($item->product) {
+                    $item->price = $item->product->wholesale_price;
+                    $item->save();
+                    $newTotal += $item->price * $item->quantity;
+                }
+            }
+            $order->total = $newTotal;
+            $order->role_applied = 'vip_mayorista';
+            $order->save();
+
+            $this->loadOrders();
+            $this->dispatch('notify', message: 'Orden recalculada a precios mayoristas correctamente.');
         }
     }
 
@@ -190,7 +205,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     <div class="text-xs text-gray-500 dark:text-gray-400">{{ $order->user->email }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-[var(--color-primary)]">
-                                    ${{ number_format($order->total, 2) }}
+                                    ${{ number_format($order->total, 0, ',', '.') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide
@@ -290,13 +305,23 @@ new #[Layout('layouts.app')] class extends Component {
                                                     <span>{{ $item->product ? $item->product->name : '⚠ Producto Eliminado' }}</span>
                                                 </div>
                                                 <div class="text-gray-500 dark:text-gray-400 text-right">
-                                                    {{ $item->quantity }} × ${{ number_format($item->price, 2) }} = <span class="font-bold text-gray-900 dark:text-white">${{ number_format($item->quantity * $item->price, 2) }}</span>
+                                                    {{ $item->quantity }} × ${{ number_format($item->price, 0, ',', '.') }} = <span class="font-bold text-gray-900 dark:text-white">${{ number_format($item->quantity * $item->price, 0, ',', '.') }}</span>
                                                 </div>
                                             </li>
                                         @endforeach
                                         <li class="px-4 py-3 flex justify-between items-center bg-gray-50 dark:bg-gray-900/30 font-bold text-sm">
-                                            <span class="text-gray-700 dark:text-gray-300">TOTAL</span>
-                                            <span class="text-[var(--color-primary)]">${{ number_format($order->total, 2) }}</span>
+                                            <div class="flex flex-col">
+                                                <span class="text-gray-700 dark:text-gray-300">TOTAL</span>
+                                                <span class="text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Total de unidades: {{ $order->items->sum('quantity') }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-4">
+                                                @if($order->status === 'pendiente')
+                                                    <button wire:click.stop="recalculateToWholesale({{ $order->id }})" wire:confirm="¿Aplicar precios mayoristas a todos los ítems y recalcular el total de esta orden?" class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded hover:bg-purple-200 dark:hover:bg-purple-800/50 transition-colors border border-purple-200 dark:border-purple-800">
+                                                        Recalcular a Mayorista
+                                                    </button>
+                                                @endif
+                                                <span class="text-[var(--color-primary)] text-base">${{ number_format($order->total, 0, ',', '.') }}</span>
+                                            </div>
                                         </li>
                                     </ul>
                                 </td>
@@ -333,7 +358,7 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                         
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-black text-[var(--color-primary)]">${{ number_format($order->total, 2) }}</span>
+                            <span class="text-sm font-black text-[var(--color-primary)]">${{ number_format($order->total, 0, ',', '.') }}</span>
                             <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="expanded ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                         </div>
                     </div>
@@ -403,7 +428,7 @@ new #[Layout('layouts.app')] class extends Component {
                                         <div class="text-[11px] font-medium text-gray-800 dark:text-gray-200 truncate">{{ $item->product ? $item->product->name : '⚠ Producto Eliminado' }}</div>
                                     </div>
                                     <div class="text-[10px] whitespace-nowrap text-right text-gray-500">
-                                        {{ $item->quantity }}x ${{ number_format($item->price, 2) }}
+                                        {{ $item->quantity }}x ${{ number_format($item->price, 0, ',', '.') }}
                                     </div>
                                 </li>
                             @endforeach

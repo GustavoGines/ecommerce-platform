@@ -149,16 +149,12 @@ new #[Layout('layouts.app')] class extends Component {
                     <div class="sticky top-32 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
                         
                         @if($product->stock <= 0)
-                            <div class="inline-flex items-center gap-2 px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] uppercase tracking-widest font-bold rounded-full mb-6">
-                                <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> Agotado
-                            </div>
-                        @elseif($product->stock <= ($product->min_stock ?? 5))
-                            <div class="inline-flex items-center gap-2 px-3 py-1 bg-orange-500/20 text-orange-400 border border-orange-500/30 text-[10px] uppercase tracking-widest font-bold rounded-full mb-6" title="Stock Disponible">
-                                <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span> ¡Solo quedan {{ $product->stock }}!
+                            <div class="inline-flex items-center gap-2 px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] uppercase tracking-widest font-bold rounded-full mb-6" title="Agotado">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> 🔴 Agotado / No Disponible
                             </div>
                         @else
-                            <div class="inline-flex items-center gap-2 px-3 py-1 bg-[#1a1f2c]/40 text-gray-300 border border-white/5 text-[10px] uppercase tracking-widest font-bold rounded-full mb-6" title="Stock Disponible">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Stock: {{ $product->stock }}
+                            <div class="inline-flex items-center gap-2 px-3 py-1 bg-[#1a1f2c]/40 text-gray-300 border border-white/5 text-[10px] uppercase tracking-widest font-bold rounded-full mb-6" title="Disponible">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> 🟢 Stock Disponible
                             </div>
                         @endif
 
@@ -168,7 +164,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <div class="mt-10 mb-10 pb-10 border-b border-white/10">
                             <p class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-2">Precio de Lista</p>
                             <div class="flex items-end gap-4">
-                                <span class="text-5xl font-black tracking-tighter text-white">${{ number_format($product->retail_price, 2) }}</span>
+                                <span class="text-5xl font-black tracking-tighter text-white">${{ number_format($product->retail_price, 0, ',', '.') }}</span>
                                 <span class="text-gray-500 mb-2 font-medium">Final</span>
                             </div>
 
@@ -177,16 +173,16 @@ new #[Layout('layouts.app')] class extends Component {
                                     <span class="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-emerald-400">
                                         <span class="relative flex h-2 w-2">
                                           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                        </span>
-                                        Precio Mayorista
-                                    </span>
+                            <div class="mt-8 pt-6 border-t border-white/10">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        <span class="text-xs uppercase tracking-widest font-black text-emerald-400">Precio Efectivo / Transferencia</span>
+                                    </div>
+                                    <div class="flex items-end gap-3">
+                                        <span class="text-2xl font-black text-emerald-400">${{ number_format($product->wholesale_price, 0, ',', '.') }} <span class="text-[10px] opacity-70">C/U</span></span>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-2">10% DE DESCUENTO</p>
                                 </div>
-                                <div class="flex justify-between items-end">
-                                    <span class="text-xs text-gray-400 uppercase tracking-wider">Mínimo {{ $product->wholesale_min_quantity }} uds.</span>
-                                    <span class="text-2xl font-black text-emerald-400">${{ number_format($product->wholesale_price, 2) }} <span class="text-[10px] opacity-70">c/u</span></span>
-                                </div>
-                            </div>
                         </div>
 
                         {{-- Add to Cart livewire component (needs to be adapted to luxury context but we'll use the existing one, it has generic tailwind) --}}
@@ -266,7 +262,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="p-6">
                                 <h4 class="font-bold text-white truncate transition-colors">{{ $related->name }}</h4>
                                 <div class="mt-2 text-gray-400 font-bold">
-                                    ${{ number_format($related->retail_price, 2) }}
+                                    ${{ number_format($related->retail_price, 0, ',', '.') }}
                                 </div>
                             </div>
                         </a>
@@ -296,7 +292,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="p-6">
                                 <h4 class="font-bold text-white truncate transition-colors">{{ $viewed->name }}</h4>
                                 <div class="mt-2 text-gray-400 font-bold">
-                                    ${{ number_format($viewed->retail_price, 2) }}
+                                    ${{ number_format($viewed->retail_price, 0, ',', '.') }}
                                 </div>
                             </div>
                         </a>
@@ -380,11 +376,9 @@ new #[Layout('layouts.app')] class extends Component {
                 <!-- Info -->
                 <div class="flex flex-col justify-center">
                     @if($product->stock <= 0)
-                        <span class="inline-block px-3 py-1 bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/30 text-xs uppercase tracking-widest font-bold rounded-full w-max mb-4">Agotado</span>
-                    @elseif($product->stock <= ($product->min_stock ?? 5))
-                        <span class="inline-block px-3 py-1 bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-500/30 text-xs uppercase tracking-widest font-bold rounded-full w-max mb-4" title="Stock Disponible">¡Solo quedan {{ $product->stock }}!</span>
+                        <span class="inline-block px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 text-xs uppercase tracking-widest font-bold rounded-full w-max mb-4" title="Agotado">🔴 Agotado / No Disponible</span>
                     @else
-                        <span class="inline-block px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-700 text-xs uppercase tracking-widest font-bold rounded-full w-max mb-4" title="Stock Disponible">Stock: {{ $product->stock }}</span>
+                        <span class="inline-block px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-700 text-xs uppercase tracking-widest font-bold rounded-full w-max mb-4" title="Disponible">🟢 Stock Disponible</span>
                     @endif
 
                     <h1 class="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight mb-4">{{ $product->name }}</h1>
@@ -396,32 +390,31 @@ new #[Layout('layouts.app')] class extends Component {
                             @if(auth()->check() && auth()->user()->isWholesaleCustomer())
                                 <div class="flex flex-col items-end">
                                     <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 shadow-sm mb-1">
-                                        🔥 Precio Mayorista VIP
+                                        🔥 Precio Especial VIP
                                     </span>
-                                    <span class="text-4xl sm:text-5xl font-black tracking-tighter text-emerald-600">${{ number_format($product->wholesale_price, 2) }}</span>
+                                    <span class="text-4xl sm:text-5xl font-black tracking-tighter text-emerald-600">${{ number_format($product->wholesale_price, 0, ',', '.') }}</span>
                                 </div>
                             @else
-                                <span class="text-4xl sm:text-5xl font-black tracking-tighter text-gray-900 dark:text-white">${{ number_format($product->retail_price, 2) }}</span>
+                                <span class="text-4xl sm:text-5xl font-black tracking-tighter text-gray-900 dark:text-white">${{ number_format($product->retail_price, 0, ',', '.') }}</span>
                             @endif
                         </div>
                         
                         @if(!(auth()->check() && auth()->user()->isWholesaleCustomer()) && $theme === 'modern-light')
-                        <div class="relative group cursor-help mb-4" title="Descuento automático al llevar 10 o más unidades">
+                        <div class="relative group cursor-help mb-4">
                             <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
                             <div class="relative flex justify-between items-center p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/30 dark:from-slate-800 dark:to-slate-900 border border-emerald-200/50 dark:border-emerald-700/50 shadow-sm">
                                 <div>
-                                    <span class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">
-                                        <span class="relative flex h-2.5 w-2.5">
-                                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                                        </span>
-                                        Precio Mayorista
-                                    </span>
-                                    <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1 uppercase tracking-wider">Llevando 10 o más unidades</p>
+                                    <div class="flex items-center gap-2 mb-1">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                    <span class="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-500">Precio Efectivo / Transferencia</span>
+                                </div>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1 uppercase tracking-wider">10% DE DESCUENTO</p>
                                 </div>
                                 <div class="text-right flex flex-col items-end">
-                                    <span class="text-2xl sm:text-3xl font-black tracking-tighter text-emerald-900 dark:text-emerald-100">${{ number_format($product->wholesale_price, 2) }}</span>
-                                    <span class="opacity-75 font-bold text-[10px] bg-emerald-200/50 dark:bg-emerald-900/50 px-1.5 py-0.5 rounded text-emerald-800 dark:text-emerald-200 mt-1">C/U</span>
+                                    <div class="mt-2 flex items-baseline gap-2">
+                                    <span class="text-2xl sm:text-3xl font-black tracking-tighter text-emerald-900 dark:text-emerald-100">${{ number_format($product->wholesale_price, 0, ',', '.') }}</span>
+                                    <span class="text-xs font-bold text-emerald-700 dark:text-emerald-300">C/U</span>
+                                </div>
                                 </div>
                             </div>
                         </div>
@@ -472,7 +465,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <div class="p-4">
                             <h4 class="font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-[var(--color-primary)] transition-colors">{{ $related->name }}</h4>
                             <div class="mt-2 text-[var(--color-primary)] font-black">
-                                ${{ number_format($related->retail_price, 2) }}
+                                ${{ number_format($related->retail_price, 0, ',', '.') }}
                             </div>
                         </div>
                     </a>

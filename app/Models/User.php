@@ -46,15 +46,17 @@ class User extends Authenticatable
             return true;
         }
 
-        // Fallback to checking their purchase history
+        // Fallback: buscar en historial de compras si alguna orden pagada suma >= GLOBAL_WHOLESALE_MIN unidades
         return \Illuminate\Support\Facades\Cache::remember(
             "user.{$this->id}.wholesale", 
             300, 
             fn() => $this->orders()
                 ->whereIn('status', ['pagado', 'completado'])
-                ->whereHas('items', function ($query) {
-                    $query->where('quantity', '>=', 10);
-                })
+                ->where(function ($query) {
+                    $query->selectRaw('COALESCE(SUM(quantity), 0)')
+                          ->from('order_items')
+                          ->whereColumn('order_items.order_id', 'orders.id');
+                }, '>=', \App\Services\PricingService::GLOBAL_WHOLESALE_MIN)
                 ->exists()
         );
     }

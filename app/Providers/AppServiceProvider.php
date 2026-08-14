@@ -17,14 +17,18 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $theme = 'stealth';
-        try {
-            $settings = \App\Models\StoreSetting::getSettings();
+        
+        // FIX BUG-08: No consultar la BD durante comandos de consola (ej. migraciones)
+        if (! app()->runningInConsole()) {
+            try {
+                $settings = \App\Models\StoreSetting::getSettings();
 
-            $dbTheme = ($settings && $settings->theme_name) ? $settings->theme_name : 'stealth';
-            if ($dbTheme !== 'stealth') {
-                $theme = $dbTheme;
-            }
-        } catch (\Exception $e) {}
+                $dbTheme = ($settings && $settings->theme_name) ? $settings->theme_name : 'stealth';
+                if ($dbTheme !== 'stealth') {
+                    $theme = $dbTheme;
+                }
+            } catch (\Exception $e) {}
+        }
 
         \Illuminate\Support\Facades\View::share('activeTheme', $theme);
         app()->singleton('activeTheme', fn() => $theme);

@@ -61,6 +61,9 @@ new class extends Component {
     {
         $query = Product::with(['category', 'brands']);
 
+        // Prioridad de Stock: Los productos sin stock van al final
+        $query->orderByRaw('stock > 0 DESC');
+
         if ($this->selectedCategory) {
             $query->where('category_id', $this->selectedCategory);
         }
@@ -126,8 +129,8 @@ new class extends Component {
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-white font-black text-sm tracking-wide">COMPRÁ MÁS, PAGÁ MENOS</h3>
-                    <p class="text-g3-silver text-xs mt-1 font-medium">Llevá <strong class="text-white">10 unidades</strong> en tu 1ra compra. ¡Desde la 2da compra, obtenés precio mayorista por unidad!</p>
+                    <h3 class="text-white font-black text-sm tracking-wide">10% OFF EN EFECTIVO O TRANSFERENCIA</h3>
+                    <p class="text-g3-silver text-xs mt-1 font-medium">Llevate un <strong class="text-white">10% de descuento</strong> sobre el total abonando en efectivo o por transferencia al finalizar tu compra.</p>
                 </div>
             </div>
             <div class="hidden sm:block relative z-10">
@@ -353,14 +356,6 @@ new class extends Component {
                                             <span class="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-red-900/50 text-red-400 border border-red-800 shadow-sm whitespace-nowrap">
                                                 Agotado
                                             </span>
-                                        @elseif($product->stock <= ($product->min_stock ?? 5))
-                                            <span class="shrink-0 text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-orange-900/50 text-orange-400 border border-orange-800 shadow-sm whitespace-nowrap" title="Stock Disponible">
-                                                ¡Quedan {{ $product->stock }}!
-                                            </span>
-                                        @else
-                                            <span class="shrink-0 text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-zinc-800 text-gray-300 border border-zinc-700 shadow-sm whitespace-nowrap" title="Stock Disponible">
-                                                Stock: {{ $product->stock }}
-                                            </span>
                                         @endif
                                     </div>
                                     @if($product->sku)
@@ -381,13 +376,12 @@ new class extends Component {
                                             @if(auth()->check() && auth()->user()->isWholesaleCustomer())
                                                 <div class="flex items-center gap-1.5 mb-0.5">
                                                     <span class="inline-flex items-center text-[9px] font-black uppercase tracking-wider text-g3-green bg-g3-green/10 border border-g3-green/20 px-1.5 py-0.5 rounded shadow-sm">
-                                                        🔥 Precio Mayorista
+                                                        🔥 Precio Especial
                                                     </span>
                                                 </div>
-                                                <p class="text-lg font-black text-g3-green leading-none">${{ number_format($product->wholesale_price, 2) }}</p>
+                                                <p class="text-lg font-black text-g3-green leading-none">${{ number_format($product->wholesale_price, 0, ',', '.') }}</p>
                                             @else
-                                                <p class="text-lg font-black text-[var(--color-primary)] leading-none">${{ number_format($product->retail_price, 2) }}</p>
-                                                <p class="text-[10px] text-g3-silver font-bold leading-tight mt-1">Llevando 10 o más queda en <span class="text-g3-green">${{ number_format($product->wholesale_price, 2) }}</span></p>
+                                                <p class="text-lg font-black text-[var(--color-primary)] leading-none">${{ number_format($product->retail_price, 0, ',', '.') }}</p>
                                             @endif
                                         </div>
                                     </div>

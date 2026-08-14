@@ -11,6 +11,12 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
+        @if(isset($settings) && $settings->favicon_url)
+            <link rel="icon" href="{{ asset('storage/' . $settings->favicon_url) }}">
+        @else
+            <link rel="icon" href="{{ asset('images/favicon.png') }}">
+        @endif
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800,900&display=swap" rel="stylesheet" />

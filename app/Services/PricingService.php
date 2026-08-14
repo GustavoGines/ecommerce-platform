@@ -18,32 +18,37 @@ use Illuminate\Support\Facades\Auth;
  */
 class PricingService
 {
+    // Mínimo global de artículos en el carrito para activar precios mayoristas.
+    // Fuente de verdad única: si cambia esta regla de negocio, se modifica SOLO aquí.
+    public const GLOBAL_WHOLESALE_MIN = 10;
+
     /**
      * Calcula el precio unitario de un producto para un cliente dado.
      *
      * Reglas (en orden de prioridad):
      * 1. Si el usuario es cliente mayorista VIP → precio mayorista en TODO.
-     * 2. Si compra la cantidad mínima del producto → precio mayorista.
+     * 2. Si la suma total de productos en el carrito es >= GLOBAL_WHOLESALE_MIN → precio mayorista.
      * 3. En cualquier otro caso → precio minorista.
      *
      * @param  Product        $product   Producto a calcular.
-     * @param  int            $quantity  Cantidad solicitada.
+     * @param  int            $quantity  Cantidad solicitada del producto.
      * @param  \App\Models\User|null  $user  Usuario autenticado (null = invitado).
+     * @param  int            $totalCartQuantity Cantidad total de artículos en el carrito actual.
      * @return float          Precio unitario a aplicar.
      */
-    public function unitPrice(Product $product, int $quantity, $user = null): float
+    public function unitPrice(Product $product, int $quantity, $user = null, int $totalCartQuantity = 0): float
     {
-        // Regla 1: Cliente VIP — mayorista en todo el carrito
+        // 1. Cliente VIP Mayorista
         if ($user && $user->isWholesaleCustomer()) {
             return (float) $product->wholesale_price;
         }
 
-        // Regla 2: Cantidad mínima alcanzada para este producto
-        if ($quantity >= $product->wholesale_min_quantity) {
+        // 2. Compra por volumen (cantidad total del carrito supera el mínimo global)
+        if ($totalCartQuantity >= self::GLOBAL_WHOLESALE_MIN) {
             return (float) $product->wholesale_price;
         }
 
-        // Regla 3: Precio de lista
+        // 3. Cliente Minorista
         return (float) $product->retail_price;
     }
 }

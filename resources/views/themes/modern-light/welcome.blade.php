@@ -92,7 +92,7 @@
                     
                     <a href="{{ route('shop', ['categoria' => 'Xiaomi']) }}" class="group relative h-32 md:h-40 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-zinc-900 hover:shadow-[0_8px_30px_rgba(59,130,246,0.3)] transition-all duration-300">
                         <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent opacity-80 z-10"></div>
-                        <img src="https://images.unsplash.com/photo-1621330396167-897b9195b4cb?q=80&w=400&auto=format&fit=crop" alt="Xiaomi" class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-110 group-hover:opacity-60 transition-all duration-500">
+                        <img src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=400&auto=format&fit=crop" alt="Xiaomi" class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-110 group-hover:opacity-60 transition-all duration-500">
                         <span class="relative z-20 text-white font-bold text-sm md:text-base text-center px-4 tracking-wide group-hover:-translate-y-1 transition-transform drop-shadow-md">XIAOMI</span>
                     </a>
                     
@@ -171,7 +171,7 @@
                                 <div class="mt-2 pt-2 border-t border-zinc-800 flex flex-col gap-2">
                                     <div class="flex items-end justify-between">
                                         <div>
-                                            <p class="text-lg font-black text-g3-green leading-none">${{ number_format($product->retail_price, 2) }}</p>
+                                            <p class="text-lg font-black text-g3-green leading-none">${{ number_format($product->retail_price, 0, ',', '.') }}</p>
                                         </div>
                                     </div>
                                     <div class="w-full">

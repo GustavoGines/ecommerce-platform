@@ -132,6 +132,10 @@ new #[Layout('layouts.app')] class extends Component {
         }
 
         $settings->save();
+        
+        // Limpiar la caché de configuraciones para que los cambios se vean en toda la web
+        \Illuminate\Support\Facades\Cache::forget('store_settings');
+
         session()->flash('message', 'Configuración guardada exitosamente.');
         
         // Redirigir (recargar) la página sin 'navigate' para que los cambios de layout se apliquen instantáneamente.

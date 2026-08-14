@@ -356,7 +356,7 @@
                                 <div class="mt-auto pt-4 flex items-center justify-between">
                                     <div class="flex flex-col">
                                         <span class="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-0.5">Precio</span>
-                                        <span class="text-white font-black text-lg">${{ number_format($product->retail_price ?? 0, 2) }}</span>
+                                        <span class="text-white font-black text-lg">${{ number_format($product->retail_price ?? 0, 0, ',', '.') }}</span>
                                     </div>
                                     
                                     {{-- Add to Cart Button (Hybrid Desktop/Mobile) --}}

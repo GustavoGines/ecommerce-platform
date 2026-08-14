@@ -18,6 +18,8 @@
 
         @if(isset($settings) && $settings->favicon_url)
             <link rel="icon" href="{{ asset('storage/' . $settings->favicon_url) }}">
+        @else
+            <link rel="icon" href="{{ asset('images/favicon.png') }}">
         @endif
 
         <!-- Open Graph / WhatsApp Preview -->

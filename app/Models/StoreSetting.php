@@ -26,18 +26,30 @@ class StoreSetting extends Model
 
     public static function getSettings()
     {
-        try {
-            if (! Schema::hasTable('store_settings')) {
-                return new static;
+        // BUG-04 FIX: Cachear los settings para evitar consultas en cada request.
+        // IMPORTANTE: cacheamos los atributos como array plano (NO el objeto Eloquent),
+        // porque el cache serializa/deserializa con unserialize() y si la clase no está
+        // cargada aún en ese punto, lanza "incomplete object". Con un array, ese problema
+        // no existe. Reconstruimos la instancia después de leer el caché.
+        $attributes = Cache::remember('store_settings', 3600, function () {
+            try {
+                if (! Schema::hasTable('store_settings')) {
+                    return [];
+                }
+                return static::first()?->getAttributes() ?? [];
+            } catch (\Exception $e) {
+                return [];
             }
-            $setting = static::first();
-            if (! $setting) {
-                return new static;
-            }
-            return $setting;
-        } catch (\Exception $e) {
+        });
+
+        if (empty($attributes)) {
             return new static;
         }
+
+        $instance = new static;
+        $instance->setRawAttributes($attributes);
+        $instance->exists = true;
+        return $instance;
     }
 
 

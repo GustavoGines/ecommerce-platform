@@ -51,17 +51,21 @@ new class extends Component {
         return app(PricingService::class)->unitPrice($product, $quantity, auth()->user());
     }
 
+    public $subtotalCash = 0;
+
     public function calculateSubtotal($products)
     {
         $this->subtotal = 0;
+        $totalCartQuantity = array_sum($this->cart);
 
         foreach ($this->cart as $productId => $quantity) {
             if (isset($products[$productId])) {
                 $product = $products[$productId];
-                $price = $this->getPrice($product, $quantity);
+                $price = app(PricingService::class)->unitPrice($product, $quantity, auth()->user(), $totalCartQuantity);
                 $this->subtotal += $price * $quantity;
             }
         }
+        $this->subtotalCash = $this->subtotal * 0.90;
     }
 
     public function updateQuantity($productId, $action)
@@ -127,11 +131,18 @@ new class extends Component {
 <div x-data="{ 
         isClearing: false,
         itemTotals: {},
-        get globalSubtotal() {
-            return Object.values(this.itemTotals).reduce((a, b) => a + b, 0);
+        itemQtys: {},
+        get globalQty() {
+            return Object.values(this.itemQtys).reduce((a, b) => a + (b || 0), 0);
+        },
+        get globalRetailTotal() {
+            return Object.values(this.itemTotals).reduce((a, b) => a + (b.retail || 0), 0);
+        },
+        get globalCashTotal() {
+            return this.globalRetailTotal * 0.90;
         },
         formatMoney(value) {
-            return new Intl.NumberFormat('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(value);
+            return new Intl.NumberFormat('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0}).format(value).replace(/,/g, '.');
         }
      }"
      x-show="$store.cart.open"
@@ -174,7 +185,7 @@ new class extends Component {
                      x-transition:leave="transform transition ease-in-out duration-500 sm:duration-700" 
                      x-transition:leave-start="translate-x-0" 
                      x-transition:leave-end="translate-x-full" 
-                     class="pointer-events-auto w-screen max-w-md">
+                     class="pointer-events-auto w-[100vw] sm:w-screen max-w-md">
                      
                      <div class="flex h-full flex-col relative shadow-2xl transition-colors duration-300 {{ $theme === 'luxury' ? 'bg-[#0a0f1c]/90 backdrop-blur-3xl border-l border-white/5' : 'bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800' }}" :style="('{{ $theme }}' === 'stealth' && $store.theme.dark) ? 'box-shadow: -10px 0 30px -10px var(--color-primary-glow);' : ''">
                         <div class="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
@@ -221,17 +232,19 @@ new class extends Component {
                                                         timeout: null,
                                                         
                                                         get isWholesale() {
-                                                            return this.isVip || this.qty >= this.minWholesaleQty;
+                                                            let q = parseInt(this.qty) || 0;
+                                                            return this.isVip || q >= this.minWholesaleQty || globalQty >= {{ \App\Services\PricingService::GLOBAL_WHOLESALE_MIN }};
                                                         },
                                                         get currentUnitPrice() {
                                                             return this.isWholesale ? this.wholesalePrice : this.retailPrice;
                                                         },
-                                                        get itemTotal() {
-                                                            return this.currentUnitPrice * this.qty;
+                                                        get itemRetailTotal() {
+                                                            let q = parseInt(this.qty) || 0;
+                                                            return this.currentUnitPrice * q;
                                                         },
                                                         
                                                         formatMoney(value) {
-                                                            return new Intl.NumberFormat('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(value);
+                                                            return new Intl.NumberFormat('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0}).format(value).replace(/,/g, '.');
                                                         },
                                                         
                                                         changeQty(amount) {
@@ -251,13 +264,15 @@ new class extends Component {
                                                     }"
                                                     x-init="
                                                         $watch('qty', val => { 
-                                                            let parsed = parseInt(val);
-                                                            if(isNaN(parsed)) return;
+                                                            let parsed = parseInt(val) || 0;
                                                             if(parsed > stock) { qty = stock; sync(); }
-                                                            else if(parsed < 1) { qty = 1; sync(); }
+                                                            else if(parsed < 1 && parsed !== 0) { qty = 1; sync(); }
                                                         });
                                                     "
-                                                    x-effect="itemTotals[{{ $productId }}] = itemTotal"
+                                                    x-effect="
+                                                        itemTotals[{{ $productId }}] = { retail: itemRetailTotal };
+                                                        itemQtys[{{ $productId }}] = parseInt(qty) || 0;
+                                                    "
                                                 >
                                                     <div class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl border {{ $theme === 'luxury' ? 'border-white/10 bg-[#0a0f1c]/50' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800' }} p-2">
                                                         @if($product->image_url)
@@ -277,7 +292,7 @@ new class extends Component {
                                                                 <h3 class="line-clamp-2 leading-tight flex-1">
                                                                     {{ $product->name }}
                                                                 </h3>
-                                                                <p class="text-[var(--color-primary)] whitespace-nowrap" x-text="`$${formatMoney(itemTotal)}`"></p>
+                                                                <p class="text-[var(--color-primary)] whitespace-nowrap" x-text="`$${formatMoney(itemRetailTotal)}`"></p>
                                                             </div>
                                                             <div class="mt-1 flex items-center flex-wrap gap-2">
                                                                 <template x-if="isWholesale">
@@ -340,10 +355,24 @@ new class extends Component {
                         @if(count($cart) > 0)
                             <div class="border-t px-4 py-6 sm:px-6 transition-colors duration-300 {{ $theme === 'luxury' ? 'border-white/10 bg-white/5' : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50' }}" x-show="!isClearing" x-transition.opacity.duration.300ms>
                                 <div class="flex justify-between text-base font-black text-xl {{ $theme === 'luxury' ? 'text-white' : 'text-gray-900 dark:text-white' }}">
-                                    <p>Subtotal</p>
-                                    <p x-text="`$${formatMoney(globalSubtotal)}`">${{ number_format($subtotal, 2) }}</p>
+                                    <p>Total de Lista</p>
+                                    <p x-text="`$${formatMoney(globalRetailTotal)}`">${{ number_format($subtotal, 0, ',', '.') }}</p>
                                 </div>
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Impuestos y envío calculados en el checkout.</p>
+                                <div class="flex justify-between text-base font-black text-emerald-600 dark:text-emerald-400 mt-2">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        <p>Efectivo / Transferencia</p>
+                                    </div>
+                                    <p x-text="`$${formatMoney(globalCashTotal)}`">${{ number_format($subtotalCash ?? 0, 0, ',', '.') }}</p>
+                                </div>
+
+                                <div class="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between shadow-inner">
+                                    <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+                                        <span class="text-lg">🔥</span>
+                                        <span>¡Ahorras pagando en Efectivo!</span>
+                                    </div>
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-black text-lg" x-text="`$${formatMoney(globalRetailTotal - globalCashTotal)}`"></span>
+                                </div>
                                 <div class="mt-6">
                                     <button wire:click="goToCheckout"
                                        @click="$store.cart.hide()"

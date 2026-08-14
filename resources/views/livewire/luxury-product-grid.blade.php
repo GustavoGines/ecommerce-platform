@@ -55,6 +55,9 @@ new class extends Component {
     public function with()
     {
         $query = Product::with(['category', 'brands']);
+        
+        // Prioridad de Stock: Los productos sin stock van al final
+        $query->orderByRaw('stock > 0 DESC');
 
         if ($this->selectedCategory) {
             $query->where('category_id', $this->selectedCategory);
@@ -250,7 +253,7 @@ new class extends Component {
                                     </div>
                                     <div>
                                         <h5 class="text-xs font-bold text-gray-300 group-hover:text-white transition-colors line-clamp-2 leading-tight">{{ $pop->name }}</h5>
-                                        <span class="text-[10px] text-[var(--color-primary)] font-black mt-1 block">${{ number_format($pop->retail_price ?? 0, 2) }}</span>
+                                        <span class="text-[10px] text-[var(--color-primary)] font-black mt-1 block">${{ number_format($pop->retail_price ?? 0, 0, ',', '.') }}</span>
                                     </div>
                                 </a>
                             @endforeach
@@ -344,7 +347,7 @@ new class extends Component {
                                 
                                 <div class="mt-auto pt-4 flex items-end justify-between">
                                     <div>
-                                        <p class="text-xl font-black text-white">${{ number_format($product->retail_price, 2) }}</p>
+                                        <p class="text-xl font-black text-white">${{ number_format($product->retail_price, 0, ',', '.') }}</p>
                                     </div>
                                     
                                     {{-- Mobile Add to Cart (Always visible on mobile, hidden on desktop) --}}
@@ -390,7 +393,7 @@ new class extends Component {
                         <div class="p-6">
                             <h4 class="font-bold text-white truncate transition-colors">{{ $viewed->name }}</h4>
                             <div class="mt-2 text-gray-400 font-bold">
-                                ${{ number_format($viewed->retail_price, 2) }}
+                                ${{ number_format($viewed->retail_price, 0, ',', '.') }}
                             </div>
                         </div>
                     </a>

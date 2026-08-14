@@ -19,7 +19,7 @@ class TrackVisits
      */
     private const BOT_SIGNATURES = [
         // ── Search Engines ───────────────────────────────────────────
-        'googlebot', 'google-inspectiontool', 'googlelighthoue',
+        'googlebot', 'google-inspectiontool', 'googlelighthouse',
         'bingbot', 'msnbot', 'bingpreview',
         'slurp',                    // Yahoo
         'duckduckbot',

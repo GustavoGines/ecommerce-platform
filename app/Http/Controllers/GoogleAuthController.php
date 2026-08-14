@@ -34,7 +34,7 @@ class GoogleAuthController extends Controller
         try {
             // Store intended URL if not auth pages
             $previousUrl = url()->previous();
-            if (! Str::contains($previousUrl, ['/login', '/register', '/auth'])) {
+            if (! Str::contains($previousUrl, ['/login', '/register', '/auth']) && str_starts_with($previousUrl, config('app.url'))) {
                 session(['url.intended' => $previousUrl]);
             }
 

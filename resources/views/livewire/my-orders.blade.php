@@ -174,7 +174,7 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                         
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-black text-gray-900 dark:text-white">${{ number_format($order->total, 2) }}</span>
+                            <span class="text-sm font-black text-gray-900 dark:text-white">${{ number_format($order->total, 0, ',', '.') }}</span>
                             <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="expandido ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                         </div>
                     </div>
@@ -201,10 +201,10 @@ new #[Layout('layouts.app')] class extends Component {
                                             </div>
                                             <div class="flex flex-col">
                                                 <span class="text-[11px] font-medium text-gray-800 dark:text-gray-200 line-clamp-1">{{ $item->product ? $item->product->name : 'Producto eliminado' }}</span>
-                                                <span class="text-[10px] text-gray-500">{{ $item->quantity }}x ${{ number_format($item->price, 2) }}</span>
+                                                <span class="text-[10px] text-gray-500">{{ $item->quantity }}x ${{ number_format($item->price, 0, ',', '.') }}</span>
                                             </div>
                                         </div>
-                                        <span class="font-bold text-gray-900 dark:text-white text-[11px] pr-1">${{ number_format($item->price * $item->quantity, 2) }}</span>
+                                        <span class="font-bold text-gray-900 dark:text-white text-[11px] pr-1">${{ number_format($item->price * $item->quantity, 0, ',', '.') }}</span>
                                     </li>
                                 @endforeach
                             </ul>

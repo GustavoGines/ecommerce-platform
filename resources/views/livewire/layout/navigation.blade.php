@@ -67,26 +67,33 @@ new class extends Component
         {{-- Ticker Animado (Marquesina) para Modern Light --}}
         <div class="bg-zinc-950 border-b border-zinc-900 text-g3-silver overflow-hidden relative z-[60] py-1.5 flex shadow-md">
             {{-- Marca de Agua "G3" intercalada en el fondo --}}
-            <div class="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-screen" 
-                 style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 80\'><path d=\'M 50,15 L 25,15 C 15,15 10,20 10,30 L 10,50 C 10,60 15,65 25,65 L 50,65 L 50,40 L 30,40 L 30,50 L 40,50 L 40,55 L 20,55 L 20,25 L 50,25 Z\' fill=\'%23ffffff\'/></svg>'); background-repeat: repeat, repeat; background-size: 60px, 60px; background-position: 0 0, 30px 30px;">
+            <div class="absolute inset-0 pointer-events-none flex items-center overflow-hidden" style="opacity: 0.15; filter: grayscale(100%) brightness(150%);">
+                @for($i = 0; $i < 30; $i++)
+                    <img src="{{ asset('images/favicon.png') }}" class="w-6 h-auto shrink-0" style="margin-right: 80px;" alt="">
+                @endfor
             </div>
 
-            <div class="whitespace-nowrap animate-[marquee_25s_linear_infinite] flex items-center gap-10 text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] relative z-10 drop-shadow-md">
-                <span class="flex items-center gap-2 text-white"><span class="animate-pulse text-g3-blue text-lg">⚡</span> PRECIOS MAYORISTAS EN HARDWARE</span>
+            <div class="whitespace-nowrap animate-[marquee_35s_linear_infinite] flex items-center gap-10 text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] relative z-10 drop-shadow-md">
+                {{-- Bloque 1 --}}
+                <span class="flex items-center gap-2 text-white"><span class="animate-pulse text-g3-blue text-lg">⚡</span> LOS MEJORES PRECIOS EN HARDWARE</span>
+                <span class="text-zinc-700">&bull;</span>
+                <span class="flex items-center gap-2 text-white"><span class="text-lg">🚚</span> ENVÍOS A TODO EL PAÍS</span>
                 <span class="text-zinc-700">&bull;</span>
                 <span class="flex items-center gap-2 text-g3-green"><span class="text-lg">✅</span> RETIRO INMEDIATO EN LOCAL</span>
+                <span class="text-zinc-700">&bull;</span>
+                <span class="flex items-center gap-2 text-white"><span class="text-lg text-g3-green">💵</span> EFECTIVO O TRANSFERENCIA</span>
                 <span class="text-zinc-700">&bull;</span>
                 <span class="flex items-center gap-2 text-white"><span class="text-lg">🛡️</span> COMPRA 100% SEGURA</span>
                 <span class="text-zinc-700">&bull;</span>
-                <span class="flex items-center gap-2 text-white"><span class="animate-pulse text-g3-blue text-lg">⚡</span> PRECIOS MAYORISTAS EN HARDWARE</span>
+                
+                {{-- Bloque 2 (Duplicado para el loop continuo) --}}
+                <span class="flex items-center gap-2 text-white"><span class="animate-pulse text-g3-blue text-lg">⚡</span> LOS MEJORES PRECIOS EN HARDWARE</span>
+                <span class="text-zinc-700">&bull;</span>
+                <span class="flex items-center gap-2 text-white"><span class="text-lg">🚚</span> ENVÍOS A TODO EL PAÍS</span>
                 <span class="text-zinc-700">&bull;</span>
                 <span class="flex items-center gap-2 text-g3-green"><span class="text-lg">✅</span> RETIRO INMEDIATO EN LOCAL</span>
                 <span class="text-zinc-700">&bull;</span>
-                <span class="flex items-center gap-2 text-white"><span class="text-lg">🛡️</span> COMPRA 100% SEGURA</span>
-                <span class="text-zinc-700">&bull;</span>
-                <span class="flex items-center gap-2 text-white"><span class="animate-pulse text-g3-blue text-lg">⚡</span> PRECIOS MAYORISTAS EN HARDWARE</span>
-                <span class="text-zinc-700">&bull;</span>
-                <span class="flex items-center gap-2 text-g3-green"><span class="text-lg">✅</span> RETIRO INMEDIATO EN LOCAL</span>
+                <span class="flex items-center gap-2 text-white"><span class="text-lg text-g3-green">💵</span> EFECTIVO O TRANSFERENCIA</span>
                 <span class="text-zinc-700">&bull;</span>
                 <span class="flex items-center gap-2 text-white"><span class="text-lg">🛡️</span> COMPRA 100% SEGURA</span>
             </div>
@@ -132,9 +139,9 @@ new class extends Component
                     <a href="{{ url('/') }}" wire:navigate class="shrink-0 flex items-center">
                         @if(isset($settings) && $settings->logo_url)
                             <img src="{{ asset('storage/' . $settings->logo_url) }}"
-                                 alt="Logo" class="h-8 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform duration-300">
+                                 alt="Logo" class="h-14 w-auto object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:scale-105 transition-transform duration-300">
                         @else
-                            <x-application-logo class="block h-8 w-auto fill-current text-white transition-colors"/>
+                            <x-application-logo class="block h-14 w-auto fill-current text-white transition-colors drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]"/>
                         @endif
                     </a>
                 </div>
@@ -143,9 +150,9 @@ new class extends Component
                 <div class="flex sm:hidden flex-1 items-center">
                     <a href="{{ url('/') }}" wire:navigate class="shrink-0 flex items-center">
                         @if(isset($settings) && $settings->logo_url)
-                            <img src="{{ asset('storage/' . $settings->logo_url) }}" alt="Logo" class="h-7 w-auto object-contain hover:scale-105 transition-transform duration-300">
+                            <img src="{{ asset('storage/' . $settings->logo_url) }}" alt="Logo" class="h-12 w-auto object-contain hover:scale-105 transition-transform duration-300">
                         @else
-                            <x-application-logo class="block h-7 w-auto fill-current text-white"/>
+                            <x-application-logo class="block h-12 w-auto fill-current text-white"/>
                         @endif
                     </a>
                 </div>
@@ -156,12 +163,8 @@ new class extends Component
                     {{-- ── Izquierda: Logo (Absolute Left/Center on Mobile) ── --}}
                     <div class="flex-shrink-0 flex items-center">
                         <a href="{{ url('/') }}" wire:navigate class="flex items-center gap-2 group pointer-events-auto">
-                            <!-- G3 Logo SVG -->
-                            <svg width="220" height="40" viewBox="0 0 320 60" xmlns="http://www.w3.org/2000/svg" class="group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(126,211,33,0.5)]">
-                              <path d="M 40,10 L 15,10 C 5,10 0,15 0,25 L 0,45 C 0,55 5,60 15,60 L 40,60 L 40,35 L 20,35 L 20,45 L 25,45 L 25,50 L 12,50 L 12,20 L 40,20 Z" fill="#3B82F6"/>
-                              <path d="M 45,10 L 70,10 C 80,10 85,15 85,25 L 85,30 C 85,35 80,37.5 75,37.5 C 80,37.5 85,40 85,45 L 85,50 C 85,60 80,60 70,60 L 45,60 L 45,50 L 70,50 C 75,50 75,47.5 75,45 C 75,42.5 75,40 70,40 L 55,40 L 55,30 L 70,30 C 75,30 75,27.5 75,25 C 75,22.5 75,20 70,20 L 45,20 Z" fill="#7ED321"/>
-                              <text x="95" y="42" font-family="Inter, sans-serif" font-size="28" font-weight="900" fill="#ffffff" letter-spacing="1">TECNOLOGÍA</text>
-                            </svg>
+                            <!-- G3 Logo -->
+                            <x-application-logo class="h-16 w-auto group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(126,211,33,0.5)]" />
                         </a>
                     </div>
                     
@@ -174,6 +177,9 @@ new class extends Component
                             {{ __('Tienda') }}
                         </a>
                         @if(auth()->check() && optional(auth()->user())->isAdmin())
+                            <a href="{{ route('admin.products') }}" wire:navigate class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-bold transition-colors {{ request()->routeIs('admin.products') ? 'border-g3-blue text-white' : 'border-transparent text-gray-300 hover:text-white hover:border-g3-blue' }}">
+                                {{ __('Productos') }}
+                            </a>
                             <a href="{{ route('admin.dashboard') }}" wire:navigate class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-bold transition-colors {{ request()->routeIs('admin.dashboard') ? 'border-g3-blue text-white' : 'border-transparent text-gray-300 hover:text-white hover:border-g3-blue' }}">
                                 {{ __('Panel') }}
                             </a>
@@ -217,6 +223,7 @@ new class extends Component
                                             @endif
                                         </a>
                                         <a href="{{ route('admin.users') }}" wire:navigate class="block w-full px-4 py-2 text-start text-sm text-gray-300 hover:text-white hover:bg-zinc-800 transition-colors">👥 &nbsp;Usuarios</a>
+                                        <a href="{{ route('admin.products') }}" wire:navigate class="block w-full px-4 py-2 text-start text-sm text-gray-300 hover:text-white hover:bg-zinc-800 transition-colors">🏷️ &nbsp;Productos</a>
                                         <a href="{{ route('admin.settings') }}" wire:navigate class="block w-full px-4 py-2 text-start text-sm text-gray-300 hover:text-white hover:bg-zinc-800 transition-colors">⚙️ &nbsp;Configuración</a>
                                         <div class="my-1 border-t border-zinc-800"></div>
                                     @else
@@ -345,6 +352,7 @@ new class extends Component
                                 </div>
                                 <x-dropdown-link :href="route('admin.orders')" wire:navigate>📦 &nbsp;Órdenes</x-dropdown-link>
                                 <x-dropdown-link :href="route('admin.users')" wire:navigate>👥 &nbsp;Usuarios</x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.products')" wire:navigate>🏷️ &nbsp;Productos</x-dropdown-link>
                                 <x-dropdown-link :href="route('admin.settings')" wire:navigate>⚙️ &nbsp;Configuración</x-dropdown-link>
                                 <div class="my-1 border-t border-slate-100 dark:border-slate-700/60"></div>
                             @else
@@ -462,6 +470,9 @@ new class extends Component
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.users')" wire:navigate>
                         <span class="w-5 text-center">👥</span> <span>Usuarios</span>
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.products')" wire:navigate>
+                        <span class="w-5 text-center">🏷️</span> <span>Productos</span>
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.settings')" wire:navigate>
                         <span class="w-5 text-center">⚙️</span> <span>Configuración</span>

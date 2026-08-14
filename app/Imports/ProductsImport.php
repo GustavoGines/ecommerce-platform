@@ -83,18 +83,22 @@ class ProductsImport implements OnEachRow, WithHeadingRow, WithTransactions
             'cost_price' => (float) $costPrice,
             'stock' => $stock,
             'category_id' => $categoryId,
-            'brand_id' => $brandId,
         ];
 
         // Lógica de actualización o creación
         if (!empty($sku)) {
             $productData['sku'] = $sku;
-            Product::updateOrCreate(
+            $product = Product::updateOrCreate(
                 ['sku' => $sku],
                 $productData
             );
         } else {
-            Product::create($productData);
+            $product = Product::create($productData);
+        }
+
+        // Sincronizar relación Many-to-Many de marca
+        if ($brandId) {
+            $product->brands()->sync([$brandId]);
         }
 
         $this->importedCount++;
