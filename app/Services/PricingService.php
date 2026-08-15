@@ -38,17 +38,8 @@ class PricingService
      */
     public function unitPrice(Product $product, int $quantity, $user = null, int $totalCartQuantity = 0): float
     {
-        // 1. Cliente VIP Mayorista
-        if ($user && $user->isWholesaleCustomer()) {
-            return (float) $product->wholesale_price;
-        }
-
-        // 2. Compra por volumen (cantidad total del carrito supera el mínimo global)
-        if ($totalCartQuantity >= self::GLOBAL_WHOLESALE_MIN) {
-            return (float) $product->wholesale_price;
-        }
-
-        // 3. Cliente Minorista
+        // Para G3 (ecommerce-platform) NO se aplica descuento mayorista de ningún tipo.
+        // Solo aplica descuento en efectivo/transferencia al final de la compra.
         return (float) $product->retail_price;
     }
 }
