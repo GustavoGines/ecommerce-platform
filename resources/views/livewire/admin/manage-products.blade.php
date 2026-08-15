@@ -48,6 +48,7 @@ new #[Layout('layouts.app')] class extends Component {
     public $search = '';
     public $filter_category_id = '';
     public $filter_brand_id = '';
+    public $filter_stock = '';
     public $perPage = 50;
 
     // Selections and Visibility
@@ -126,6 +127,11 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $this->resetPage();
     }
+    
+    public function updatedFilterStock()
+    {
+        $this->resetPage();
+    }
 
     public function with(): array
     {
@@ -147,6 +153,13 @@ new #[Layout('layouts.app')] class extends Component {
             $query->whereHas('brands', function($q) {
                 $q->where('brands.id', $this->filter_brand_id);
             });
+        }
+
+        // Filtro por stock
+        if ($this->filter_stock === 'in_stock') {
+            $query->where('products.stock', '>', 0);
+        } elseif ($this->filter_stock === 'out_of_stock') {
+            $query->where('products.stock', '<=', 0);
         }
 
         // Ordenamiento: category y brand usan LEFT JOIN para operar en SQL
@@ -632,8 +645,13 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                     </div>
                     
-                    {{-- Filtros Rápidos (Categoría y Marca) --}}
+                    {{-- Filtros Rápidos (Categoría, Marca, Stock) --}}
                     <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                        <select wire:model.live="filter_stock" class="flex-1 min-w-[140px] sm:w-40 py-1.5 px-3 text-xs font-medium bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] transition-colors">
+                            <option value="">Cualquier Stock</option>
+                            <option value="in_stock">En Stock (>0)</option>
+                            <option value="out_of_stock">Agotados (0)</option>
+                        </select>
                         <select wire:model.live="filter_category_id" class="flex-1 min-w-[140px] sm:w-40 py-1.5 px-3 text-xs font-medium bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] transition-colors">
                             <option value="">Todas las Categorías</option>
                             @foreach($categories as $cat)
