@@ -633,14 +633,14 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
                     
                     {{-- Filtros Rápidos (Categoría y Marca) --}}
-                    <div class="flex items-center gap-2 w-full lg:w-auto">
-                        <select wire:model.live="filter_category_id" class="flex-1 sm:w-40 py-1.5 px-3 text-xs font-medium bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] transition-colors">
+                    <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                        <select wire:model.live="filter_category_id" class="flex-1 min-w-[140px] sm:w-40 py-1.5 px-3 text-xs font-medium bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] transition-colors">
                             <option value="">Todas las Categorías</option>
                             @foreach($categories as $cat)
                                 <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                             @endforeach
                         </select>
-                        <select wire:model.live="filter_brand_id" class="flex-1 sm:w-40 py-1.5 px-3 text-xs font-medium bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] transition-colors">
+                        <select wire:model.live="filter_brand_id" class="flex-1 min-w-[140px] sm:w-40 py-1.5 px-3 text-xs font-medium bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] transition-colors">
                             <option value="">Todas las Marcas</option>
                             @foreach($brands as $brand)
                                 <option value="{{ $brand->id }}">{{ $brand->name }}</option>
@@ -648,8 +648,8 @@ new #[Layout('layouts.app')] class extends Component {
                         </select>
                         
                         @if(tenant('id') === 'g3')
-                            <div class="hidden sm:flex items-center gap-1.5 text-[10px] text-gray-500 font-medium whitespace-nowrap bg-white/50 dark:bg-gray-800/50 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm" title="Última actualización desde Google Sheets">
-                                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <div class="flex items-center justify-center w-full sm:w-auto gap-1.5 text-[10px] text-gray-500 font-medium whitespace-nowrap bg-white/50 dark:bg-gray-800/50 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm" title="Última actualización desde Google Sheets">
+                                <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 Sync: {{ is_numeric(cache('last_price_sync_at')) ? \Carbon\Carbon::createFromTimestamp(cache('last_price_sync_at'))->timezone('America/Argentina/Buenos_Aires')->format('d/m H:i') : 'Actualizado' }}
                             </div>
                         @endif
@@ -712,7 +712,7 @@ new #[Layout('layouts.app')] class extends Component {
                             @foreach($visibleColumns as $key => $val)
                                 <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300 mb-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 p-1 rounded">
                                     <input type="checkbox" wire:model.live="visibleColumns.{{ $key }}" class="rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]">
-                                    <span class="capitalize">{{ $key === 'retail' ? 'Precio Lista' : ($key === 'wholesale' ? 'Mayorista' : ($key === 'cost' ? 'Costo' : $key)) }}</span>
+                                    <span class="capitalize">{{ $key === 'retail' ? 'Precio Lista' : ($key === 'wholesale' ? 'Efectivo/Transf.' : ($key === 'cost' ? 'Costo' : $key)) }}</span>
                                 </label>
                             @endforeach
                         </div>
@@ -763,7 +763,7 @@ new #[Layout('layouts.app')] class extends Component {
 
                             @if($visibleColumns['wholesale'])
                             <th class="px-6 py-4 text-xs font-bold text-[var(--color-primary)] uppercase tracking-wider cursor-pointer select-none" wire:click="sortBy('wholesale_price')">
-                                Mayorista @if($sortField === 'wholesale_price') <span class="inline-block ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
+                                Efectivo/Transf. @if($sortField === 'wholesale_price') <span class="inline-block ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                             </th>
                             @endif
 
@@ -1171,9 +1171,9 @@ new #[Layout('layouts.app')] class extends Component {
                                     <input wire:model="wholesale_min_quantity" type="number" min="1" class="w-full py-2 px-2 sm:px-3 bg-white dark:bg-gray-900 border border-[var(--color-primary)]/40 rounded-lg text-xs sm:text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-[var(--color-primary)]">
                                     @error('wholesale_min_quantity') <span class="text-red-500 text-[9px] sm:text-[10px]">{{ $message }}</span> @enderror
                                 </div>
-                                <!-- Desc. Mayorista -->
+                                <!-- Desc. Efectivo -->
                                 <div>
-                                    <label class="block text-[var(--color-primary)] text-[9px] sm:text-xs font-bold mb-1 uppercase tracking-wider truncate" title="Desc. Mayorista">Desc. M.</label>
+                                    <label class="block text-[var(--color-primary)] text-[9px] sm:text-xs font-bold mb-1 uppercase tracking-wider truncate" title="Desc. Efectivo">Desc. Efe.</label>
                                     <div class="relative">
                                         <input wire:model.live.debounce.300ms="wholesale_discount" type="number" class="w-full py-2 pl-2 sm:pl-3 pr-4 sm:pr-6 bg-white dark:bg-gray-900 border border-[var(--color-primary)]/40 rounded-lg text-xs sm:text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-[var(--color-primary)]">
                                         <div class="absolute inset-y-0 right-0 pr-1.5 sm:pr-2 flex items-center pointer-events-none">
@@ -1183,9 +1183,9 @@ new #[Layout('layouts.app')] class extends Component {
                                     @error('wholesale_discount') <span class="text-red-500 text-[9px] sm:text-[10px]">{{ $message }}</span> @enderror
                                 </div>
 
-                                <!-- Precio Mayorista -->
+                                <!-- Precio Efectivo -->
                                 <div>
-                                    <label class="block text-[var(--color-primary)] text-[9px] sm:text-xs font-bold mb-1 uppercase tracking-wider truncate" title="Precio Final Mayorista">P. Mayorista</label>
+                                    <label class="block text-[var(--color-primary)] text-[9px] sm:text-xs font-bold mb-1 uppercase tracking-wider truncate" title="Precio Final Efectivo">P. Efectivo</label>
                                     <div class="relative">
                                         <div class="absolute inset-y-0 left-0 pl-1.5 sm:pl-2.5 flex items-center pointer-events-none">
                                             <span class="text-[var(--color-primary)] opacity-70 font-bold text-xs sm:text-sm">$</span>
@@ -1350,7 +1350,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <select wire:model="massField" class="w-full py-3 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white font-bold">
                                     <option value="cost_price">Precio de Costo</option>
                                     <option value="retail_price">Precio Lista</option>
-                                    <option value="wholesale_price">Precio Mayorista</option>
+                                    <option value="wholesale_price">Precio Efectivo/Transf.</option>
                                 </select>
                             </div>
                         </div>
@@ -1392,8 +1392,8 @@ new #[Layout('layouts.app')] class extends Component {
                  class="inline-block align-bottom bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full relative">
                 
                 <div class="px-4 sm:px-8 pt-6 sm:pt-8 pb-6 sm:pb-8">
-                    <div class="flex justify-between items-center mb-6">
-                        <div class="flex items-center gap-4">
+                    <div class="flex justify-between items-start sm:items-center mb-6">
+                        <div class="flex flex-wrap items-center gap-2 sm:gap-4">
                             <h3 class="text-xl sm:text-2xl leading-6 font-bold text-gray-900 dark:text-white tracking-tight">Gestión de Marcas</h3>
                             <button wire:click="$set('manageBrandId', 'new'); $set('manageBrandName', '')" class="bg-[var(--color-primary)]/10 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/20 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors">➕ Nueva Marca</button>
                         </div>
@@ -1406,43 +1406,47 @@ new #[Layout('layouts.app')] class extends Component {
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead class="bg-gray-100 dark:bg-gray-900 sticky top-0 z-10">
                                 <tr>
-                                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nombre</th>
-                                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Productos</th>
-                                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acciones</th>
+                                    <th class="px-3 sm:px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nombre</th>
+                                    <th class="px-3 sm:px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Productos</th>
+                                    <th class="px-3 sm:px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
                                 @if($manageBrandId === 'new')
                                 <tr class="bg-green-50/50 dark:bg-green-900/10">
-                                    <td class="px-6 py-3" colspan="2">
-                                        <input wire:model="manageBrandName" type="text" class="w-full py-2 px-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] dark:bg-gray-900 dark:text-white" @keydown.enter="$wire.saveBrand()" placeholder="Nombre de la nueva marca">
+                                    <td class="px-3 sm:px-6 py-3" colspan="2">
+                                        <input wire:model="manageBrandName" type="text" class="w-full py-2 px-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] dark:bg-gray-900 dark:text-white" @keydown.enter="$wire.saveBrand()" placeholder="Nueva marca">
                                         @error('manageBrandName') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                                     </td>
-                                    <td class="px-6 py-3 text-right">
-                                        <button wire:click="saveBrand" class="text-white bg-green-500 hover:bg-green-600 font-bold py-1.5 px-3 rounded text-xs mr-2 transition-colors">Guardar</button>
-                                        <button wire:click="$set('manageBrandId', null)" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs font-bold transition-colors">Cancelar</button>
+                                    <td class="px-3 sm:px-6 py-3 text-right">
+                                        <div class="flex flex-col sm:flex-row justify-end gap-2">
+                                            <button wire:click="saveBrand" class="text-white bg-green-500 hover:bg-green-600 font-bold py-1.5 px-3 rounded text-xs transition-colors">Guardar</button>
+                                            <button wire:click="$set('manageBrandId', null)" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs font-bold transition-colors">Cancelar</button>
+                                        </div>
                                     </td>
                                 </tr>
                                 @endif
                                 @foreach($brands as $brand)
                                     @if($manageBrandId === $brand->id)
                                     <tr class="bg-blue-50/50 dark:bg-blue-900/10">
-                                        <td class="px-6 py-3" colspan="2">
+                                        <td class="px-3 sm:px-6 py-3" colspan="2">
                                             <input wire:model="manageBrandName" type="text" class="w-full py-2 px-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] dark:bg-gray-900 dark:text-white" @keydown.enter="$wire.saveBrand()" placeholder="Nombre de la marca">
                                             @error('manageBrandName') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                                         </td>
-                                        <td class="px-6 py-3 text-right">
-                                            <button wire:click="saveBrand" class="text-white bg-green-500 hover:bg-green-600 font-bold py-1.5 px-3 rounded text-xs mr-2 transition-colors">Guardar</button>
-                                            <button wire:click="$set('manageBrandId', null)" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs font-bold transition-colors">Cancelar</button>
+                                        <td class="px-3 sm:px-6 py-3 text-right">
+                                            <div class="flex flex-col sm:flex-row justify-end gap-2">
+                                                <button wire:click="saveBrand" class="text-white bg-green-500 hover:bg-green-600 font-bold py-1.5 px-3 rounded text-xs transition-colors">Guardar</button>
+                                                <button wire:click="$set('manageBrandId', null)" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs font-bold transition-colors">Cancelar</button>
+                                            </div>
                                         </td>
                                     </tr>
                                     @else
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">{{ $brand->name }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-gray-500 dark:text-gray-400">
+                                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-gray-900 dark:text-white">{{ $brand->name }}</td>
+                                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-center font-bold text-gray-500 dark:text-gray-400">
                                             <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">{{ $brand->products()->count() }}</span>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex justify-end items-center gap-2 sm:gap-4">
                                                 <button wire:click="editBrand({{ $brand->id }})" title="Editar" class="text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 p-1.5 sm:p-0 rounded-lg font-bold transition-colors flex items-center">
                                                     <span class="hidden sm:inline">Editar</span>
@@ -1487,8 +1491,8 @@ new #[Layout('layouts.app')] class extends Component {
                  class="inline-block align-bottom bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full relative">
                 
                 <div class="px-4 sm:px-8 pt-6 sm:pt-8 pb-6 sm:pb-8">
-                    <div class="flex justify-between items-center mb-6">
-                        <div class="flex items-center gap-4">
+                    <div class="flex justify-between items-start sm:items-center mb-6">
+                        <div class="flex flex-wrap items-center gap-2 sm:gap-4">
                             <h3 class="text-xl sm:text-2xl leading-6 font-bold text-gray-900 dark:text-white tracking-tight">Gestión Categorías</h3>
                             <button wire:click="$set('manageCategoryId', 'new'); $set('manageCategoryName', '')" class="bg-[var(--color-primary)]/10 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/20 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors">➕ Nueva Categoría</button>
                         </div>
@@ -1509,35 +1513,39 @@ new #[Layout('layouts.app')] class extends Component {
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
                                 @if($manageCategoryId === 'new')
                                 <tr class="bg-green-50/50 dark:bg-green-900/10">
-                                    <td class="px-6 py-3" colspan="2">
-                                        <input wire:model="manageCategoryName" type="text" class="w-full py-2 px-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] dark:bg-gray-900 dark:text-white" @keydown.enter="$wire.saveCategory()" placeholder="Nombre de la nueva categoría">
+                                    <td class="px-3 sm:px-6 py-3" colspan="2">
+                                        <input wire:model="manageCategoryName" type="text" class="w-full py-2 px-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] dark:bg-gray-900 dark:text-white" @keydown.enter="$wire.saveCategory()" placeholder="Nueva categoría">
                                         @error('manageCategoryName') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                                     </td>
-                                    <td class="px-6 py-3 text-right">
-                                        <button wire:click="saveCategory" class="text-white bg-green-500 hover:bg-green-600 font-bold py-1.5 px-3 rounded text-xs mr-2 transition-colors">Guardar</button>
-                                        <button wire:click="$set('manageCategoryId', null)" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs font-bold transition-colors">Cancelar</button>
+                                    <td class="px-3 sm:px-6 py-3 text-right">
+                                        <div class="flex flex-col sm:flex-row justify-end gap-2">
+                                            <button wire:click="saveCategory" class="text-white bg-green-500 hover:bg-green-600 font-bold py-1.5 px-3 rounded text-xs transition-colors">Guardar</button>
+                                            <button wire:click="$set('manageCategoryId', null)" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs font-bold transition-colors">Cancelar</button>
+                                        </div>
                                     </td>
                                 </tr>
                                 @endif
                                 @foreach($categories as $category)
                                     @if($manageCategoryId === $category->id)
                                     <tr class="bg-blue-50/50 dark:bg-blue-900/10">
-                                        <td class="px-6 py-3" colspan="2">
+                                        <td class="px-3 sm:px-6 py-3" colspan="2">
                                             <input wire:model="manageCategoryName" type="text" class="w-full py-2 px-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] dark:bg-gray-900 dark:text-white" @keydown.enter="$wire.saveCategory()" placeholder="Nombre de la categoría">
                                             @error('manageCategoryName') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                                         </td>
-                                        <td class="px-6 py-3 text-right">
-                                            <button wire:click="saveCategory" class="text-white bg-green-500 hover:bg-green-600 font-bold py-1.5 px-3 rounded text-xs mr-2 transition-colors">Guardar</button>
-                                            <button wire:click="$set('manageCategoryId', null)" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs font-bold transition-colors">Cancelar</button>
+                                        <td class="px-3 sm:px-6 py-3 text-right">
+                                            <div class="flex flex-col sm:flex-row justify-end gap-2">
+                                                <button wire:click="saveCategory" class="text-white bg-green-500 hover:bg-green-600 font-bold py-1.5 px-3 rounded text-xs transition-colors">Guardar</button>
+                                                <button wire:click="$set('manageCategoryId', null)" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xs font-bold transition-colors">Cancelar</button>
+                                            </div>
                                         </td>
                                     </tr>
                                     @else
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">{{ $category->name }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center font-bold text-gray-500 dark:text-gray-400">
+                                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-gray-900 dark:text-white">{{ $category->name }}</td>
+                                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-center font-bold text-gray-500 dark:text-gray-400">
                                             <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">{{ $category->products()->count() }}</span>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div class="flex justify-end items-center gap-2 sm:gap-4">
                                                 <button wire:click="editCategory({{ $category->id }})" title="Editar" class="text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 p-1.5 sm:p-0 rounded-lg font-bold transition-colors flex items-center">
                                                     <span class="hidden sm:inline">Editar</span>

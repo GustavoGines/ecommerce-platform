@@ -415,7 +415,7 @@ new class extends Component
                 <livewire:cart-icon />
 
                 <button @click="open = !open"
-                        class="relative p-2 rounded-xl {{ $isModernLight ? 'text-white hover:bg-white/10' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }} transition-all"
+                        class="relative p-2 rounded-xl {{ ($isModernLight || $isLuxury) ? 'text-white hover:bg-white/10' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }} transition-all"
                         aria-label="Menú">
                     @if(optional(auth()->user())->isAdmin() && $pendingOrdersCount > 0)
                         <span class="absolute top-1 right-1 flex h-2.5 w-2.5">
