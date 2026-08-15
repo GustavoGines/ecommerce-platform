@@ -666,9 +666,9 @@ new #[Layout('layouts.app')] class extends Component {
                         </select>
                         
                         @if(tenant('id') === 'g3')
-                            <div class="flex items-center justify-center w-full sm:w-auto gap-1.5 text-[10px] text-gray-500 font-medium whitespace-nowrap bg-white/50 dark:bg-gray-800/50 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm" title="Última actualización desde Google Sheets">
+                            <div class="flex items-center justify-center w-full sm:w-auto gap-1.5 text-[10px] text-gray-500 font-medium whitespace-nowrap bg-white/50 dark:bg-gray-800/50 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm" title="Última actualización de productos">
                                 <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Sync: {{ is_numeric(cache('last_price_sync_at')) ? \Carbon\Carbon::createFromTimestamp(cache('last_price_sync_at'))->timezone('America/Argentina/Buenos_Aires')->format('d/m H:i') : 'Actualizado' }}
+                                Sync: {{ \App\Models\Product::max('updated_at') ? \Carbon\Carbon::parse(\App\Models\Product::max('updated_at'))->timezone('America/Argentina/Buenos_Aires')->format('d/m H:i') : 'Nunca' }}
                             </div>
                         @endif
                     </div>
