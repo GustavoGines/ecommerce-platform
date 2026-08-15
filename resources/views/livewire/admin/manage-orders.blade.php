@@ -397,12 +397,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <!-- Controles de Estado y Borrar -->
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2 w-full" @click.stop>
-                                <select wire:key="select-mob-{{ $order->id }}-{{ $order->status }}" wire:change="updateStatus({{ $order->id }}, $event.target.value)" class="flex-1 text-[10px] uppercase font-bold py-1 px-2 border-0 rounded-md ring-1 ring-inset focus:ring-2 focus:ring-inset focus:ring-[var(--color-primary)] transition-colors cursor-pointer outline-none
-                                    @if($order->status === 'pendiente') bg-yellow-50 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-500/10 dark:text-yellow-500 dark:ring-yellow-500/20
-                                    @elseif($order->status === 'pagado') bg-blue-50 text-blue-800 ring-blue-600/20 dark:bg-blue-500/10 dark:text-blue-500 dark:ring-blue-500/20
-                                    @elseif($order->status === 'completado') bg-green-50 text-green-800 ring-green-600/20 dark:bg-green-500/10 dark:text-green-500 dark:ring-green-500/20
-                                    @elseif($order->status === 'cancelado') bg-red-50 text-red-800 ring-red-600/20 dark:bg-red-500/10 dark:text-red-500 dark:ring-red-500/20
-                                    @endif">
+                                <select wire:key="select-mob-{{ $order->id }}-{{ $order->status }}" wire:change="updateStatus({{ $order->id }}, $event.target.value)" class="flex-1 text-[10px] uppercase font-bold py-1 px-2 border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-md focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-colors cursor-pointer outline-none">
                                     <option value="pendiente" {{ $order->status === 'pendiente' ? 'selected' : '' }}>Pendiente</option>
                                     <option value="pagado" {{ $order->status === 'pagado' ? 'selected' : '' }}>Pagado</option>
                                     <option value="completado" {{ $order->status === 'completado' ? 'selected' : '' }}>Completado</option>
