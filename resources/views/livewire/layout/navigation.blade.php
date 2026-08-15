@@ -156,17 +156,17 @@ new class extends Component
                 {{-- ════════════ LUXURY NAVBAR ════════════ --}}
                 {{-- Izquierda: Links --}}
                 <div class="hidden sm:flex flex-1 items-center gap-6">
-                    <x-nav-link :href="route('home')" :active="request()->routeIs('home')" wire:navigate>
+                    <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
                         {{ __('Inicio') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('shop')" :active="request()->routeIs('shop')" wire:navigate>
+                    <x-nav-link :href="route('shop')" :active="request()->routeIs('shop')">
                         {{ __('Tienda') }}
                     </x-nav-link>
                     @if(auth()->check() && optional(auth()->user())->isAdmin())
-                        <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" wire:navigate>
+                        <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                             {{ __('Panel') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('admin.products')" :active="request()->routeIs('admin.products')" wire:navigate>
+                        <x-nav-link :href="route('admin.products')" :active="request()->routeIs('admin.products')">
                             {{ __('Productos') }}
                         </x-nav-link>
                     @endif
@@ -174,7 +174,7 @@ new class extends Component
 
                 {{-- Centro: Logo (Absolute Center) --}}
                 <div class="hidden sm:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center">
-                    <a href="{{ url('/') }}" wire:navigate class="shrink-0 flex items-center">
+                    <a href="{{ url('/') }}" class="shrink-0 flex items-center">
                         @if(isset($settings) && $settings->logo_url)
                             <img src="{{ tenant_asset($settings->logo_url) }}"
                                  alt="Logo" class="h-8 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform duration-300">
@@ -186,7 +186,7 @@ new class extends Component
                 
                 {{-- Mobile Solo Logo (se ve en movil cuando links estan ocultos) --}}
                 <div class="flex sm:hidden flex-1 items-center">
-                    <a href="{{ url('/') }}" wire:navigate class="shrink-0 flex items-center">
+                    <a href="{{ url('/') }}" class="shrink-0 flex items-center">
                         @if(isset($settings) && $settings->logo_url)
                             <img src="{{ tenant_asset($settings->logo_url) }}" alt="Logo" class="h-7 w-auto object-contain hover:scale-105 transition-transform duration-300">
                         @else
@@ -200,17 +200,17 @@ new class extends Component
                 <div class="flex items-center justify-between flex-1 relative z-10">
                     {{-- ── Izquierda: Links ── --}}
                     <div class="hidden sm:flex items-center gap-6 flex-1">
-                        <x-nav-link :href="route('home')" :active="request()->routeIs('home')" wire:navigate class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
+                        <x-nav-link :href="route('home')" :active="request()->routeIs('home')" class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
                             {{ __('Inicio') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('shop')" :active="request()->routeIs('shop')" wire:navigate class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
+                        <x-nav-link :href="route('shop')" :active="request()->routeIs('shop')" class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
                             {{ __('Tienda') }}
                         </x-nav-link>
                         @if(auth()->check() && optional(auth()->user())->isAdmin())
-                            <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" wire:navigate class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
+                            <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
                                 {{ __('Panel') }}
                             </x-nav-link>
-                            <x-nav-link :href="route('admin.products')" :active="request()->routeIs('admin.products')" wire:navigate class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
+                            <x-nav-link :href="route('admin.products')" :active="request()->routeIs('admin.products')" class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
                                 {{ __('Productos') }}
                             </x-nav-link>
                         @endif
@@ -218,7 +218,7 @@ new class extends Component
 
                     {{-- ── Centro: Logo (Centrado dinámico entre links y buscador) ── --}}
                     <div class="hidden sm:flex items-center justify-center z-[100] px-4">
-                        <a href="{{ url('/') }}" wire:navigate class="shrink-0 flex items-center justify-center relative h-20 w-48 sm:w-64 hover:scale-105 transition-transform pointer-events-auto">
+                        <a href="{{ url('/') }}" class="shrink-0 flex items-center justify-center relative h-20 w-48 sm:w-64 hover:scale-105 transition-transform pointer-events-auto">
                             @if(isset($settings) && $settings->logo_url)
                                 <img src="{{ tenant_asset($settings->logo_url) }}"
                                      alt="Logo" class="absolute max-w-none pointer-events-none drop-shadow-[0_10px_20px_rgba(220,38,38,0.3)]" style="top: 72%; left: 50%; width: 220px; height: auto; transform: translate(-50%, -50%); animation: writeReveal 2.5s ease-out 0.5s both;">
@@ -233,7 +233,7 @@ new class extends Component
                     
                     {{-- Logo en Móvil (Visible solo en pantallas chicas) --}}
                     <div class="flex sm:hidden flex-1 items-center justify-start z-[100]">
-                        <a href="{{ url('/') }}" wire:navigate class="shrink-0 flex items-center justify-center relative h-16 w-48 ml-4">
+                        <a href="{{ url('/') }}" class="shrink-0 flex items-center justify-center relative h-16 w-48 ml-4">
                             @if(isset($settings) && $settings->logo_url)
                                 <img src="{{ tenant_asset($settings->logo_url) }}"
                                      alt="Logo" class="absolute max-w-none pointer-events-none drop-shadow-md" style="top: 72%; left: 50%; width: 180px; height: auto; transform: translate(-50%, -50%); animation: writeReveal 2.5s ease-out 0.5s both;">
@@ -271,19 +271,19 @@ new class extends Component
                                         <div class="px-3 py-1.5">
                                             <p class="text-[10px] uppercase tracking-widest font-bold text-gray-500 dark:text-gray-400">Administración</p>
                                         </div>
-                                        <x-dropdown-link :href="route('admin.orders')" wire:navigate class="flex items-center justify-between w-full">
+                                        <x-dropdown-link :href="route('admin.orders')" class="flex items-center justify-between w-full">
                                             <span>📦 &nbsp;Órdenes</span>
                                             @if($pendingOrdersCount > 0)
                                                 <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{{ $pendingOrdersCount }}</span>
                                             @endif
                                         </x-dropdown-link>
-                                        <x-dropdown-link :href="route('admin.users')" wire:navigate>👥 &nbsp;Usuarios</x-dropdown-link>
-                                        <x-dropdown-link :href="route('admin.settings')" wire:navigate>⚙️ &nbsp;Configuración</x-dropdown-link>
+                                        <x-dropdown-link :href="route('admin.users')">👥 &nbsp;Usuarios</x-dropdown-link>
+                                        <x-dropdown-link :href="route('admin.settings')">⚙️ &nbsp;Configuración</x-dropdown-link>
                                         <div class="my-1 border-t border-gray-100 dark:border-zinc-800"></div>
                                     @else
-                                        <x-dropdown-link :href="route('my-orders')" wire:navigate>🛍 &nbsp;Mis Órdenes</x-dropdown-link>
+                                        <x-dropdown-link :href="route('my-orders')">🛍 &nbsp;Mis Órdenes</x-dropdown-link>
                                     @endif
-                                    <x-dropdown-link :href="route('profile')" wire:navigate>👤 &nbsp;Mi Perfil</x-dropdown-link>
+                                    <x-dropdown-link :href="route('profile')">👤 &nbsp;Mi Perfil</x-dropdown-link>
                                     <div class="my-1 border-t border-gray-100 dark:border-zinc-800"></div>
                                     <button wire:click="logout" class="w-full text-start">
                                         <x-dropdown-link class="text-red-600 hover:text-red-700">🚪 &nbsp;Cerrar Sesión</x-dropdown-link>
@@ -305,7 +305,7 @@ new class extends Component
                 {{-- ── Izquierda: Logo + Links ── --}}
                 <div class="flex items-center gap-8 flex-1">
                     {{-- Logo --}}
-                    <a href="{{ url('/') }}" wire:navigate class="shrink-0 flex items-center">
+                    <a href="{{ url('/') }}" class="shrink-0 flex items-center">
                         @if(isset($settings) && $settings->logo_url)
                             <img src="{{ tenant_asset($settings->logo_url) }}"
                                  alt="Logo" class="h-16 w-auto object-contain drop-shadow-md">
@@ -316,17 +316,17 @@ new class extends Component
 
                     {{-- Nav links desktop --}}
                     <div class="hidden sm:flex items-center gap-1">
-                        <x-nav-link :href="route('home')" :active="request()->routeIs('home')" wire:navigate>
+                        <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
                             {{ __('Inicio') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('shop')" :active="request()->routeIs('shop')" wire:navigate>
+                        <x-nav-link :href="route('shop')" :active="request()->routeIs('shop')">
                             {{ __('Tienda') }}
                         </x-nav-link>
                         @if(auth()->check() && optional(auth()->user())->isAdmin())
-                            <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" wire:navigate>
+                            <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                                 {{ __('Panel') }}
                             </x-nav-link>
-                            <x-nav-link :href="route('admin.products')" :active="request()->routeIs('admin.products')" wire:navigate>
+                            <x-nav-link :href="route('admin.products')" :active="request()->routeIs('admin.products')">
                                 {{ __('Productos') }}
                             </x-nav-link>
                         @endif
@@ -381,14 +381,14 @@ new class extends Component
                                 <div class="px-3 py-1.5">
                                     <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500">Administración</p>
                                 </div>
-                                <x-dropdown-link :href="route('admin.orders')" wire:navigate>📦 &nbsp;Órdenes</x-dropdown-link>
-                                <x-dropdown-link :href="route('admin.users')" wire:navigate>👥 &nbsp;Usuarios</x-dropdown-link>
-                                <x-dropdown-link :href="route('admin.settings')" wire:navigate>⚙️ &nbsp;Configuración</x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.orders')">📦 &nbsp;Órdenes</x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.users')">👥 &nbsp;Usuarios</x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.settings')">⚙️ &nbsp;Configuración</x-dropdown-link>
                                 <div class="my-1 border-t border-slate-100 dark:border-slate-700/60"></div>
                             @else
-                                <x-dropdown-link :href="route('my-orders')" wire:navigate>🛍 &nbsp;Mis Órdenes</x-dropdown-link>
+                                <x-dropdown-link :href="route('my-orders')">🛍 &nbsp;Mis Órdenes</x-dropdown-link>
                             @endif
-                            <x-dropdown-link :href="route('profile')" wire:navigate>👤 &nbsp;Mi Perfil</x-dropdown-link>
+                            <x-dropdown-link :href="route('profile')">👤 &nbsp;Mi Perfil</x-dropdown-link>
                             <div class="my-1 border-t border-slate-100 dark:border-slate-700/60"></div>
                             <button wire:click="logout" class="w-full text-start">
                                 <x-dropdown-link>🚪 &nbsp;Cerrar Sesión</x-dropdown-link>
@@ -440,17 +440,17 @@ new class extends Component
     <div :class="{'block': open, 'hidden': !open}"
          class="hidden sm:hidden transition-colors duration-300 {{ $isLuxury ? 'bg-[#0a0f1c] border-t border-white/5' : 'bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800' }}">
         <div class="pt-4 pb-3 space-y-1 px-4">
-            <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')" wire:navigate>
+            <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
                 <span class="w-5 text-center">🏠</span> <span>Inicio</span>
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('shop')" :active="request()->routeIs('shop')" wire:navigate>
+            <x-responsive-nav-link :href="route('shop')" :active="request()->routeIs('shop')">
                 <span class="w-5 text-center">🛍️</span> <span>Tienda</span>
             </x-responsive-nav-link>
             @if(auth()->check() && optional(auth()->user())->isAdmin())
-                <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" wire:navigate>
+                <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                     <span class="w-5 text-center">📊</span> <span>Panel</span>
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.products')" :active="request()->routeIs('admin.products')" wire:navigate>
+                <x-responsive-nav-link :href="route('admin.products')" :active="request()->routeIs('admin.products')">
                     <span class="w-5 text-center">🏷️</span> <span>Productos</span>
                 </x-responsive-nav-link>
             @endif
@@ -473,7 +473,7 @@ new class extends Component
             </div>
             <div class="space-y-1 px-4">
                 @if(optional(auth()->user())->isAdmin())
-                    <x-responsive-nav-link :href="route('admin.orders')" wire:navigate>
+                    <x-responsive-nav-link :href="route('admin.orders')">
                         <div class="flex items-center justify-between w-full">
                             <div class="flex items-center gap-3">
                                 <span class="w-5 text-center">📦</span> <span>Gestión de Órdenes</span>
@@ -483,18 +483,18 @@ new class extends Component
                             @endif
                         </div>
                     </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('admin.users')" wire:navigate>
+                    <x-responsive-nav-link :href="route('admin.users')">
                         <span class="w-5 text-center">👥</span> <span>Usuarios</span>
                     </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('admin.settings')" wire:navigate>
+                    <x-responsive-nav-link :href="route('admin.settings')">
                         <span class="w-5 text-center">⚙️</span> <span>Configuración</span>
                     </x-responsive-nav-link>
                 @else
-                    <x-responsive-nav-link :href="route('my-orders')" wire:navigate>
+                    <x-responsive-nav-link :href="route('my-orders')">
                         <span class="w-5 text-center">🛍</span> <span>Mis Órdenes</span>
                     </x-responsive-nav-link>
                 @endif
-                <x-responsive-nav-link :href="route('profile')" wire:navigate>
+                <x-responsive-nav-link :href="route('profile')">
                     <span class="w-5 text-center">👤</span> <span>Mi Perfil</span>
                 </x-responsive-nav-link>
                 <div class="my-2 border-t border-slate-100 dark:border-slate-800/60 mx-4"></div>
