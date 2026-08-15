@@ -15,10 +15,15 @@ new class extends Component {
             $this->theme = $settings->theme_name ?? 'stealth';
             $this->storeName = $settings->store_name ?? 'Premium Hardware';
             
-            // Si es JCG usa el del setting (controles), sino usa la de hardware (G3)
-            $this->tagline = ($this->theme === 'modern-light') 
-                ? ($settings->store_tagline ?? 'El mayor catálogo de controles remotos y electrónica. Ventas por mayor y menor.')
-                : 'Los mejores precios en hardware y tecnología.';
+            // Siempre priorizamos el slogan configurado en la base de datos.
+            // Si no hay ninguno, usamos un texto por defecto según el tema.
+            if (!empty($settings->store_tagline)) {
+                $this->tagline = $settings->store_tagline;
+            } else {
+                $this->tagline = ($this->theme === 'modern-light') 
+                    ? 'Los mejores precios en hardware y tecnología.'
+                    : 'El mayor catálogo de controles remotos y electrónica. Ventas por mayor y menor.';
+            }
                 
             $this->social = is_array($settings->social_links) ? $settings->social_links : json_decode($settings->social_links ?? '{}', true);
             
