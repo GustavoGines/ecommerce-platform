@@ -338,6 +338,38 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
                 </div>
 
+                <!-- Configuración Mercado Pago -->
+                <div class="bg-white dark:bg-gray-800 shadow sm:rounded-xl mb-8 border border-gray-200 dark:border-gray-700">
+                    <div class="px-4 py-5 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                            Integración con Mercado Pago
+                        </h3>
+                        <div class="mt-2 max-w-xl text-sm text-gray-500 dark:text-gray-400">
+                            <p>Ingresá tus credenciales de Mercado Pago. Si dejás esto vacío, el botón de Mercado Pago no aparecerá en el Checkout y el único medio será coordinar por WhatsApp.</p>
+                        </div>
+                    </div>
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <div class="sm:col-span-6">
+                                <label for="mp_access_token" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Access Token
+                                </label>
+                                <input type="password" wire:model="mp_access_token" id="mp_access_token" class="w-full py-2.5 px-4 bg-gray-50 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all shadow-sm dark:shadow-none" placeholder="APP_USR-...">
+                                @error('mp_access_token') <p class="mt-2 text-sm font-bold text-red-500">{{ $message }}</p> @enderror
+                            </div>
+
+                            <div class="sm:col-span-6">
+                                <label for="mp_public_key" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Public Key
+                                </label>
+                                <input type="text" wire:model="mp_public_key" id="mp_public_key" class="w-full py-2.5 px-4 bg-gray-50 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all shadow-sm dark:shadow-none" placeholder="APP_USR-...">
+                                @error('mp_public_key') <p class="mt-2 text-sm font-bold text-red-500">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex flex-col sm:flex-row items-center justify-end">
                     <button class="w-full sm:w-auto text-white font-bold py-3 px-8 rounded-full transition-all hover:opacity-90 shadow-lg hover:shadow-xl hover:-translate-y-0.5" style="background-color: var(--color-primary); box-shadow: 0 4px 14px 0 var(--color-primary-glow);" type="submit">
                         Guardar Configuración
