@@ -23,7 +23,7 @@ new #[Layout('layouts.app')] class extends Component {
     public $cost_price = 0;
     public $profit_margin = 0;
     public $wholesale_discount = 0;
-    public $wholesale_min_quantity = 3;
+    public $wholesale_min_quantity = 10;
     public $retail_price = 0;
     public $wholesale_price = 0;
     public $stock = 0;
@@ -172,12 +172,6 @@ new #[Layout('layouts.app')] class extends Component {
         ];
     }
 
-    public function syncPrices()
-    {
-        \Illuminate\Support\Facades\Artisan::call('g3:sync-prices');
-        $this->dispatch('notify', message: 'Precios sincronizados con éxito.');
-    }
-
     // --- CRUD DE PRODUCTOS ---
     public function create()
     {
@@ -197,7 +191,7 @@ new #[Layout('layouts.app')] class extends Component {
         $this->cost_price = (float) $product->cost_price;
         $this->profit_margin = (int) $product->profit_margin;
         $this->wholesale_discount = (int) $product->wholesale_discount;
-        $this->wholesale_min_quantity = $product->wholesale_min_quantity ?? 3;
+        $this->wholesale_min_quantity = $product->wholesale_min_quantity ?? 10;
         $this->retail_price = (float) $product->retail_price;
         $this->wholesale_price = (float) $product->wholesale_price;
         $this->stock = $product->stock;
@@ -316,7 +310,7 @@ new #[Layout('layouts.app')] class extends Component {
         $this->cost_price = 0;
         $this->profit_margin = 0;
         $this->wholesale_discount = 0;
-        $this->wholesale_min_quantity = 3;
+        $this->wholesale_min_quantity = 10;
         $this->retail_price = 0;
         $this->wholesale_price = 0;
         $this->stock = 0;
@@ -575,6 +569,11 @@ new #[Layout('layouts.app')] class extends Component {
         $this->selectAll = false;
         $this->loadProducts();
     }
+    public function syncPrices()
+    {
+        \Illuminate\Support\Facades\Artisan::call('shop:sync-prices');
+        $this->dispatch('notify', message: 'Precios sincronizados con éxito.');
+    }
 }; ?>
 
 <div x-data="{ 
@@ -589,7 +588,7 @@ new #[Layout('layouts.app')] class extends Component {
 }">
 
 
-    <div class="w-[98%] max-w-[140rem] mx-auto py-10 sm:px-6 lg:px-8">
+    <div class="w-full mx-auto py-10 px-4 sm:px-6 lg:px-8">
         <!-- Bulk Actions Bar -->
         @if(count($selectedProducts) > 0)
         <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700/50 rounded-2xl mb-6 p-4 flex items-center justify-between shadow-sm animate-pulse-once">
@@ -634,7 +633,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </div>
                     
                     {{-- Filtros Rápidos (Categoría y Marca) --}}
-                    <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full lg:w-auto">
+                    <div class="flex items-center gap-2 w-full lg:w-auto">
                         <select wire:model.live="filter_category_id" class="flex-1 sm:w-40 py-1.5 px-3 text-xs font-medium bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] transition-colors">
                             <option value="">Todas las Categorías</option>
                             @foreach($categories as $cat)
@@ -647,17 +646,16 @@ new #[Layout('layouts.app')] class extends Component {
                                 <option value="{{ $brand->id }}">{{ $brand->name }}</option>
                             @endforeach
                         </select>
+                        
+                        @if(tenant('id') === 'g3' && cache('last_price_sync_at'))
+                            <div class="hidden sm:flex items-center gap-1.5 text-[10px] text-gray-500 font-medium whitespace-nowrap bg-white/50 dark:bg-gray-800/50 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm" title="Última actualización desde Google Sheets">
+                                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Sync: {{ is_numeric(cache('last_price_sync_at')) ? \Carbon\Carbon::createFromTimestamp(cache('last_price_sync_at'))->timezone('America/Argentina/Buenos_Aires')->format('d/m H:i') : 'Actualizado' }}
+                            </div>
+                        @endif
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-2 items-center">
-                    
-                    <button type="button" wire:click="syncPrices" class="group flex items-center justify-center p-2.5 rounded-full transition-all hover:bg-emerald-100 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700/50 shadow-sm text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-900/10">
-                        <svg wire:loading.remove wire:target="syncPrices" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        <svg wire:loading wire:target="syncPrices" class="animate-spin w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        <div class="grid grid-cols-[0fr] group-hover:grid-cols-[1fr] transition-all duration-300 ease-in-out">
-                            <span class="overflow-hidden whitespace-nowrap text-sm"><span class="pl-2">Sincronizar</span></span>
-                        </div>
-                    </button>
                     
                     <button type="button" @click="massUpdateOpen = true" class="group flex items-center justify-center p-2.5 rounded-full transition-all hover:bg-gray-100 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-700 shadow-sm text-slate-700 dark:text-slate-200 font-bold">
                         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -686,6 +684,17 @@ new #[Layout('layouts.app')] class extends Component {
                             <span class="overflow-hidden whitespace-nowrap text-sm"><span class="pl-2 pr-1">Nuevo Producto</span></span>
                         </div>
                     </button>
+                    
+                    @if(tenant('id') === 'g3')
+                    <!-- Botón de Sincronización Google Sheets -->
+                    <button type="button" wire:click="syncPrices" class="group flex items-center justify-center p-2.5 rounded-full transition-all hover:bg-emerald-100 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700/50 shadow-sm text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-900/10">
+                        <svg wire:loading.remove wire:target="syncPrices" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        <svg wire:loading wire:target="syncPrices" class="animate-spin w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <div class="grid grid-cols-[0fr] group-hover:grid-cols-[1fr] transition-all duration-300 ease-in-out">
+                            <span class="overflow-hidden whitespace-nowrap text-sm"><span class="pl-2">Sincronizar Sheets</span></span>
+                        </div>
+                    </button>
+                    @endif
 
                     <!-- Importar Excel Component -->
                     <livewire:admin.product-import />
@@ -703,7 +712,7 @@ new #[Layout('layouts.app')] class extends Component {
                             @foreach($visibleColumns as $key => $val)
                                 <label class="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300 mb-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 p-1 rounded">
                                     <input type="checkbox" wire:model.live="visibleColumns.{{ $key }}" class="rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]">
-                                    <span class="capitalize">{{ ['image' => 'Imagen', 'name' => 'Nombre', 'category' => 'Categoría', 'brand' => 'Marca', 'cost' => 'Costo', 'retail' => 'Precio Lista', 'wholesale' => 'Efectivo/Transf.', 'stock' => 'Stock'][$key] ?? $key }}</span>
+                                    <span class="capitalize">{{ $key === 'retail' ? 'Precio Lista' : ($key === 'wholesale' ? 'Mayorista' : ($key === 'cost' ? 'Costo' : $key)) }}</span>
                                 </label>
                             @endforeach
                         </div>
@@ -754,7 +763,7 @@ new #[Layout('layouts.app')] class extends Component {
 
                             @if($visibleColumns['wholesale'])
                             <th class="px-6 py-4 text-xs font-bold text-[var(--color-primary)] uppercase tracking-wider cursor-pointer select-none" wire:click="sortBy('wholesale_price')">
-                                Efectivo/Transf. @if($sortField === 'wholesale_price') <span class="inline-block ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
+                                Mayorista @if($sortField === 'wholesale_price') <span class="inline-block ml-1">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span> @endif
                             </th>
                             @endif
 
@@ -805,15 +814,15 @@ new #[Layout('layouts.app')] class extends Component {
                             @endif
 
                             @if($visibleColumns['cost'])
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${{ number_format($product->cost_price, 0, ',', '.') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${{ number_format($product->cost_price, 2) }}</td>
                             @endif
 
                             @if($visibleColumns['retail'])
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${{ number_format($product->retail_price, 0, ',', '.') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${{ number_format($product->retail_price, 2) }}</td>
                             @endif
 
                             @if($visibleColumns['wholesale'])
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-[var(--color-primary)]">${{ number_format($product->wholesale_price, 0, ',', '.') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-[var(--color-primary)]">${{ number_format($product->wholesale_price, 2) }}</td>
                             @endif
 
                             @if($visibleColumns['stock'])
@@ -879,8 +888,8 @@ new #[Layout('layouts.app')] class extends Component {
                             <!-- Renglón 2: Precio y Botón eliminar -->
                             <div class="flex justify-between items-center">
                                 <div class="flex items-baseline gap-1.5">
-                                    <div class="text-[10px] font-medium text-gray-400">${{ number_format($product->retail_price, 0, ',', '.') }}</div>
-                                    <div class="text-sm font-black text-[var(--color-primary)]">${{ number_format($product->wholesale_price, 0, ',', '.') }}</div>
+                                    <div class="text-[10px] font-medium text-gray-400">${{ number_format($product->retail_price, 2) }}</div>
+                                    <div class="text-sm font-black text-[var(--color-primary)]">${{ number_format($product->wholesale_price, 2) }}</div>
                                 </div>
                                 <div @click.stop>
                                     <button wire:click="delete({{ $product->id }})" wire:confirm="¿Seguro de eliminar?" title="Eliminar" class="p-1 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors">
@@ -946,7 +955,7 @@ new #[Layout('layouts.app')] class extends Component {
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             
             <!-- Modal Content -->
-            <div x-show="modalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl text-left overflow-hidden shadow-2xl dark:[box-shadow:0_25px_50px_-12px_var(--color-primary-glow)] transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full relative">
+            <div x-show="modalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl text-left overflow-visible shadow-2xl dark:[box-shadow:0_25px_50px_-12px_var(--color-primary-glow)] transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full relative">
                 
                 <!-- Overlay de carga premium -->
                 <div x-show="isProductLoading" x-transition.opacity.duration.200ms class="absolute inset-0 z-50 flex items-center justify-center bg-white/40 dark:bg-gray-900/40 backdrop-blur-sm rounded-3xl" style="display: none;">
@@ -992,7 +1001,7 @@ new #[Layout('layouts.app')] class extends Component {
                                             <button type="button" @click="openCatPrompt = !openCatPrompt; if(openCatPrompt) $nextTick(() => $refs.catInput.focus())" class="text-[var(--color-primary)] hover:text-blue-600 transition-colors" title="Crear nueva categoría">
                                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                                             </button>
-                                            <div x-show="openCatPrompt" style="display:none;" x-transition class="absolute z-50 left-0 sm:right-0 sm:left-auto top-full mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-3">
+                                            <div x-show="openCatPrompt" style="display:none;" x-transition class="absolute z-50 left-0 sm:left-auto sm:right-0 top-full mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-3">
                                                 <span class="block text-xs text-gray-500 dark:text-gray-400 mb-2 normal-case font-normal">Nombre de la nueva categoría:</span>
                                                 <div class="flex gap-2">
                                                     <input x-ref="catInput" x-model="newCatName" @keydown.enter.prevent="$wire.createCategoryQuick(newCatName); openCatPrompt = false; newCatName = ''" type="text" class="w-full text-sm py-1.5 px-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-[var(--color-primary)]">
@@ -1023,7 +1032,7 @@ new #[Layout('layouts.app')] class extends Component {
                                             <button type="button" @click="openBrandPrompt = !openBrandPrompt; if(openBrandPrompt) $nextTick(() => $refs.brandInput.focus())" class="text-[var(--color-primary)] hover:text-blue-600 transition-colors" title="Crear nueva marca">
                                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                                             </button>
-                                            <div x-show="openBrandPrompt" style="display:none;" x-transition class="absolute z-50 right-0 top-full mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-3">
+                                            <div x-show="openBrandPrompt" style="display:none;" x-transition class="absolute z-50 left-0 sm:left-auto sm:right-0 top-full mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-3">
                                                 <span class="block text-xs text-gray-500 dark:text-gray-400 mb-2 normal-case font-normal">Nombre de la nueva marca:</span>
                                                 <div class="flex gap-2">
                                                     <input x-ref="brandInput" x-model="newBrandName" @keydown.enter.prevent="$wire.createBrandQuick(newBrandName); openBrandPrompt = false; newBrandName = ''" type="text" class="w-full text-sm py-1.5 px-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-[var(--color-primary)]">

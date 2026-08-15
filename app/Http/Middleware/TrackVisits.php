@@ -107,7 +107,7 @@ class TrackVisits
                         if (!$alreadyVisited) {
                             PageVisit::create([
                                 'ip_address' => $request->ip(),
-                                'url'        => $request->fullUrl(),
+                                'url'        => $request->path(),
                                 'user_agent' => $request->userAgent(),
                             ]);
                         }

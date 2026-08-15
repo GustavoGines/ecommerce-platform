@@ -54,7 +54,7 @@
                     <p class="text-emerald-50 print:text-gray-500 mt-1 font-medium">Orden #{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</p>
                 </div>
                 <div class="text-left sm:text-right mt-4 sm:mt-0">
-                    <div class="text-3xl sm:text-4xl font-black print:text-gray-900">${{ number_format($order->total, 0, ',', '.') }}</div>
+                    <div class="text-3xl sm:text-4xl font-black print:text-gray-900">${{ number_format($order->total, 2) }}</div>
                     <div class="text-emerald-50 print:text-gray-500 text-sm mt-1 font-medium">Total pagado</div>
                 </div>
             </div>
@@ -156,10 +156,10 @@
                                     <span class="sm:hidden font-bold mr-1 text-[10px] uppercase">Cant:</span>{{ $item->quantity }}
                                 </div>
                                 <div class="w-auto sm:w-32 text-gray-500 text-right print:text-gray-900">
-                                    <span class="sm:hidden font-bold mr-1 text-[10px] uppercase">P.U:</span>${{ number_format($item->price, 0, ',', '.') }}
+                                    <span class="sm:hidden font-bold mr-1 text-[10px] uppercase">P.U:</span>${{ number_format($item->price, 2) }}
                                 </div>
                                 <div class="w-auto sm:w-32 font-bold text-gray-900 text-right">
-                                    <span class="sm:hidden mr-1 text-[10px] uppercase text-gray-400">Total:</span>${{ number_format($item->price * $item->quantity, 0, ',', '.') }}
+                                    <span class="sm:hidden mr-1 text-[10px] uppercase text-gray-400">Total:</span>${{ number_format($item->price * $item->quantity, 2) }}
                                 </div>
                             </div>
                         </div>
@@ -169,7 +169,7 @@
                     {{-- Footer del total --}}
                     <div class="bg-gray-100 flex justify-between sm:justify-end items-center px-4 sm:px-6 py-4 sm:py-5 border-t border-gray-200 print:bg-transparent print:border-gray-800 print:px-0">
                         <span class="text-gray-500 font-bold uppercase tracking-wider text-sm sm:mr-8 print:text-gray-900">Total pagado</span>
-                        <span class="text-2xl sm:text-3xl font-black text-gray-900 print:!text-gray-900 text-emerald-600">${{ number_format($order->total, 0, ',', '.') }}</span>
+                        <span class="text-2xl sm:text-3xl font-black text-gray-900 print:!text-gray-900 text-emerald-600">${{ number_format($order->total, 2) }}</span>
                     </div>
                 </div>
             </div>

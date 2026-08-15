@@ -9,9 +9,9 @@ Hemos recibido tu pedido **#{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}** co
 | Producto       | Cant. | Precio  |
 |:---------------|:-----:|--------:|
 @foreach($order->items as $item)
-| {{ $item->product ? $item->product->name : 'Producto' }} | {{ $item->quantity }} | ${{ number_format($item->price, 0, ',', '.') }} |
+| {{ $item->product ? $item->product->name : 'Producto' }} | {{ $item->quantity }} | ${{ number_format($item->price, 2) }} |
 @endforeach
-| **Total:** | | **${{ number_format($order->total, 0, ',', '.') }}** |
+| **Total:** | | **${{ number_format($order->total, 2) }}** |
 </x-mail::table>
 
 Nos pondremos en contacto contigo a la brevedad para coordinar el pago y la entrega de tu pedido.

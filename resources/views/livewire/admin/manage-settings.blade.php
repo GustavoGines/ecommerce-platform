@@ -5,6 +5,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 new #[Layout('layouts.app')] class extends Component {
     use WithFileUploads;
@@ -54,6 +55,9 @@ new #[Layout('layouts.app')] class extends Component {
             Storage::disk('public')->delete($settings->favicon_url);
             $settings->favicon_url = null;
             $settings->save();
+            $tenantId = tenant('id') ?? 'global';
+            Cache::forget('store_settings_' . $tenantId); // BUG-04 FIX
+            Cache::forget('store_settings');
         }
         $this->current_favicon_url = null;
         $this->favicon = null;
@@ -67,6 +71,9 @@ new #[Layout('layouts.app')] class extends Component {
             Storage::disk('public')->delete($settings->logo_url);
             $settings->logo_url = null;
             $settings->save();
+            $tenantId = tenant('id') ?? 'global';
+            Cache::forget('store_settings_' . $tenantId); // BUG-04 FIX
+            Cache::forget('store_settings');
         }
         $this->current_logo_url = null;
         $this->logo = null;
@@ -85,7 +92,7 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $this->validate([
             'store_name'       => 'required|string|max:255',
-            'theme_name'       => 'required|string|in:stealth,luxury,modern-light',
+            'theme_name'       => 'required|string|in:modern-light,tech-dark',
             'store_tagline'    => 'nullable|string|max:255',
             'social_facebook'  => 'nullable|url|max:255',
             'social_instagram' => 'nullable|url|max:255',
@@ -132,10 +139,9 @@ new #[Layout('layouts.app')] class extends Component {
         }
 
         $settings->save();
-        
-        // Limpiar la caché de configuraciones para que los cambios se vean en toda la web
-        \Illuminate\Support\Facades\Cache::forget('store_settings');
-
+        $tenantId = tenant('id') ?? 'global';
+        Cache::forget('store_settings_' . $tenantId); // BUG-04 FIX: invalidar caché al guardar
+        Cache::forget('store_settings'); // Por si acaso también borramos el global viejo
         session()->flash('message', 'Configuración guardada exitosamente.');
         
         // Redirigir (recargar) la página sin 'navigate' para que los cambios de layout se apliquen instantáneamente.
@@ -172,9 +178,8 @@ new #[Layout('layouts.app')] class extends Component {
                         Tema de la Tienda
                     </label>
                     <select wire:model="theme_name" id="theme_name" class="w-full py-3 px-4 bg-gray-50 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 leading-tight focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all shadow-sm dark:shadow-none">
-                        <option value="stealth">Stealth (Tema Claro Predeterminado)</option>
-                        <option value="luxury">Luxury (Tema Premium Oscuro)</option>
-                        <option value="modern-light">Modern Light (Tema Limpio y Claro)</option>
+                        <option value="modern-light">Modern Light (Tema Claro - JCG)</option>
+                        <option value="tech-dark">Tech Dark (Tema Oscuro - G3)</option>
                     </select>
                     @error('theme_name') <span class="text-red-500 dark:text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
@@ -195,7 +200,7 @@ new #[Layout('layouts.app')] class extends Component {
 
                     @if($current_favicon_url)
                         <div class="flex items-center gap-4 mb-4 p-3 bg-white dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700">
-                            <img src="{{ asset('storage/' . $current_favicon_url) }}"
+                            <img src="{{ tenant_asset($current_favicon_url) }}"
                                  alt="Favicon Actual"
                                  class="h-10 w-10 object-contain rounded bg-gray-100 dark:bg-gray-800 p-1 border border-gray-200 dark:border-gray-600">
                             <div class="flex-1">
@@ -240,7 +245,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1" for="social_whatsapp">WhatsApp (Solo números con código de país)</label>
-                            <input wire:model="social_whatsapp" id="social_whatsapp" type="text" class="w-full py-2.5 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm" placeholder="Ej: 5493704022685">
+                            <input wire:model="social_whatsapp" id="social_whatsapp" type="text" class="w-full py-2.5 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm" placeholder="Ej: 5493705075839">
                             @error('social_whatsapp') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                         </div>
                         <div>
@@ -270,7 +275,7 @@ new #[Layout('layouts.app')] class extends Component {
                     {{-- Logo actual --}}
                     @if($current_logo_url)
                         <div class="flex items-center gap-4 mb-4 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700">
-                            <img src="{{ asset('storage/' . $current_logo_url) }}"
+                            <img src="{{ tenant_asset($current_logo_url) }}"
                                  alt="Logo Actual"
                                  class="h-16 w-auto object-contain rounded-lg bg-white dark:bg-gray-800 p-1 border border-gray-200 dark:border-gray-600">
                             <div class="flex-1">

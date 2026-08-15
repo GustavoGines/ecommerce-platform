@@ -67,7 +67,11 @@ return [
         'disk' => null,        // Example: 'local', 's3'              | Default: 'default'
         'rules' => null,       // Example: ['file', 'mimes:png,jpg']  | Default: ['required', 'file', 'max:12288'] (12MB)
         'directory' => null,   // Example: 'tmp'                      | Default: 'livewire-tmp'
-        'middleware' => null,  // Example: 'throttle:5,1'             | Default: 'throttle:60,1'
+        'middleware' => [
+            'throttle:60,1',
+            \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class,
+            \Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class,
+        ],
         'preview_mimes' => [   // Supported file types for temporary pre-signed file URLs...
             'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
             'mov', 'avi', 'wmv', 'mp3', 'm4a',
@@ -115,13 +119,6 @@ return [
     */
 
     'inject_assets' => true,
-
-    /*
-    |---------------------------------------------------------------------------
-    | Base URL for Livewire Assets & Updates (Laragon Subdirectory Fix)
-    |---------------------------------------------------------------------------
-    */
-    'asset_url' => env('LIVEWIRE_ASSET_URL', null),
 
     /*
     |---------------------------------------------------------------------------
@@ -189,5 +186,5 @@ return [
     |
     */
 
-    'release_token' => env('APP_VERSION', '1.0.0'),
+    'release_token' => 'a',
 ];

@@ -29,10 +29,11 @@ new class extends Component
     @endphp
 
     <nav x-data="{ open: false, scrolled: false }"
+     @scroll.window="scrolled = (window.pageYOffset > 20)"
      :class="{
          'bg-[#0a0f1c]/90 backdrop-blur-xl border-b border-white/5 shadow-none': {{ $isLuxury ? 'true' : 'false' }} && (!{{ $transparent ? 'true' : 'false' }} || scrolled),
-         'bg-g3-dark/95 backdrop-blur-md shadow-lg border-b border-zinc-800': {{ $isModernLight ? 'true' : 'false' }} && (!{{ $transparent ? 'true' : 'false' }} || scrolled),
-         'bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 shadow-sm dark:shadow-none': (!{{ $isLuxury ? 'true' : 'false' }} && !{{ $isModernLight ? 'true' : 'false' }}) && (!{{ $transparent ? 'true' : 'false' }} || scrolled),
+         'bg-gray-950 shadow-lg border-b-2 border-red-600': {{ $isModernLight ? 'true' : 'false' }} && (!{{ $transparent ? 'true' : 'false' }} || scrolled),
+         'bg-white dark:bg-zinc-900/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 shadow-sm dark:shadow-none': (!{{ $isLuxury ? 'true' : 'false' }} && !{{ $isModernLight ? 'true' : 'false' }}) && (!{{ $transparent ? 'true' : 'false' }} || scrolled),
          'bg-transparent border-transparent': {{ $transparent ? 'true' : 'false' }} && !scrolled
      }"
      class="sticky top-0 z-50 transition-all duration-300 relative overflow-visible">
@@ -41,19 +42,19 @@ new class extends Component
 
     @if($isLuxury)
         {{-- Top Bar Animada --}}
-        <div class="bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white overflow-hidden relative z-[60] py-1 shadow-lg">
+        <div class="bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-gray-900 dark:text-white overflow-hidden relative z-[60] py-1 shadow-lg">
             <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
             <div class="whitespace-nowrap animate-[marquee_20s_linear_infinite] flex items-center gap-8 text-[10px] font-bold uppercase tracking-widest relative z-10">
                 <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping"></span> PRECIOS MAYORISTAS DISPONIBLES</span>
-                <span class="text-white/30">&bull;</span>
+                <span class="text-gray-900 dark:text-white/30">&bull;</span>
                 <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-300 animate-pulse"></span> ENVÍOS A TODO EL PAÍS</span>
-                <span class="text-white/30">&bull;</span>
+                <span class="text-gray-900 dark:text-white/30">&bull;</span>
                 <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping"></span> PRECIOS MAYORISTAS DISPONIBLES</span>
-                <span class="text-white/30">&bull;</span>
+                <span class="text-gray-900 dark:text-white/30">&bull;</span>
                 <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-300 animate-pulse"></span> ENVÍOS A TODO EL PAÍS</span>
-                <span class="text-white/30">&bull;</span>
+                <span class="text-gray-900 dark:text-white/30">&bull;</span>
                 <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping"></span> PRECIOS MAYORISTAS DISPONIBLES</span>
-                <span class="text-white/30">&bull;</span>
+                <span class="text-gray-900 dark:text-white/30">&bull;</span>
                 <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-300 animate-pulse"></span> ENVÍOS A TODO EL PAÍS</span>
             </div>
             <style>
@@ -65,36 +66,29 @@ new class extends Component
         </div>
     @elseif($isModernLight)
         {{-- Ticker Animado (Marquesina) para Modern Light --}}
-        <div class="bg-zinc-950 border-b border-zinc-900 text-g3-silver overflow-hidden relative z-[60] py-1.5 flex shadow-md">
-            {{-- Marca de Agua "G3" intercalada en el fondo --}}
-            <div class="absolute inset-0 pointer-events-none flex items-center overflow-hidden" style="opacity: 0.15; filter: grayscale(100%) brightness(150%);">
-                @for($i = 0; $i < 30; $i++)
-                    <img src="{{ asset('images/favicon.png') }}" class="w-6 h-auto shrink-0" style="margin-right: 80px;" alt="">
-                @endfor
+        <div class="bg-red-600 text-white overflow-hidden relative z-[60] py-1.5 flex shadow-md">
+            {{-- Marca de Agua "JCG" intercalada en el fondo --}}
+            <div class="absolute inset-0 pointer-events-none opacity-[0.5] mix-blend-screen" 
+                 style="background-image: url('{{ tenant_asset('logos/watermark-cjg.png') }}'), url('{{ tenant_asset('logos/watermark-cjg.png') }}'); background-repeat: repeat, repeat; background-size: 60px, 60px; background-position: 0 0, 30px 30px;">
             </div>
 
-            <div class="whitespace-nowrap animate-[marquee_35s_linear_infinite] flex items-center gap-10 text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] relative z-10 drop-shadow-md">
-                {{-- Bloque 1 --}}
-                <span class="flex items-center gap-2 text-white"><span class="animate-pulse text-g3-blue text-lg">⚡</span> LOS MEJORES PRECIOS EN HARDWARE</span>
-                <span class="text-zinc-700">&bull;</span>
-                <span class="flex items-center gap-2 text-white"><span class="text-lg">🚚</span> ENVÍOS A TODO EL PAÍS</span>
-                <span class="text-zinc-700">&bull;</span>
-                <span class="flex items-center gap-2 text-g3-green"><span class="text-lg">✅</span> RETIRO INMEDIATO EN LOCAL</span>
-                <span class="text-zinc-700">&bull;</span>
-                <span class="flex items-center gap-2 text-white"><span class="text-lg text-g3-green">💵</span> EFECTIVO O TRANSFERENCIA</span>
-                <span class="text-zinc-700">&bull;</span>
+            <div class="whitespace-nowrap animate-[marquee_25s_linear_infinite] flex items-center gap-10 text-[11px] sm:text-xs font-black uppercase tracking-[0.2em] relative z-10 drop-shadow-md">
+                <span class="flex items-center gap-2 text-white"><span class="animate-pulse text-lg">🔥</span> PRECIOS MAYORISTAS EN TODOS LOS CONTROLES</span>
+                <span class="text-white/50">&bull;</span>
+                <span class="flex items-center gap-2 text-yellow-300"><span class="text-lg">✅</span> RETIRO INMEDIATO EN LOCAL</span>
+                <span class="text-white/50">&bull;</span>
                 <span class="flex items-center gap-2 text-white"><span class="text-lg">🛡️</span> COMPRA 100% SEGURA</span>
-                <span class="text-zinc-700">&bull;</span>
-                
-                {{-- Bloque 2 (Duplicado para el loop continuo) --}}
-                <span class="flex items-center gap-2 text-white"><span class="animate-pulse text-g3-blue text-lg">⚡</span> LOS MEJORES PRECIOS EN HARDWARE</span>
-                <span class="text-zinc-700">&bull;</span>
-                <span class="flex items-center gap-2 text-white"><span class="text-lg">🚚</span> ENVÍOS A TODO EL PAÍS</span>
-                <span class="text-zinc-700">&bull;</span>
-                <span class="flex items-center gap-2 text-g3-green"><span class="text-lg">✅</span> RETIRO INMEDIATO EN LOCAL</span>
-                <span class="text-zinc-700">&bull;</span>
-                <span class="flex items-center gap-2 text-white"><span class="text-lg text-g3-green">💵</span> EFECTIVO O TRANSFERENCIA</span>
-                <span class="text-zinc-700">&bull;</span>
+                <span class="text-white/50">&bull;</span>
+                <span class="flex items-center gap-2 text-white"><span class="animate-pulse text-lg">🔥</span> PRECIOS MAYORISTAS EN TODOS LOS CONTROLES</span>
+                <span class="text-white/50">&bull;</span>
+                <span class="flex items-center gap-2 text-yellow-300"><span class="text-lg">✅</span> RETIRO INMEDIATO EN LOCAL</span>
+                <span class="text-white/50">&bull;</span>
+                <span class="flex items-center gap-2 text-white"><span class="text-lg">🛡️</span> COMPRA 100% SEGURA</span>
+                <span class="text-white/50">&bull;</span>
+                <span class="flex items-center gap-2 text-white"><span class="animate-pulse text-lg">🔥</span> PRECIOS MAYORISTAS EN TODOS LOS CONTROLES</span>
+                <span class="text-white/50">&bull;</span>
+                <span class="flex items-center gap-2 text-yellow-300"><span class="text-lg">✅</span> RETIRO INMEDIATO EN LOCAL</span>
+                <span class="text-white/50">&bull;</span>
                 <span class="flex items-center gap-2 text-white"><span class="text-lg">🛡️</span> COMPRA 100% SEGURA</span>
             </div>
             <style>
@@ -106,6 +100,50 @@ new class extends Component
                     0% { clip-path: inset(0 100% 0 0); opacity: 0; filter: drop-shadow(0 0 0 rgba(220,38,38,0)); }
                     30% { opacity: 1; filter: drop-shadow(0 0 10px rgba(220,38,38,0.5)); }
                     100% { clip-path: inset(0 0 0 0); opacity: 1; filter: drop-shadow(0 10px 20px rgba(220,38,38,0.3)); }
+                }
+            </style>
+        </div>
+    @else
+        {{-- Ticker Animado (Marquesina) Comercial (G3 / Default) --}}
+        <div class="bg-zinc-950 border-b border-zinc-900 text-g3-silver overflow-hidden relative z-[60] py-1.5 flex shadow-md">
+            {{-- Marca de Agua intercalada en el fondo (Solo 1 línea como en main) --}}
+            <div class="absolute inset-0 pointer-events-none flex items-center overflow-hidden" style="opacity: 0.15; filter: grayscale(100%) brightness(150%);">
+                @php
+                    $bgFavicon = isset($settings) && $settings->favicon_url ? tenant_asset($settings->favicon_url) : asset('images/favicon.png');
+                @endphp
+                @for($i = 0; $i < 30; $i++)
+                    <img src="{{ $bgFavicon }}" class="w-6 h-auto shrink-0" style="margin-right: 80px;" alt="">
+                @endfor
+            </div>
+
+            <div class="whitespace-nowrap animate-[marquee_35s_linear_infinite] flex items-center gap-10 text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] relative z-10 drop-shadow-md">
+                {{-- Bloque 1 --}}
+                <span class="flex items-center gap-2 text-white"><span class="animate-pulse text-g3-blue text-lg">⚡</span> LOS MEJORES PRECIOS EN HARDWARE</span>
+                <span class="text-zinc-700">&bull;</span>
+                <span class="flex items-center gap-2 text-white"><span class="text-lg">📦</span> ENVÍOS A TODO EL PAÍS</span>
+                <span class="text-zinc-700">&bull;</span>
+                <span class="flex items-center gap-2 text-g3-green"><span class="text-lg">✅</span> RETIRO INMEDIATO EN LOCAL</span>
+                <span class="text-zinc-700">&bull;</span>
+                <span class="flex items-center gap-2 text-white"><span class="text-lg text-g3-green">💵</span> EFECTIVO O TRANSFERENCIA</span>
+                <span class="text-zinc-700">&bull;</span>
+                <span class="flex items-center gap-2 text-white"><span class="text-lg">🛡️</span> COMPRA 100% SEGURA</span>
+                <span class="text-zinc-700">&bull;</span>
+                
+                {{-- Bloque 2 (Duplicado para el loop continuo) --}}
+                <span class="flex items-center gap-2 text-white"><span class="animate-pulse text-g3-blue text-lg">⚡</span> LOS MEJORES PRECIOS EN HARDWARE</span>
+                <span class="text-zinc-700">&bull;</span>
+                <span class="flex items-center gap-2 text-white"><span class="text-lg">📦</span> ENVÍOS A TODO EL PAÍS</span>
+                <span class="text-zinc-700">&bull;</span>
+                <span class="flex items-center gap-2 text-g3-green"><span class="text-lg">✅</span> RETIRO INMEDIATO EN LOCAL</span>
+                <span class="text-zinc-700">&bull;</span>
+                <span class="flex items-center gap-2 text-white"><span class="text-lg text-g3-green">💵</span> EFECTIVO O TRANSFERENCIA</span>
+                <span class="text-zinc-700">&bull;</span>
+                <span class="flex items-center gap-2 text-white"><span class="text-lg">🛡️</span> COMPRA 100% SEGURA</span>
+            </div>
+            <style>
+                @keyframes marquee {
+                    0% { transform: translateX(0%); }
+                    100% { transform: translateX(-50%); }
                 }
             </style>
         </div>
@@ -138,10 +176,10 @@ new class extends Component
                 <div class="hidden sm:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center">
                     <a href="{{ url('/') }}" wire:navigate class="shrink-0 flex items-center">
                         @if(isset($settings) && $settings->logo_url)
-                            <img src="{{ asset('storage/' . $settings->logo_url) }}"
-                                 alt="Logo" class="h-14 w-auto object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:scale-105 transition-transform duration-300">
+                            <img src="{{ tenant_asset($settings->logo_url) }}"
+                                 alt="Logo" class="h-8 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform duration-300">
                         @else
-                            <x-application-logo class="block h-14 w-auto fill-current text-white transition-colors drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]"/>
+                            <x-application-logo class="block h-8 w-auto fill-current text-gray-900 dark:text-white transition-colors"/>
                         @endif
                     </a>
                 </div>
@@ -150,97 +188,113 @@ new class extends Component
                 <div class="flex sm:hidden flex-1 items-center">
                     <a href="{{ url('/') }}" wire:navigate class="shrink-0 flex items-center">
                         @if(isset($settings) && $settings->logo_url)
-                            <img src="{{ asset('storage/' . $settings->logo_url) }}" alt="Logo" class="h-12 w-auto object-contain hover:scale-105 transition-transform duration-300">
+                            <img src="{{ tenant_asset($settings->logo_url) }}" alt="Logo" class="h-7 w-auto object-contain hover:scale-105 transition-transform duration-300">
                         @else
-                            <x-application-logo class="block h-12 w-auto fill-current text-white"/>
+                            <x-application-logo class="block h-7 w-auto fill-current text-gray-900 dark:text-white"/>
                         @endif
                     </a>
                 </div>
             @elseif($isModernLight)
-                {{-- ════════════ G3 TECH NAVBAR ════════════ --}}
+                {{-- ════════════ MODERN-LIGHT NAVBAR ════════════ --}}
                 
-                <div class="flex items-center justify-between flex-1 relative z-10 h-full w-full">
-                    {{-- ── Izquierda: Logo (Absolute Left/Center on Mobile) ── --}}
-                    <div class="flex-shrink-0 flex items-center">
-                        <a href="{{ url('/') }}" wire:navigate class="flex items-center gap-2 group pointer-events-auto">
-                            <!-- G3 Logo -->
-                            <x-application-logo class="h-16 w-auto group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] group-hover:drop-shadow-[0_0_20px_rgba(126,211,33,0.5)]" />
-                        </a>
-                    </div>
-                    
-                    {{-- ── Centro: Links (Hidden on small screens) ── --}}
-                    <div class="hidden md:flex items-center gap-6 ml-8">
-                        <a href="{{ route('home') }}" wire:navigate class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-bold transition-colors {{ request()->routeIs('home') ? 'border-g3-blue text-white' : 'border-transparent text-gray-300 hover:text-white hover:border-g3-blue' }}">
+                <div class="flex items-center justify-between flex-1 relative z-10">
+                    {{-- ── Izquierda: Links ── --}}
+                    <div class="hidden sm:flex items-center gap-6 flex-1">
+                        <x-nav-link :href="route('home')" :active="request()->routeIs('home')" wire:navigate class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
                             {{ __('Inicio') }}
-                        </a>
-                        <a href="{{ route('shop') }}" wire:navigate class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-bold transition-colors {{ request()->routeIs('shop') ? 'border-g3-blue text-white' : 'border-transparent text-gray-300 hover:text-white hover:border-g3-blue' }}">
+                        </x-nav-link>
+                        <x-nav-link :href="route('shop')" :active="request()->routeIs('shop')" wire:navigate class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
                             {{ __('Tienda') }}
-                        </a>
+                        </x-nav-link>
                         @if(auth()->check() && optional(auth()->user())->isAdmin())
-                            <a href="{{ route('admin.products') }}" wire:navigate class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-bold transition-colors {{ request()->routeIs('admin.products') ? 'border-g3-blue text-white' : 'border-transparent text-gray-300 hover:text-white hover:border-g3-blue' }}">
-                                {{ __('Productos') }}
-                            </a>
-                            <a href="{{ route('admin.dashboard') }}" wire:navigate class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-bold transition-colors {{ request()->routeIs('admin.dashboard') ? 'border-g3-blue text-white' : 'border-transparent text-gray-300 hover:text-white hover:border-g3-blue' }}">
+                            <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" wire:navigate class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
                                 {{ __('Panel') }}
-                            </a>
+                            </x-nav-link>
+                            <x-nav-link :href="route('admin.products')" :active="request()->routeIs('admin.products')" wire:navigate class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
+                                {{ __('Productos') }}
+                            </x-nav-link>
                         @endif
                     </div>
 
+                    {{-- ── Centro: Logo (Centrado dinámico entre links y buscador) ── --}}
+                    <div class="hidden sm:flex items-center justify-center z-[100] px-4">
+                        <a href="{{ url('/') }}" wire:navigate class="shrink-0 flex items-center justify-center relative h-20 w-48 sm:w-64 hover:scale-105 transition-transform pointer-events-auto">
+                            @if(isset($settings) && $settings->logo_url)
+                                <img src="{{ tenant_asset($settings->logo_url) }}"
+                                     alt="Logo" class="absolute max-w-none pointer-events-none drop-shadow-[0_10px_20px_rgba(220,38,38,0.3)]" style="top: 72%; left: 50%; width: 220px; height: auto; transform: translate(-50%, -50%); animation: writeReveal 2.5s ease-out 0.5s both;">
+                            @else
+                                <div class="flex items-center gap-2 text-white" style="animation: writeReveal 2.5s ease-out 0.5s both;">
+                                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13h-13L12 6.5z"/></svg>
+                                    <span class="text-2xl font-black tracking-tight text-white">JCG Electrónica</span>
+                                </div>
+                            @endif
+                        </a>
+                    </div>
+                    
+                    {{-- Logo en Móvil (Visible solo en pantallas chicas) --}}
+                    <div class="flex sm:hidden flex-1 items-center justify-start z-[100]">
+                        <a href="{{ url('/') }}" wire:navigate class="shrink-0 flex items-center justify-center relative h-16 w-48 ml-4">
+                            @if(isset($settings) && $settings->logo_url)
+                                <img src="{{ tenant_asset($settings->logo_url) }}"
+                                     alt="Logo" class="absolute max-w-none pointer-events-none drop-shadow-md" style="top: 72%; left: 50%; width: 180px; height: auto; transform: translate(-50%, -50%); animation: writeReveal 2.5s ease-out 0.5s both;">
+                            @else
+                                <span class="text-lg font-black text-white" style="animation: writeReveal 2.5s ease-out 0.5s both;">JCG</span>
+                            @endif
+                        </a>
+                    </div>
+
                     {{-- ── Derecha: Buscador + Íconos ── --}}
-                    <div class="hidden sm:flex items-center gap-4 flex-1 justify-end ml-auto">
-                        <div class="w-full max-w-sm mr-2 text-gray-900">
-                            {{-- Livewire Search --}}
+                    <div class="hidden sm:flex items-center gap-4 flex-1 justify-end">
+                        <div class="hidden sm:block w-full max-w-[280px] mr-2 text-white">
                             <livewire:search-bar />
                         </div>
-                        <div class="text-gray-300 hover:text-white transition-colors">
+                        <div class="text-white">
                             <livewire:cart-icon />
                         </div>
                         @auth
-                            <x-dropdown align="right" width="48" contentClasses="py-1 bg-g3-card border border-zinc-800">
+                            <x-dropdown align="right" width="48">
                                 <x-slot name="trigger">
-                                    <button class="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-lg transition-colors border border-zinc-700 hover:border-g3-blue">
-                                        <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-g3-blue to-g3-green flex items-center justify-center font-bold text-white text-xs shadow-sm">
+                                    <button class="relative flex items-center gap-2 p-2 rounded-full hover:bg-white/10 transition-colors">
+                                        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-white shadow-sm border border-white/30">
                                             {{ substr(Auth::user()->name, 0, 1) }}
                                         </div>
-                                        <span class="text-sm font-medium hidden lg:block">Mi Cuenta</span>
                                         @if(optional(auth()->user())->isAdmin() && $pendingOrdersCount > 0)
-                                            <span class="absolute -top-1 -right-1 flex h-3 w-3">
-                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-g3-green opacity-75"></span>
-                                                <span class="relative inline-flex rounded-full h-3 w-3 bg-g3-blue"></span>
+                                            <span class="absolute top-1 right-1 flex h-3 w-3">
+                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-zinc-900"></span>
                                             </span>
                                         @endif
                                     </button>
                                 </x-slot>
                                 <x-slot name="content">
-                                    @if(optional(auth()->user())->isAdmin())
+                                        @if(optional(auth()->user())->isAdmin())
                                         <div class="px-3 py-1.5">
-                                            <p class="text-[10px] uppercase tracking-widest font-bold text-g3-silver">Administración</p>
+                                            <p class="text-[10px] uppercase tracking-widest font-bold text-gray-500 dark:text-gray-400">Administración</p>
                                         </div>
-                                        <a href="{{ route('admin.orders') }}" wire:navigate class="flex items-center justify-between w-full px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-zinc-800 transition-colors">
+                                        <x-dropdown-link :href="route('admin.orders')" wire:navigate class="flex items-center justify-between w-full">
                                             <span>📦 &nbsp;Órdenes</span>
                                             @if($pendingOrdersCount > 0)
-                                                <span class="bg-g3-blue text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{{ $pendingOrdersCount }}</span>
+                                                <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{{ $pendingOrdersCount }}</span>
                                             @endif
-                                        </a>
-                                        <a href="{{ route('admin.users') }}" wire:navigate class="block w-full px-4 py-2 text-start text-sm text-gray-300 hover:text-white hover:bg-zinc-800 transition-colors">👥 &nbsp;Usuarios</a>
-                                        <a href="{{ route('admin.products') }}" wire:navigate class="block w-full px-4 py-2 text-start text-sm text-gray-300 hover:text-white hover:bg-zinc-800 transition-colors">🏷️ &nbsp;Productos</a>
-                                        <a href="{{ route('admin.settings') }}" wire:navigate class="block w-full px-4 py-2 text-start text-sm text-gray-300 hover:text-white hover:bg-zinc-800 transition-colors">⚙️ &nbsp;Configuración</a>
-                                        <div class="my-1 border-t border-zinc-800"></div>
+                                        </x-dropdown-link>
+                                        <x-dropdown-link :href="route('admin.users')" wire:navigate>👥 &nbsp;Usuarios</x-dropdown-link>
+                                        <x-dropdown-link :href="route('admin.settings')" wire:navigate>⚙️ &nbsp;Configuración</x-dropdown-link>
+                                        <div class="my-1 border-t border-gray-100 dark:border-zinc-800"></div>
                                     @else
-                                        <a href="{{ route('my-orders') }}" wire:navigate class="block w-full px-4 py-2 text-start text-sm text-gray-300 hover:text-white hover:bg-zinc-800 transition-colors">🛍 &nbsp;Mis Órdenes</a>
+                                        <x-dropdown-link :href="route('my-orders')" wire:navigate>🛍 &nbsp;Mis Órdenes</x-dropdown-link>
                                     @endif
-                                    <a href="{{ route('profile') }}" wire:navigate class="block w-full px-4 py-2 text-start text-sm text-gray-300 hover:text-white hover:bg-zinc-800 transition-colors">👤 &nbsp;Mi Perfil</a>
-                                    <div class="my-1 border-t border-zinc-800"></div>
-                                    <button wire:click="logout" class="w-full text-start focus:outline-none">
-                                        <span class="block w-full px-4 py-2 text-start text-sm text-gray-400 hover:text-white hover:bg-zinc-800 transition-colors">🚪 &nbsp;Cerrar Sesión</span>
+                                    <x-dropdown-link :href="route('profile')" wire:navigate>👤 &nbsp;Mi Perfil</x-dropdown-link>
+                                    <div class="my-1 border-t border-gray-100 dark:border-zinc-800"></div>
+                                    <button wire:click="logout" class="w-full text-start">
+                                        <x-dropdown-link class="text-red-600 hover:text-red-700">🚪 &nbsp;Cerrar Sesión</x-dropdown-link>
                                     </button>
                                 </x-slot>
                             </x-dropdown>
                         @else
-                            <a href="{{ route('login') }}" class="text-sm font-bold text-g3-silver hover:text-white transition-colors whitespace-nowrap">
+                            <a href="{{ route('login') }}" class="text-sm font-bold text-white/90 hover:text-white transition-colors whitespace-nowrap">
                                 Ingresar
                             </a>
-                            <a href="{{ route('register') }}" class="px-4 py-2 text-sm font-bold text-white rounded-xl transition-all shadow hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] bg-gradient-to-r from-g3-blue to-g3-green whitespace-nowrap border border-transparent">
+                            <a href="{{ route('register') }}" class="px-4 py-2 text-sm font-bold text-[var(--color-primary)] rounded-xl transition-all shadow hover:shadow-md hover:-translate-y-0.5 bg-white hover:bg-gray-50 whitespace-nowrap">
                                 Registrarse
                             </a>
                         @endauth
@@ -253,10 +307,10 @@ new class extends Component
                     {{-- Logo --}}
                     <a href="{{ url('/') }}" wire:navigate class="shrink-0 flex items-center">
                         @if(isset($settings) && $settings->logo_url)
-                            <img src="{{ asset('storage/' . $settings->logo_url) }}"
-                                 alt="Logo" class="h-9 w-auto object-contain drop-shadow-md">
+                            <img src="{{ tenant_asset($settings->logo_url) }}"
+                                 alt="Logo" class="h-16 w-auto object-contain drop-shadow-md">
                         @else
-                            <x-application-logo class="block h-9 w-auto fill-current text-slate-800 dark:text-slate-200 transition-colors"/>
+                            <x-application-logo class="block h-16 w-auto fill-current text-slate-800 dark:text-slate-200 transition-colors"/>
                         @endif
                     </a>
 
@@ -301,37 +355,14 @@ new class extends Component
                 {{-- Carrito --}}
                 <livewire:cart-icon />
 
-                {{-- Toggle Tema — onclick puro, siempre funciona (Sólo en Stealth puro, ocultar en modern-light) --}}
-                @if(!$isLuxury)
-                    <button onclick="POS.toggleTheme()" id="nav-theme-btn"
-                            class="relative p-2.5 rounded-xl
-                                   bg-slate-100 dark:bg-slate-800
-                                   text-slate-600 dark:text-slate-300
-                                   hover:bg-slate-200 dark:hover:bg-slate-700
-                                   hover:text-slate-900 dark:hover:text-white
-                                   transition-all focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/30"
-                            aria-label="Cambiar tema">
-                        {{-- Ícono: Sol (visible en dark, clic → light) --}}
-                        <svg id="icon-sun" class="w-5 h-5 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>
-                        {{-- Ícono: Luna (visible en light, clic → dark) --}}
-                        <svg id="icon-moon" class="w-5 h-5 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                        </svg>
-                    </button>
-                @endif
-
                 {{-- Usuario --}}
                 @auth
                     <x-dropdown align="right" width="56" :contentClasses="$isLuxury ? 'py-1 bg-[#0a0f1c] border border-white/5' : 'py-1 bg-white dark:bg-gray-800'">
                         <x-slot name="trigger">
                             <button class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium
-                                           text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white
+                                           text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-gray-900 dark:text-white
                                            focus:outline-none transition-all">
-                                <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm"
+                                <div class="w-7 h-7 rounded-full flex items-center justify-center text-gray-900 dark:text-white text-xs font-bold shadow-sm"
                                      style="background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 60%, #7c3aed))">
                                     {{ strtoupper(substr(optional(auth()->user())->name ?? 'U', 0, 1)) }}
                                 </div>
@@ -352,7 +383,6 @@ new class extends Component
                                 </div>
                                 <x-dropdown-link :href="route('admin.orders')" wire:navigate>📦 &nbsp;Órdenes</x-dropdown-link>
                                 <x-dropdown-link :href="route('admin.users')" wire:navigate>👥 &nbsp;Usuarios</x-dropdown-link>
-                                <x-dropdown-link :href="route('admin.products')" wire:navigate>🏷️ &nbsp;Productos</x-dropdown-link>
                                 <x-dropdown-link :href="route('admin.settings')" wire:navigate>⚙️ &nbsp;Configuración</x-dropdown-link>
                                 <div class="my-1 border-t border-slate-100 dark:border-slate-700/60"></div>
                             @else
@@ -367,11 +397,11 @@ new class extends Component
                     </x-dropdown>
                 @else
                     <a href="{{ route('login') }}"
-                       class="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap">
+                       class="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-gray-900 dark:text-white transition-colors whitespace-nowrap">
                         Ingresar
                     </a>
                     <a href="{{ route('register') }}"
-                       class="px-4 py-2 text-sm font-bold text-white rounded-xl transition-all
+                       class="px-4 py-2 text-sm font-bold text-gray-900 dark:text-white rounded-xl transition-all
                               hover:opacity-90 hover:-translate-y-0.5 shadow-md whitespace-nowrap"
                        style="background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 60%, #7c3aed))">
                         Registrarse
@@ -384,28 +414,13 @@ new class extends Component
             <div class="flex items-center gap-1 sm:hidden">
                 <livewire:cart-icon />
 
-                @if(!$isLuxury && !$isModernLight)
-                    <button onclick="POS.toggleTheme()"
-                            class="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
-                            aria-label="Tema">
-                        <svg class="w-5 h-5 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>
-                        <svg class="w-5 h-5 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                        </svg>
-                    </button>
-                @endif
-
                 <button @click="open = !open"
                         class="relative p-2 rounded-xl {{ $isModernLight ? 'text-white hover:bg-white/10' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }} transition-all"
                         aria-label="Menú">
                     @if(optional(auth()->user())->isAdmin() && $pendingOrdersCount > 0)
                         <span class="absolute top-1 right-1 flex h-2.5 w-2.5">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-g3-green opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-g3-blue border border-white dark:border-gray-900"></span>
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-white dark:border-gray-900"></span>
                         </span>
                     @endif
                     <svg class="h-5 w-5" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -444,7 +459,7 @@ new class extends Component
         @auth
         <div class="pt-4 pb-3 {{ $isLuxury ? 'border-t border-white/5' : 'border-t border-slate-200 dark:border-slate-800' }}">
             <div class="px-4 mb-4 mx-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex items-center gap-3 border border-slate-100 dark:border-slate-700/50">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm shrink-0"
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-gray-900 dark:text-white text-sm font-bold shadow-sm shrink-0"
                      style="background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 60%, #7c3aed))">
                     {{ strtoupper(substr(optional(auth()->user())->name ?? 'U', 0, 1)) }}
                 </div>
@@ -464,15 +479,12 @@ new class extends Component
                                 <span class="w-5 text-center">📦</span> <span>Gestión de Órdenes</span>
                             </div>
                             @if($pendingOrdersCount > 0)
-                                <span class="bg-g3-blue text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $pendingOrdersCount }}</span>
+                                <span class="bg-red-500 text-gray-900 dark:text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $pendingOrdersCount }}</span>
                             @endif
                         </div>
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.users')" wire:navigate>
                         <span class="w-5 text-center">👥</span> <span>Usuarios</span>
-                    </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('admin.products')" wire:navigate>
-                        <span class="w-5 text-center">🏷️</span> <span>Productos</span>
                     </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('admin.settings')" wire:navigate>
                         <span class="w-5 text-center">⚙️</span> <span>Configuración</span>
@@ -487,9 +499,9 @@ new class extends Component
                 </x-responsive-nav-link>
                 <div class="my-2 border-t border-slate-100 dark:border-slate-800/60 mx-4"></div>
                 <button wire:click="logout" class="w-full text-start focus:outline-none">
-                    <a class="block w-full pl-3 pr-4 py-2 border-l-4 border-transparent text-start text-base font-medium text-gray-400 hover:text-white hover:bg-zinc-800 transition duration-150 ease-in-out cursor-pointer">
-                        <span class="w-5 text-center inline-block">🚪</span> <span>Cerrar Sesión</span>
-                    </a>
+                    <x-responsive-nav-link class="!text-red-500 hover:!text-red-600 hover:!bg-red-50 dark:hover:!bg-red-900/20">
+                        <span class="w-5 text-center">🚪</span> <span>Cerrar Sesión</span>
+                    </x-responsive-nav-link>
                 </button>
             </div>
         </div>

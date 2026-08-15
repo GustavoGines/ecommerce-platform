@@ -63,14 +63,14 @@ new #[Layout('layouts.guest')] class extends Component
     <form wire:submit="register" class="space-y-4">
         <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Nombre Completo')" />
+            <x-input-label for="name" :value="__('Nombre completo')" />
             <x-text-input wire:model="name" id="name" class="block mt-1 w-full py-2 px-4" type="text" name="name" required autofocus autocomplete="name" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
         <!-- Email Address -->
         <div>
-            <x-input-label for="email" :value="__('Correo Electrónico')" />
+            <x-input-label for="email" :value="__('Correo electrónico')" />
             <x-text-input wire:model="email" id="email" class="block mt-1 w-full py-2 px-4" type="email" name="email" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
@@ -107,11 +107,11 @@ new #[Layout('layouts.guest')] class extends Component
 
         <div class="flex items-center justify-between pt-1">
             <a class="text-sm font-medium text-[var(--color-primary)] hover:opacity-80 transition-opacity" href="{{ route('login') }}">
-                {{ __('¿Ya tienes una cuenta?') }}
+                {{ __('¿Ya estás registrado?') }}
             </a>
 
             <x-primary-button>
-                {{ __('Registrarse') }}
+                {{ __('CREAR CUENTA') }}
             </x-primary-button>
         </div>
 

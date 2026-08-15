@@ -16,22 +16,22 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $theme = 'stealth';
-        
-        // FIX BUG-08: No consultar la BD durante comandos de consola (ej. migraciones)
-        if (! app()->runningInConsole()) {
+        app()->singleton('activeTheme', function () {
+            $default = env('DEFAULT_THEME', 'modern-light');
+            if (app()->runningInConsole()) {
+                return $default;
+            }
             try {
                 $settings = \App\Models\StoreSetting::getSettings();
+                return ($settings && $settings->theme_name) ? $settings->theme_name : $default;
+            } catch (\Exception $e) {
+                return $default;
+            }
+        });
 
-                $dbTheme = ($settings && $settings->theme_name) ? $settings->theme_name : 'stealth';
-                if ($dbTheme !== 'stealth') {
-                    $theme = $dbTheme;
-                }
-            } catch (\Exception $e) {}
-        }
-
-        \Illuminate\Support\Facades\View::share('activeTheme', $theme);
-        app()->singleton('activeTheme', fn() => $theme);
+        \Illuminate\Support\Facades\View::composer('*', function ($view) {
+            $view->with('activeTheme', app('activeTheme'));
+        });
 
         // Fix for Laragon subdirectories: Force Laravel to generate URLs with the correct base path
         if (! app()->environment('testing')) {
@@ -39,8 +39,6 @@ class AppServiceProvider extends ServiceProvider
             
             if (str_contains($host, 'loca.lt') || str_contains($host, 'ngrok') || str_starts_with(config('app.url'), 'https://') || config('app.tunnel_active')) {
                 URL::forceScheme('https');
-            } else if (config('app.url')) {
-                URL::forceRootUrl(config('app.url'));
             }
             
             // Fix dynamic Google Redirect URI for tunnels

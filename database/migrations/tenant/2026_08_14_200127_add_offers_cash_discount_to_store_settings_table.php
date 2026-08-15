@@ -12,10 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('store_settings', function (Blueprint $table) {
-            $table->string('theme_name')->default('stealth')->after('logo_url');
-            $table->string('store_tagline')->nullable()->after('store_name');
-            $table->string('favicon_url')->nullable()->after('logo_url');
-            $table->json('social_links')->nullable()->after('theme_name');
+            // Flag para determinar si la tienda ofrece el 10% de descuento por pago en efectivo
+            $table->boolean('offers_cash_discount')->default(true)->after('theme_name');
         });
     }
 
@@ -25,12 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('store_settings', function (Blueprint $table) {
-            $table->dropColumn([
-                'theme_name',
-                'store_tagline',
-                'favicon_url',
-                'social_links',
-            ]);
+            $table->dropColumn('offers_cash_discount');
         });
     }
 };

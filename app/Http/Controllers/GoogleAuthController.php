@@ -109,7 +109,7 @@ class GoogleAuthController extends Controller
         // El middleware CheckBanned solo aplica a usuarios ya logueados.
         // Sin este guard, un usuario baneado podría eludir la suspensión
         // usando "Continuar con Google" y obtener una sesión válida.
-        if ($user->is_banned) {
+        if ($user->getAttribute('is_banned')) {
             throw new \RuntimeException('account_suspended');
         }
 

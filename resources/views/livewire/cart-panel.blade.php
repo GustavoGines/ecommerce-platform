@@ -8,14 +8,14 @@ use Livewire\Attributes\On;
 new class extends Component {
     public $cart = [];
     public $subtotal = 0;
-    public $theme = 'stealth';
+    
     
     public function mount()
     {
         $this->loadCart();
         $settings = \App\Models\StoreSetting::getSettings();
         if ($settings) {
-            $this->theme = $settings->theme_name ?? 'stealth';
+            
         }
     }
 
@@ -47,25 +47,24 @@ new class extends Component {
 
     public function getPrice($product, $quantity): float
     {
+        // Pasamos array_sum($this->cart) como cartTotalQuantity
+        $cartTotalQuantity = array_sum($this->cart);
+        
         // DRY-01: Lógica centralizada en PricingService
-        return app(PricingService::class)->unitPrice($product, $quantity, auth()->user());
+        return app(PricingService::class)->unitPrice($product, $quantity, auth()->user(), $cartTotalQuantity);
     }
-
-    public $subtotalCash = 0;
 
     public function calculateSubtotal($products)
     {
         $this->subtotal = 0;
-        $totalCartQuantity = array_sum($this->cart);
 
         foreach ($this->cart as $productId => $quantity) {
             if (isset($products[$productId])) {
                 $product = $products[$productId];
-                $price = app(PricingService::class)->unitPrice($product, $quantity, auth()->user(), $totalCartQuantity);
+                $price = $this->getPrice($product, $quantity);
                 $this->subtotal += $price * $quantity;
             }
         }
-        $this->subtotalCash = $this->subtotal * 0.90;
     }
 
     public function updateQuantity($productId, $action)
@@ -131,18 +130,16 @@ new class extends Component {
 <div x-data="{ 
         isClearing: false,
         itemTotals: {},
-        itemQtys: {},
-        get globalQty() {
-            return Object.values(this.itemQtys).reduce((a, b) => a + (b || 0), 0);
+        itemQuantities: {},
+        get globalSubtotal() {
+            let total = Object.values(this.itemTotals).reduce((a, b) => a + (parseFloat(b) || 0), 0);
+            return isNaN(total) ? 0 : total;
         },
-        get globalRetailTotal() {
-            return Object.values(this.itemTotals).reduce((a, b) => a + (b.retail || 0), 0);
-        },
-        get globalCashTotal() {
-            return this.globalRetailTotal * 0.90;
+        get globalQuantity() {
+            return Object.values(this.itemQuantities).reduce((a, b) => a + b, 0);
         },
         formatMoney(value) {
-            return new Intl.NumberFormat('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0}).format(value).replace(/,/g, '.');
+            return new Intl.NumberFormat('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(value);
         }
      }"
      x-show="$store.cart.open"
@@ -151,13 +148,16 @@ new class extends Component {
      @cart-badge-updated.window="isClearing = false"
      class="relative z-[100]"
      data-cart-ids="{{ json_encode(array_keys($cart)) }}"
-     x-effect="
-         let validIds = JSON.parse($el.dataset.cartIds || '[]');
-         for(let id in itemTotals) {
-             if(!validIds.includes(parseInt(id))) {
-                 delete itemTotals[id];
+     @cart-updated.window="
+         $nextTick(() => {
+             let validIds = JSON.parse($el.dataset.cartIds || '[]');
+             for(let id in itemTotals) {
+                 if(!validIds.includes(parseInt(id))) {
+                     delete itemTotals[id];
+                     delete itemQuantities[id];
+                 }
              }
-         }
+         });
      "
      aria-labelledby="slide-over-title" role="dialog" aria-modal="true" x-cloak>
     
@@ -169,7 +169,7 @@ new class extends Component {
          x-transition:leave="ease-in-out duration-500" 
          x-transition:leave-start="opacity-100" 
          x-transition:leave-end="opacity-0" 
-         class="fixed inset-0 transition-opacity {{ $theme === 'luxury' ? 'bg-[#030712]/80 backdrop-blur-md' : 'bg-gray-900/60 dark:bg-[#0b0f19]/80 backdrop-blur-sm' }}" 
+         class="fixed inset-0 transition-opacity bg-gray-900/60 dark:bg-[#0b0f19]/80 backdrop-blur-sm" 
          @click="$store.cart.hide()">
     </div>
 
@@ -185,9 +185,9 @@ new class extends Component {
                      x-transition:leave="transform transition ease-in-out duration-500 sm:duration-700" 
                      x-transition:leave-start="translate-x-0" 
                      x-transition:leave-end="translate-x-full" 
-                     class="pointer-events-auto w-[100vw] sm:w-screen max-w-md">
+                     class="pointer-events-auto w-screen max-w-md">
                      
-                     <div class="flex h-full flex-col relative shadow-2xl transition-colors duration-300 {{ $theme === 'luxury' ? 'bg-[#0a0f1c]/90 backdrop-blur-3xl border-l border-white/5' : 'bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800' }}" :style="('{{ $theme }}' === 'stealth' && $store.theme.dark) ? 'box-shadow: -10px 0 30px -10px var(--color-primary-glow);' : ''">
+                     <div class="flex h-full flex-col relative shadow-2xl transition-colors duration-300 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800" >
                         <div class="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
                             <div class="flex items-start justify-between">
                                 <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3" id="slide-over-title">
@@ -226,25 +226,24 @@ new class extends Component {
                                                         stock: {{ $product->stock }},
                                                         isDeleted: false,
                                                         isVip: {{ (auth()->user() && auth()->user()->isWholesaleCustomer()) ? 'true' : 'false' }},
-                                                        minWholesaleQty: {{ $product->wholesale_min_quantity }},
+                                                        minWholesaleQty: {{ \App\Services\PricingService::GLOBAL_WHOLESALE_MIN }},
                                                         retailPrice: {{ $product->retail_price }},
                                                         wholesalePrice: {{ $product->wholesale_price }},
                                                         timeout: null,
                                                         
                                                         get isWholesale() {
-                                                            let q = parseInt(this.qty) || 0;
-                                                            return this.isVip || q >= this.minWholesaleQty || globalQty >= {{ \App\Services\PricingService::GLOBAL_WHOLESALE_MIN }};
+                                                            return this.isVip || globalQuantity >= this.minWholesaleQty;
                                                         },
                                                         get currentUnitPrice() {
                                                             return this.isWholesale ? this.wholesalePrice : this.retailPrice;
                                                         },
-                                                        get itemRetailTotal() {
-                                                            let q = parseInt(this.qty) || 0;
-                                                            return this.currentUnitPrice * q;
+                                                        get itemTotal() {
+                                                            let total = this.currentUnitPrice * this.qty;
+                                                            return isNaN(total) ? 0 : total;
                                                         },
                                                         
                                                         formatMoney(value) {
-                                                            return new Intl.NumberFormat('es-AR', {minimumFractionDigits: 0, maximumFractionDigits: 0}).format(value).replace(/,/g, '.');
+                                                            return new Intl.NumberFormat('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(value);
                                                         },
                                                         
                                                         changeQty(amount) {
@@ -263,18 +262,20 @@ new class extends Component {
                                                         }
                                                     }"
                                                     x-init="
+                                                        itemQuantities[{{ $productId }}] = parseInt(qty) || 0;
                                                         $watch('qty', val => { 
-                                                            let parsed = parseInt(val) || 0;
+                                                            let parsed = parseInt(val);
+                                                            itemQuantities[{{ $productId }}] = parsed || 0;
+                                                            if(isNaN(parsed)) return;
                                                             if(parsed > stock) { qty = stock; sync(); }
-                                                            else if(parsed < 1 && parsed !== 0) { qty = 1; sync(); }
+                                                            else if(parsed < 1) { qty = 1; sync(); }
                                                         });
                                                     "
                                                     x-effect="
-                                                        itemTotals[{{ $productId }}] = { retail: itemRetailTotal };
-                                                        itemQtys[{{ $productId }}] = parseInt(qty) || 0;
+                                                        itemTotals[{{ $productId }}] = itemTotal;
                                                     "
                                                 >
-                                                    <div class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl border {{ $theme === 'luxury' ? 'border-white/10 bg-[#0a0f1c]/50' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800' }} p-2">
+                                                    <div class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2">
                                                         @if($product->image_url)
                                                             <img src="{{ asset('storage/' . $product->image_url) }}" alt="{{ $product->name }}" class="h-full w-full object-contain mix-blend-multiply dark:mix-blend-normal">
                                                         @else
@@ -292,14 +293,14 @@ new class extends Component {
                                                                 <h3 class="line-clamp-2 leading-tight flex-1">
                                                                     {{ $product->name }}
                                                                 </h3>
-                                                                <p class="text-[var(--color-primary)] whitespace-nowrap" x-text="`$${formatMoney(itemRetailTotal)}`"></p>
+                                                                <p class="text-[var(--color-primary)] whitespace-nowrap" x-text="`$${formatMoney(itemTotal)}`"></p>
                                                             </div>
                                                             <div class="mt-1 flex items-center flex-wrap gap-2">
                                                                 <template x-if="isWholesale">
-                                                                    <div class="flex items-center gap-2">
+                                                                    <div class="flex items-center flex-wrap gap-x-2 gap-y-1">
                                                                         <p class="text-xs text-gray-400 dark:text-gray-500 line-through" x-text="`$${formatMoney(retailPrice)} c/u`"></p>
                                                                         <p class="text-sm font-black text-emerald-600 dark:text-emerald-400" x-text="`$${formatMoney(wholesalePrice)} c/u`"></p>
-                                                                        <span class="inline-flex items-center text-[9px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-transparent border border-emerald-200 dark:border-emerald-500/50 px-1.5 py-0.5 rounded shadow-sm">
+                                                                        <span class="inline-flex items-center text-[9px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-transparent border border-emerald-200 dark:border-emerald-500/50 px-1.5 py-0.5 rounded shadow-sm shrink-0">
                                                                             🔥 Precio Mayorista
                                                                         </span>
                                                                     </div>
@@ -309,17 +310,17 @@ new class extends Component {
                                                                 </template>
                                                             </div>
                                                         </div>
-                                                        <div class="flex flex-1 items-end justify-between text-sm mt-3 sm:mt-0">
+                                                        <div class="flex flex-1 items-end justify-between text-sm mt-3 sm:mt-0 gap-2 flex-wrap">
                                                             <div class="flex flex-col items-start gap-1.5">
-                                                                <div class="flex items-center border rounded-full overflow-hidden shadow-sm relative isolate {{ $theme === 'luxury' ? 'border-white/10 bg-white/5' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800' }}">
-                                                                    <button @click="changeQty(-1)" type="button" class="px-3 py-1 font-bold transition-colors disabled:cursor-not-allowed {{ $theme === 'luxury' ? 'text-gray-400 hover:bg-white/10 disabled:text-gray-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:text-gray-300 dark:disabled:text-gray-600' }}" :disabled="qty <= 1">-</button>
+                                                                <div class="flex items-center border rounded-full overflow-hidden shadow-sm relative isolate border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800">
+                                                                    <button @click="changeQty(-1)" type="button" class="px-3 py-1 font-bold transition-colors disabled:cursor-not-allowed text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:text-gray-300 dark:disabled:text-gray-600" :disabled="qty <= 1">-</button>
                                                                     <input type="text" 
                                                                            inputmode="numeric" 
                                                                            pattern="[0-9]*"
                                                                            x-model.number="qty"
                                                                            @input="sync()"
-                                                                           class="px-1 w-14 font-bold text-center bg-transparent border-0 border-transparent outline-none focus:ring-0 focus:border-transparent focus:outline-none shadow-none p-0 m-0 {{ $theme === 'luxury' ? 'text-white' : 'text-gray-900 dark:text-white' }}">
-                                                                    <button @click="changeQty(1)" type="button" class="px-3 py-1 font-bold transition-colors disabled:cursor-not-allowed {{ $theme === 'luxury' ? 'text-gray-400 hover:bg-white/10 disabled:text-gray-600' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:text-gray-300 dark:disabled:text-gray-600' }}" :disabled="qty >= stock">+</button>
+                                                                           class="px-1 w-14 font-bold text-center bg-transparent border-0 border-transparent outline-none focus:ring-0 focus:border-transparent focus:outline-none shadow-none p-0 m-0 text-gray-900 dark:text-white">
+                                                                    <button @click="changeQty(1)" type="button" class="px-3 py-1 font-bold transition-colors disabled:cursor-not-allowed text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:text-gray-300 dark:disabled:text-gray-600" :disabled="qty >= stock">+</button>
                                                                 </div>
                                                                 <span x-show="qty >= stock" x-cloak x-transition.opacity class="text-[9px] font-black text-red-600 dark:text-red-400 uppercase tracking-widest">
                                                                     ¡Últimas en stock!
@@ -353,31 +354,17 @@ new class extends Component {
                         </div>
 
                         @if(count($cart) > 0)
-                            <div class="border-t px-4 py-6 sm:px-6 transition-colors duration-300 {{ $theme === 'luxury' ? 'border-white/10 bg-white/5' : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50' }}" x-show="!isClearing" x-transition.opacity.duration.300ms>
-                                <div class="flex justify-between text-base font-black text-xl {{ $theme === 'luxury' ? 'text-white' : 'text-gray-900 dark:text-white' }}">
-                                    <p>Total de Lista</p>
-                                    <p x-text="`$${formatMoney(globalRetailTotal)}`">${{ number_format($subtotal, 0, ',', '.') }}</p>
+                            <div class="border-t px-4 py-6 sm:px-6 transition-colors duration-300 border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50" x-show="!isClearing" x-transition.opacity.duration.300ms>
+                                <div class="flex justify-between text-base font-black text-xl text-gray-900 dark:text-white">
+                                    <p>Subtotal</p>
+                                    <p x-text="`$${formatMoney(globalSubtotal)}`">${{ number_format($subtotal, 2) }}</p>
                                 </div>
-                                <div class="flex justify-between text-base font-black text-emerald-600 dark:text-emerald-400 mt-2">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                        <p>Efectivo / Transferencia</p>
-                                    </div>
-                                    <p x-text="`$${formatMoney(globalCashTotal)}`">${{ number_format($subtotalCash ?? 0, 0, ',', '.') }}</p>
-                                </div>
-
-                                <div class="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between shadow-inner">
-                                    <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
-                                        <span class="text-lg">🔥</span>
-                                        <span>¡Ahorras pagando en Efectivo!</span>
-                                    </div>
-                                    <span class="text-emerald-600 dark:text-emerald-400 font-black text-lg" x-text="`$${formatMoney(globalRetailTotal - globalCashTotal)}`"></span>
-                                </div>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Impuestos y envío calculados en el checkout.</p>
                                 <div class="mt-6">
                                     <button wire:click="goToCheckout"
                                        @click="$store.cart.hide()"
                                        class="flex items-center justify-center w-full rounded-full px-6 py-4 text-base font-bold text-white shadow-lg transition-all hover:opacity-90 hover:-translate-y-0.5 {{ empty($cart) ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' }}"
-                                       style="background-color: var(--color-primary); box-shadow: 0 4px 14px 0 var(--color-primary-glow);">
+                                       >
                                         Finalizar Pedido
                                     </button>
                                 </div>
