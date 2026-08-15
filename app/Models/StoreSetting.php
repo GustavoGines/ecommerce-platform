@@ -19,6 +19,8 @@ class StoreSetting extends Model
         'logo_url',
         'favicon_url',
         'social_links',
+        'mp_access_token',
+        'mp_public_key',
     ];
 
     protected $casts = [

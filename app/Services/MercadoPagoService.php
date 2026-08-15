@@ -15,7 +15,13 @@ class MercadoPagoService
 {
     public function __construct()
     {
-        MercadoPagoConfig::setAccessToken(config('services.mercadopago.access_token'));
+        $settings = \App\Models\StoreSetting::getSettings();
+        $accessToken = $settings->mp_access_token ?? config('services.mercadopago.access_token');
+
+        if ($accessToken) {
+            MercadoPagoConfig::setAccessToken($accessToken);
+        }
+        
         // SEC-03 FIX: TLS activo en prod (SERVER), desactivado solo en desarrollo (LOCAL).
         MercadoPagoConfig::setRuntimeEnviroment(
             app()->isProduction() ? MercadoPagoConfig::SERVER : MercadoPagoConfig::LOCAL

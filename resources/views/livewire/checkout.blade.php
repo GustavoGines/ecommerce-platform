@@ -26,12 +26,14 @@ new #[Layout('layouts.app')] class extends Component {
     public $theme = 'stealth';
     public string $turnstileToken = '';
     public string $payment_method = 'transfer'; // 'transfer' o 'mercadopago'
+    public bool $has_mp_token = false;
 
     public function mount()
     {
         $settings = \App\Models\StoreSetting::getSettings();
         if ($settings) {
             $this->theme = $settings->theme_name ?? 'stealth';
+            $this->has_mp_token = !empty($settings->mp_access_token);
         }
         $cartService = app(\App\Services\CartService::class);
         $this->cart = $cartService->getCartItemsArray();
@@ -557,18 +559,19 @@ new #[Layout('layouts.app')] class extends Component {
                             </label>
 
                             <!-- Mercado Pago -->
-                            <label class="relative flex cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all"
+                            @if($has_mp_token)
+                            <div class="relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-300"
                                    :class="$wire.payment_method === 'mercadopago' ? 'border-blue-500 bg-blue-500/10 ring-1 ring-blue-500' : 'border-zinc-700 bg-zinc-950 hover:bg-zinc-800'">
                                 <input type="radio" wire:model.live="payment_method" value="mercadopago" class="sr-only">
-                                <span class="flex flex-1">
-                                    <span class="flex flex-col">
+                                <div class="flex-1 ml-3 flex justify-between items-center">
+                                    <div>
                                         <span class="block text-sm font-bold text-white">Mercado Pago</span>
-                                        <span class="mt-1 flex items-center text-xs text-gray-400">Precio de Lista normal</span>
-                                        <span class="mt-2 text-xs text-gray-400">Tarjetas de crédito o dinero en cuenta.</span>
-                                    </span>
-                                </span>
+                                        <span class="block text-xs text-gray-400 mt-0.5">Tarjetas, Rapipago, etc.</span>
+                                    </div>
+                                </div>
                                 <svg class="h-5 w-5 text-blue-500 transition-opacity" :class="$wire.payment_method === 'mercadopago' ? 'opacity-100' : 'opacity-0'" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                            </label>
+                            </div>
+                            @endif
                         </div>
                     </div>
 
@@ -786,18 +789,19 @@ new #[Layout('layouts.app')] class extends Component {
                             </label>
 
                             <!-- Mercado Pago -->
-                            <label class="relative flex cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all"
+                            @if($has_mp_token)
+                            <div class="relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-300"
                                    :class="$wire.payment_method === 'mercadopago' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5 ring-1 ring-[var(--color-primary)]' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800'">
                                 <input type="radio" wire:model.live="payment_method" value="mercadopago" class="sr-only">
-                                <span class="flex flex-1">
-                                    <span class="flex flex-col">
+                                <div class="flex-1 ml-3 flex justify-between items-center">
+                                    <div>
                                         <span class="block text-sm font-bold text-gray-900 dark:text-white">Mercado Pago</span>
-                                        <span class="mt-1 flex items-center text-xs text-gray-500 dark:text-gray-400">Precio de Lista normal</span>
-                                        <span class="mt-2 text-xs text-gray-500 dark:text-gray-400">Tarjetas de crédito, débito o dinero en cuenta.</span>
-                                    </span>
-                                </span>
+                                        <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">Tarjetas, Efectivo (Rapipago/PagoFácil) o Dinero en cuenta</span>
+                                    </div>
+                                </div>
                                 <svg class="h-5 w-5 text-[var(--color-primary)] transition-opacity" :class="$wire.payment_method === 'mercadopago' ? 'opacity-100' : 'opacity-0'" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                            </label>
+                            </div>
+                            @endif
                         </div>
                     </div>
                     

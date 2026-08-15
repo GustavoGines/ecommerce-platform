@@ -21,6 +21,10 @@ new #[Layout('layouts.app')] class extends Component {
     public $social_tiktok = '';
     public $social_whatsapp = '';
 
+    // Credenciales de Mercado Pago
+    public $mp_access_token = '';
+    public $mp_public_key = '';
+
     public $favicon;
     public $current_favicon_url;
     public $logo;
@@ -42,6 +46,9 @@ new #[Layout('layouts.app')] class extends Component {
                 $this->social_tiktok = $social['tiktok'] ?? '';
                 $this->social_whatsapp = $social['whatsapp'] ?? '';
             }
+
+            $this->mp_access_token = $settings->mp_access_token ?? '';
+            $this->mp_public_key = $settings->mp_public_key ?? '';
 
             $this->current_favicon_url = $settings->favicon_url;
             $this->current_logo_url = $settings->logo_url;
@@ -99,8 +106,10 @@ new #[Layout('layouts.app')] class extends Component {
             'social_twitter'   => 'nullable|url|max:255',
             'social_tiktok'    => 'nullable|url|max:255',
             'social_whatsapp'  => 'nullable|string|max:50',
-            'favicon'          => 'nullable|image|max:2048', // 2MB
-            'logo'             => 'nullable|image|max:10240', // 10MB
+            'favicon'          => 'nullable|image|max:1024',
+            'logo'             => 'nullable|image|max:2048',
+            'mp_access_token'  => 'nullable|string',
+            'mp_public_key'    => 'nullable|string',
         ]);
 
         $settings = StoreSetting::first() ?? new StoreSetting();
@@ -115,7 +124,12 @@ new #[Layout('layouts.app')] class extends Component {
             'tiktok'    => $this->social_tiktok,
             'whatsapp'  => $this->social_whatsapp,
         ];
-        $settings->social_links = array_filter($social); // Remueve vacíos
+        $settings->social_links = array_filter($social);
+        
+        $settings->mp_access_token = $this->mp_access_token;
+        $settings->mp_public_key = $this->mp_public_key;
+
+        $settings->save();
 
         if ($this->favicon) {
             if ($settings->favicon_url) {
