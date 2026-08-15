@@ -27,6 +27,9 @@ new class extends Component {
     #[Url(as: 'sort')]
     public $sort = 'default';
 
+    #[Url(as: 'stock')]
+    public $inStockOnly = false;
+
     public function mount()
     {
         if ($this->selectedCategory && !is_numeric($this->selectedCategory)) {
@@ -63,6 +66,10 @@ new class extends Component {
 
         // Prioridad de Stock: Los productos sin stock van al final
         $query->orderByRaw('stock > 0 DESC');
+
+        if ($this->inStockOnly) {
+            $query->where('stock', '>', 0);
+        }
 
         if ($this->selectedCategory) {
             $query->where('category_id', $this->selectedCategory);
@@ -278,6 +285,19 @@ new class extends Component {
                         </div>
                     </div>
                     @endif
+
+                    {{-- Stock Toggle --}}
+                    <div>
+                        <h4 class="text-white font-bold text-sm tracking-widest uppercase mb-4 pb-4 border-b border-zinc-800">Disponibilidad</h4>
+                        <label class="flex items-center cursor-pointer gap-3 p-3 rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 transition-colors">
+                            <div class="relative">
+                                <input type="checkbox" wire:model.live="inStockOnly" class="sr-only">
+                                <div class="block bg-zinc-700 w-10 h-6 rounded-full transition-colors duration-300" :class="{'bg-[var(--color-primary)]': @entangle('inStockOnly')}"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300" :class="{'translate-x-4': @entangle('inStockOnly')}"></div>
+                            </div>
+                            <span class="text-sm font-medium text-g3-silver select-none">Mostrar solo en stock</span>
+                        </label>
+                    </div>
 
                     {{-- Functional Price Range --}}
                     <div>
