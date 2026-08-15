@@ -8,6 +8,7 @@ use Livewire\Attributes\On;
 new class extends Component {
     public $cart = [];
     public $subtotal = 0;
+    public $subtotalCash = 0;
     
     
     public function mount()
@@ -65,6 +66,7 @@ new class extends Component {
                 $this->subtotal += $price * $quantity;
             }
         }
+        $this->subtotalCash = $this->subtotal * 0.90;
     }
 
     public function updateQuantity($productId, $action)
@@ -137,6 +139,9 @@ new class extends Component {
         },
         get globalQuantity() {
             return Object.values(this.itemQuantities).reduce((a, b) => a + b, 0);
+        },
+        get globalCashTotal() {
+            return this.globalSubtotal * 0.90;
         },
         formatMoney(value) {
             return new Intl.NumberFormat('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(value);
@@ -356,10 +361,25 @@ new class extends Component {
                         @if(count($cart) > 0)
                             <div class="border-t px-4 py-6 sm:px-6 transition-colors duration-300 border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50" x-show="!isClearing" x-transition.opacity.duration.300ms>
                                 <div class="flex justify-between text-base font-black text-xl text-gray-900 dark:text-white">
-                                    <p>Subtotal</p>
+                                    <p>Total de Lista</p>
                                     <p x-text="`$${formatMoney(globalSubtotal)}`">${{ number_format($subtotal, 2) }}</p>
                                 </div>
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Impuestos y envío calculados en el checkout.</p>
+                                <div class="flex justify-between text-base font-black text-emerald-600 dark:text-emerald-400 mt-2">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        <p>Efectivo / Transferencia</p>
+                                    </div>
+                                    <p x-text="`$${formatMoney(globalCashTotal)}`">${{ number_format($subtotalCash ?? 0, 2) }}</p>
+                                </div>
+
+                                <div class="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between shadow-inner">
+                                    <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+                                        <span class="text-lg">🔥</span>
+                                        <span>¡Ahorras pagando en Efectivo!</span>
+                                    </div>
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-black text-lg" x-text="`$${formatMoney(globalSubtotal - globalCashTotal)}`"></span>
+                                </div>
+                                <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">Impuestos y envío calculados en el checkout.</p>
                                 <div class="mt-6">
                                     <button wire:click="goToCheckout"
                                        @click="$store.cart.hide()"
