@@ -21,5 +21,5 @@ Ver Mis Órdenes
 </x-mail::button>
 
 ¡Gracias por elegirnos!<br>
-{{ config('app.name') }}
+{{ \App\Models\StoreSetting::getSettings()->store_name ?? config('app.name') }}
 </x-mail::message>

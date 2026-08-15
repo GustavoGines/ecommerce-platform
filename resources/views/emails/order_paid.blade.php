@@ -19,5 +19,5 @@ Ver Comprobante de Pago
 O podés ver todo tu historial ingresando a [Mis Compras]({{ route('my-orders') }}).
 
 ¡Gracias por tu compra!<br>
-{{ config('app.name') }}
+{{ \App\Models\StoreSetting::getSettings()->store_name ?? config('app.name') }}
 </x-mail::message>
