@@ -373,7 +373,7 @@ new class extends Component {
                                     <button wire:click="goToCheckout"
                                        @click="$store.cart.hide()"
                                        class="flex items-center justify-center w-full rounded-full px-6 py-4 text-base font-bold text-white shadow-lg transition-all hover:opacity-90 hover:-translate-y-0.5 {{ empty($cart) ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' }}"
-                                       >
+                                       style="background-color: var(--color-primary); box-shadow: 0 4px 14px 0 var(--color-primary-glow);">
                                         Finalizar Pedido
                                     </button>
                                 </div>
