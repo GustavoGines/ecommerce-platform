@@ -85,7 +85,7 @@ class MercadoPagoService
             'back_urls' => $backUrls,
             'external_reference' => (string) $order->id,
             'metadata' => $metadata,
-            'statement_descriptor' => config('app.name'),
+            'statement_descriptor' => \App\Models\StoreSetting::getSettings()->store_name ?? config('app.name'),
         ];
 
         // auto_return y notification_url requieren URLs públicas

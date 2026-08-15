@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comprobante de Compra #{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }} — {{ config('app.name') }}</title>
+    <title>Comprobante de Compra #{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }} — {{ \App\Models\StoreSetting::getSettings()->store_name ?? config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 print:bg-white text-gray-900 min-h-screen py-10 px-4 sm:px-6">
@@ -177,7 +177,7 @@
             {{-- Footer Legal del comprobante --}}
             <div class="text-center text-gray-400 text-xs pt-6">
                 <p class="font-bold text-gray-300 uppercase tracking-widest mb-2 print:text-gray-600">Documento no válido como factura</p>
-                <p class="print:text-gray-700">{{ config('app.name') }} • Comprobante generado el {{ now()->format('d/m/Y H:i') }}</p>
+                <p class="print:text-gray-700">{{ \App\Models\StoreSetting::getSettings()->store_name ?? config('app.name') }} • Comprobante generado el {{ now()->format('d/m/Y H:i') }}</p>
                 <p class="mt-1 print:text-gray-700">Este comprobante es únicamente una constancia interna de tu pedido.</p>
             </div>
         </div>
