@@ -851,10 +851,10 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
 
             <!-- Vista Móvil para Productos (Tarjetas) -->
-            <div class="block md:hidden space-y-2.5">
+            <div class="block md:hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden divide-y divide-gray-100 dark:divide-gray-700/50 shadow-sm mb-4">
                 @foreach($products as $product)
                 <div 
-                    class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-2.5 shadow-sm relative cursor-pointer active:bg-gray-50 dark:active:bg-gray-700/50 transition-colors {{ in_array($product->id, $selectedProducts) ? 'ring-2 ring-[var(--color-primary)]' : '' }}"
+                    class="p-2.5 relative cursor-pointer hover:bg-gray-50 active:bg-gray-50 dark:hover:bg-gray-700/30 dark:active:bg-gray-700/50 transition-colors {{ in_array($product->id, $selectedProducts) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : '' }}"
                     @click="if(!isProductLoading) { isProductLoading = true; modalOpen = true; $wire.edit({{ $product->id }}).then(() => isProductLoading = false) }"
                 >
                     <div class="flex items-center gap-2.5">
