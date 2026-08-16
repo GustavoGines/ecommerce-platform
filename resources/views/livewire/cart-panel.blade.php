@@ -237,10 +237,10 @@ new class extends Component {
                                                         timeout: null,
                                                         
                                                         get isWholesale() {
-                                                            return false; // G3 no usa mayorista
+                                                            return {{ tenant('id') === 'jcg' ? 'this.isVip || globalQuantity >= this.minWholesaleQty' : 'false' }};
                                                         },
                                                         get currentUnitPrice() {
-                                                            return this.retailPrice;
+                                                            return this.isWholesale ? this.wholesalePrice : this.retailPrice;
                                                         },
                                                         get itemTotal() {
                                                             let total = this.currentUnitPrice * this.qty;
@@ -301,7 +301,18 @@ new class extends Component {
                                                                 <p class="text-[var(--color-primary)] whitespace-nowrap" x-text="`$${formatMoney(itemTotal)}`"></p>
                                                             </div>
                                                             <div class="mt-1 flex items-center flex-wrap gap-2">
-                                                                <p class="text-sm text-gray-500 dark:text-gray-400" x-text="`$${formatMoney(retailPrice)} c/u`"></p>
+                                                                <template x-if="isWholesale">
+                                                                    <div class="flex items-center flex-wrap gap-x-2 gap-y-1">
+                                                                        <p class="text-xs text-gray-400 dark:text-gray-500 line-through" x-text="`$${formatMoney(retailPrice)} c/u`"></p>
+                                                                        <p class="text-sm font-black text-emerald-600 dark:text-emerald-400" x-text="`$${formatMoney(wholesalePrice)} c/u`"></p>
+                                                                        <span class="inline-flex items-center text-[9px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-transparent border border-emerald-200 dark:border-emerald-500/50 px-1.5 py-0.5 rounded shadow-sm shrink-0">
+                                                                            🔥 Precio Mayorista
+                                                                        </span>
+                                                                    </div>
+                                                                </template>
+                                                                <template x-if="!isWholesale">
+                                                                    <p class="text-sm text-gray-500 dark:text-gray-400" x-text="`$${formatMoney(retailPrice)} c/u`"></p>
+                                                                </template>
                                                             </div>
                                                         </div>
                                                         <div class="flex flex-1 items-end justify-between text-sm mt-3 sm:mt-0 gap-2 flex-wrap">
@@ -350,9 +361,11 @@ new class extends Component {
                         @if(count($cart) > 0)
                             <div class="border-t px-4 py-6 sm:px-6 transition-colors duration-300 border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50" x-show="!isClearing" x-transition.opacity.duration.300ms>
                                 <div class="flex justify-between text-base font-black text-xl text-gray-900 dark:text-white">
-                                    <p>Total de Lista</p>
+                                    <p>{{ tenant('id') === 'g3' ? 'Total de Lista' : 'Subtotal' }}</p>
                                     <p x-text="`$${formatMoney(globalSubtotal)}`">${{ number_format($subtotal, 2) }}</p>
                                 </div>
+                                
+                                @if(tenant('id') === 'g3')
                                 <div class="flex justify-between text-base font-black text-emerald-600 dark:text-emerald-400 mt-2">
                                     <div class="flex items-center gap-1.5">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -368,6 +381,24 @@ new class extends Component {
                                     </div>
                                     <span class="text-emerald-600 dark:text-emerald-400 font-black text-lg" x-text="`$${formatMoney(globalSubtotal - globalCashTotal)}`"></span>
                                 </div>
+                                @endif
+
+                                @if(tenant('id') === 'jcg')
+                                <div x-show="globalQuantity >= 10" class="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-center gap-2 shadow-inner" x-cloak>
+                                    <span class="text-lg">✨</span>
+                                    <span class="text-blue-600 dark:text-blue-400 font-bold text-sm">¡Estás comprando con Precio Mayorista!</span>
+                                </div>
+                                
+                                <div x-show="globalQuantity > 0 && globalQuantity < 10" class="mt-4 p-3 bg-gray-200/50 dark:bg-gray-800 rounded-xl flex flex-col gap-1 shadow-inner border border-gray-300 dark:border-gray-700" x-cloak>
+                                    <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-bold text-sm">
+                                        <span class="text-lg">💡</span>
+                                        <span x-text="`Agregá ${10 - globalQuantity} productos más para acceder al Precio Mayorista`"></span>
+                                    </div>
+                                    <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1.5 mt-1 overflow-hidden">
+                                        <div class="bg-[var(--color-primary)] h-1.5 rounded-full transition-all duration-500" :style="`width: ${(globalQuantity / 10) * 100}%`"></div>
+                                    </div>
+                                </div>
+                                @endif
                                 <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">Impuestos y envío calculados en el checkout.</p>
                                 <div class="mt-6">
                                     <button wire:click="goToCheckout"
