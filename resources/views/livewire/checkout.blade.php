@@ -658,7 +658,19 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         @endif
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8"
+             @if(tenant('id') === 'g3')
+             x-data="{
+                payType: @entangle('g3_payment_type').live,
+                cashAmt: @entangle('g3_cash_amount').live,
+                cardAmt: @entangle('g3_card_amount').live,
+                subtotal: {{ $subtotal }},
+                get cashDisc() { return this.cashAmt * 0.90; },
+                get totalMixto() { return this.cashDisc + parseFloat(this.cardAmt || 0); },
+                get cardRemaining() { return Math.max(0, this.subtotal - parseFloat(this.cashAmt || 0)); }
+             }"
+             @endif
+        >
             <!-- Order Summary -->
             <div class="bg-white/80 dark:bg-gray-800/40 backdrop-blur-md border border-gray-200 dark:border-gray-700/50 shadow-xl dark:shadow-2xl sm:rounded-3xl p-8">
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Resumen de tu Orden</h3>
@@ -716,8 +728,17 @@ new #[Layout('layouts.app')] class extends Component {
                     <span class="text-xl font-bold text-gray-900 dark:text-white">Total a Pagar</span>
                     <div class="text-right">
                         @if($payment_method === 'transfer' && tenant('id') === 'g3')
-                            <p class="text-sm font-bold line-through text-gray-400 mb-1">${{ number_format($subtotal, 0, ',', '.') }}</p>
-                            <span class="text-3xl font-black text-emerald-500">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
+                            <div x-show="payType === 'efectivo'">
+                                <p class="text-sm font-bold line-through text-gray-400 mb-1">${{ number_format($subtotal, 0, ',', '.') }}</p>
+                                <span class="text-3xl font-black text-emerald-500">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
+                            </div>
+                            <div x-show="payType === 'tarjeta'" style="display: none;">
+                                <span class="text-3xl font-black text-gray-900 dark:text-white">${{ number_format($subtotal, 0, ',', '.') }}</span>
+                            </div>
+                            <div x-show="payType === 'mixto'" style="display: none;">
+                                <p class="text-sm font-bold line-through text-gray-400 mb-1">${{ number_format($subtotal, 0, ',', '.') }}</p>
+                                <span class="text-3xl font-black text-purple-500">$<span x-text="Math.round(totalMixto).toLocaleString('es-AR')"></span></span>
+                            </div>
                         @else
                             <span class="text-3xl font-black text-gray-900 dark:text-white">${{ number_format($subtotal, 0, ',', '.') }}</span>
                         @endif
@@ -788,15 +809,7 @@ new #[Layout('layouts.app')] class extends Component {
 
                     {{-- G3: Selector de tipo de pago (solo para g3 y cuando payment_method = transfer) --}}
                     @if(tenant('id') === 'g3')
-                    <div x-data="{
-                            payType: @entangle('g3_payment_type').live,
-                            cashAmt: @entangle('g3_cash_amount').live,
-                            cardAmt: @entangle('g3_card_amount').live,
-                            subtotal: {{ $subtotal }},
-                            get cashDisc() { return this.cashAmt * 0.90; },
-                            get totalMixto() { return this.cashDisc + parseFloat(this.cardAmt); },
-                            get cardRemaining() { return Math.max(0, this.subtotal - parseFloat(this.cashAmt)); }
-                        }" class="mb-8">
+                    <div class="mb-8">
                         <label class="block text-gray-700 dark:text-gray-400 text-xs font-bold mb-3 uppercase tracking-wider">¿Cómo vas a pagar?</label>
                         <div class="grid grid-cols-3 gap-3 mb-4">
                             {{-- Efectivo --}}
