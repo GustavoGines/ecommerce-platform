@@ -38,9 +38,6 @@ new class extends Component {
 }; ?>
 
 <footer class="w-full mt-auto relative {{ $theme === 'luxury' ? 'bg-[#030712] border-t border-white/5' : 'bg-gray-950 text-gray-400' }} transition-colors duration-300">
-    @if($theme === 'luxury')
-        @include('themes.luxury.footer')
-    @else
         {{-- ==========================================
              MODERN / STEALTH THEME FOOTER
              ========================================== --}}
@@ -237,6 +234,4 @@ new class extends Component {
                 </div>
             </div>
         </div>
-
-    @endif
 </footer>
