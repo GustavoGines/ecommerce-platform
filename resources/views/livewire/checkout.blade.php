@@ -261,13 +261,15 @@ new #[Layout('layouts.app')] class extends Component {
                             $message .= "*Total con 10% OFF:* $" . number_format($totalConDescuento, 0, ',', '.') . "\n\n";
                         } else { // mixto
                             $cashAmt  = floatval($this->g3_cash_amount);
-                            $cardAmt  = floatval($this->g3_card_amount);
-                            $cashDisc = $cashAmt * 0.90;
-                            $totalMixto = $cashDisc + $cardAmt;
+                            $precioContado = $subtotalBase * 0.90;
+                            $restoContado = max(0, $precioContado - $cashAmt);
+                            $cardAmt = $restoContado / 0.90;
+                            $totalMixto = $cashAmt + $cardAmt;
+                            
                             $message .= "\n*Método de pago elegido:* 💳+💵 Pago Mixto";
-                            $message .= "\n  - Efectivo/Transf: $" . number_format($cashAmt, 0, ',', '.') . " → con 10% OFF: $" . number_format($cashDisc, 0, ',', '.') . "\n";
-                            $message .= "  - Tarjeta: $" . number_format($cardAmt, 0, ',', '.') . "\n";
-                            $message .= "*Total Final:* $" . number_format($totalMixto, 0, ',', '.') . "\n\n";
+                            $message .= "\n  - Pagará en Efectivo: $" . number_format($cashAmt, 0, ',', '.') . "\n";
+                            $message .= "  - Pagará con Tarjeta (saldo a precio lista): $" . number_format($cardAmt, 0, ',', '.') . "\n";
+                            $message .= "*Total Final Mixto:* $" . number_format($totalMixto, 0, ',', '.') . "\n\n";
                         }
                     } else {
                         $message .= "\n*Total a Pagar:* $" . number_format($this->subtotal, 0, ',', '.') . "\n\n";
@@ -665,10 +667,12 @@ new #[Layout('layouts.app')] class extends Component {
                 cashAmt: @entangle('g3_cash_amount').live,
                 cardAmt: @entangle('g3_card_amount').live,
                 subtotal: {{ $subtotal }},
-                get cashDisc() { return this.cashAmt * 0.90; },
-                get totalMixto() { return this.cashDisc + parseFloat(this.cardAmt || 0); },
-                get cardRemaining() { return Math.max(0, this.subtotal - parseFloat(this.cashAmt || 0)); }
+                get precioContado() { return this.subtotal * 0.90; },
+                get restoContado() { return Math.max(0, this.precioContado - parseFloat(this.cashAmt || 0)); },
+                get calculatedCardAmt() { return this.restoContado / 0.90; },
+                get totalMixto() { return parseFloat(this.cashAmt || 0) + this.calculatedCardAmt; }
              }"
+             x-effect="if(payType === 'mixto') { cardAmt = calculatedCardAmt }"
              @endif
         >
             <!-- Order Summary -->
@@ -728,15 +732,15 @@ new #[Layout('layouts.app')] class extends Component {
                     <span class="text-xl font-bold text-gray-900 dark:text-white">Total a Pagar</span>
                     <div class="text-right">
                         @if($payment_method === 'transfer' && tenant('id') === 'g3')
-                            <div x-show="payType === 'efectivo'">
+                            <div x-show="payType === 'efectivo'" x-cloak>
                                 <p class="text-sm font-bold line-through text-gray-400 mb-1">${{ number_format($subtotal, 0, ',', '.') }}</p>
                                 <span class="text-3xl font-black text-emerald-500">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
                             </div>
-                            <div x-show="payType === 'tarjeta'" style="display: none;">
+                            <div x-show="payType === 'tarjeta'" x-cloak>
                                 <span class="text-3xl font-black text-gray-900 dark:text-white">${{ number_format($subtotal, 0, ',', '.') }}</span>
                             </div>
-                            <div x-show="payType === 'mixto'" style="display: none;">
-                                <p class="text-sm font-bold line-through text-gray-400 mb-1">${{ number_format($subtotal, 0, ',', '.') }}</p>
+                            <div x-show="payType === 'mixto'" x-cloak>
+                                <p class="text-sm font-bold text-gray-400 mb-1">Total Final (Mixto)</p>
                                 <span class="text-3xl font-black text-purple-500">$<span x-text="Math.round(totalMixto).toLocaleString('es-AR')"></span></span>
                             </div>
                         @else
@@ -863,35 +867,35 @@ new #[Layout('layouts.app')] class extends Component {
                             </div>
                         </div>
 
-                        <div x-show="payType === 'mixto'" class="space-y-4">
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Monto Efectivo/Transf.</label>
-                                    <input type="number" x-model.number="cashAmt" min="0" :max="subtotal" step="100"
-                                           @input="cardAmt = Math.max(0, subtotal - cashAmt)"
-                                           class="w-full py-2 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
-                                    <p class="text-[10px] text-emerald-400 mt-1">Con 10% OFF = $<span x-text="Math.round(cashDisc).toLocaleString('es-AR')"></span></p>
+                        <div x-show="payType === 'mixto'" x-cloak class="space-y-4">
+                            <div class="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 mb-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-purple-300 font-bold">Total a pagar de Contado:</span>
+                                    <span class="text-lg font-black text-emerald-400">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
                                 </div>
+                                <p class="text-[10px] text-gray-400 mt-1">Si no completas este monto en efectivo, el resto vuelve al precio de lista para pagar con tarjeta.</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-4">
                                 <div>
-                                    <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">Monto Tarjeta</label>
-                                    <input type="number" x-model.number="cardAmt" min="0" :max="subtotal" step="100"
-                                           @input="cashAmt = Math.max(0, subtotal - cardAmt)"
-                                           class="w-full py-2 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                                    <p class="text-[10px] text-blue-400 mt-1">Precio lista</p>
+                                    <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-2">¿Cuánto vas a entregar en Efectivo?</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 font-bold">$</span>
+                                        <input type="number" x-model.number="cashAmt" min="0" :max="precioContado" step="1000"
+                                            class="w-full py-3 pl-8 pr-4 bg-gray-50 dark:bg-gray-800 border border-emerald-500/50 dark:border-emerald-500/30 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-lg font-bold">
+                                    </div>
                                 </div>
                             </div>
-                            <div class="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
-                                <div class="flex justify-between text-xs text-gray-400 mb-1">
-                                    <span>Efectivo (<span x-text="'$'+Math.round(cashAmt).toLocaleString('es-AR')"></span>) con 10% OFF:</span>
-                                    <span class="text-emerald-400">$<span x-text="Math.round(cashDisc).toLocaleString('es-AR')"></span></span>
+                            
+                            <div class="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-xl p-4">
+                                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
+                                    <span>Resto de contado (<span x-text="'$'+Math.round(restoContado).toLocaleString('es-AR')"></span>) a precio lista:</span>
+                                    <span class="text-blue-500 font-bold">$<span x-text="Math.round(calculatedCardAmt).toLocaleString('es-AR')"></span></span>
                                 </div>
-                                <div class="flex justify-between text-xs text-gray-400 mb-2">
-                                    <span>Tarjeta:</span>
-                                    <span class="text-blue-400">$<span x-text="parseFloat(cardAmt).toLocaleString('es-AR')"></span></span>
-                                </div>
-                                <div class="flex justify-between text-base font-black border-t border-purple-500/30 pt-2">
-                                    <span class="text-purple-300">Total Final:</span>
-                                    <span class="text-purple-300">$<span x-text="Math.round(totalMixto).toLocaleString('es-AR')"></span></span>
+                                
+                                <div class="flex justify-between text-sm font-bold border-t border-gray-200 dark:border-gray-700 pt-3">
+                                    <span class="text-blue-500">Monto final a pagar con Tarjeta:</span>
+                                    <span class="text-blue-500 text-lg">$<span x-text="Math.round(calculatedCardAmt).toLocaleString('es-AR')"></span></span>
                                 </div>
                             </div>
                         </div>
