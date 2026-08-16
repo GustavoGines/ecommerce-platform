@@ -28,6 +28,11 @@ new #[Layout('layouts.app')] class extends Component {
     public string $payment_method = 'transfer'; // 'transfer' o 'mercadopago'
     public bool $has_mp_token = false;
 
+    // G3 mixed-payment properties
+    public string $g3_payment_type = 'efectivo'; // 'efectivo' | 'tarjeta' | 'mixto'
+    public float|int $g3_cash_amount = 0;
+    public float|int $g3_card_amount = 0;
+
     public function mount()
     {
         $settings = \App\Models\StoreSetting::getSettings();
@@ -229,13 +234,11 @@ new #[Layout('layouts.app')] class extends Component {
                     $settings = \App\Models\StoreSetting::getSettings();
                     $social = is_string($settings->social_links) ? json_decode($settings->social_links, true) : ($settings->social_links ?? []);
                     
-                    // Asegurar que exista whatsapp y no esté vacío antes de limpiar caracteres
                     $rawWhatsapp = (is_array($social) && !empty($social['whatsapp'])) ? $social['whatsapp'] : '';
                     $whatsappNumber = !empty($rawWhatsapp) ? preg_replace('/[^0-9]/', '', $rawWhatsapp) : '5493704022685';
                     $sellerPhone = $whatsappNumber;
                     $message = "Hola {$settings->store_name}! 🚀\n\nAcabo de realizar el pedido *#{$order->id}* en la web.\n\n*Detalle del pedido:*\n";
                     
-                    // Fix BUG-05: Usar el snapshot guardado antes de limpiar
                     foreach ($cartSnapshot as $productId => $quantity) {
                         if (isset($this->products[$productId])) {
                             $product = $this->products[$productId];
@@ -243,13 +246,33 @@ new #[Layout('layouts.app')] class extends Component {
                             $message .= "• {$quantity}x {$product->name} (\$" . number_format($price * $quantity, 0, ',', '.') . ")\n";
                         }
                     }
-                    
-                    $message .= "\n*Total Normal:* $" . number_format($this->subtotal, 0, ',', '.') . "\n";
+
                     if (tenant('id') === 'g3') {
-                        $message .= "*Total Efectivo/Transferencia (10% OFF):* $" . number_format($this->subtotal * 0.90, 0, ',', '.') . "\n\n";
+                        $g3Type = $this->g3_payment_type;
+                        $subtotalBase = $this->subtotal;
+
+                        if ($g3Type === 'tarjeta') {
+                            $message .= "\n*Método de pago elegido:* 💳 Tarjeta (precio de lista)";
+                            $message .= "\n*Total a Pagar:* $" . number_format($subtotalBase, 0, ',', '.') . "\n\n";
+                        } elseif ($g3Type === 'efectivo') {
+                            $totalConDescuento = $subtotalBase * 0.90;
+                            $message .= "\n*Método de pago elegido:* 💵 Efectivo / Transferencia (10% OFF)";
+                            $message .= "\n*Total Lista:* $" . number_format($subtotalBase, 0, ',', '.') . "\n";
+                            $message .= "*Total con 10% OFF:* $" . number_format($totalConDescuento, 0, ',', '.') . "\n\n";
+                        } else { // mixto
+                            $cashAmt  = floatval($this->g3_cash_amount);
+                            $cardAmt  = floatval($this->g3_card_amount);
+                            $cashDisc = $cashAmt * 0.90;
+                            $totalMixto = $cashDisc + $cardAmt;
+                            $message .= "\n*Método de pago elegido:* 💳+💵 Pago Mixto";
+                            $message .= "\n  - Efectivo/Transf: $" . number_format($cashAmt, 0, ',', '.') . " → con 10% OFF: $" . number_format($cashDisc, 0, ',', '.') . "\n";
+                            $message .= "  - Tarjeta: $" . number_format($cardAmt, 0, ',', '.') . "\n";
+                            $message .= "*Total Final:* $" . number_format($totalMixto, 0, ',', '.') . "\n\n";
+                        }
                     } else {
-                        $message .= "*Total a Pagar:* $" . number_format($this->subtotal, 0, ',', '.') . "\n\n";
+                        $message .= "\n*Total a Pagar:* $" . number_format($this->subtotal, 0, ',', '.') . "\n\n";
                     }
+
                     $message .= "Mi nombre es: *" . auth()->user()->name . "*\n\n";
                     $message .= "Ya cargué mis datos de envío en la web. ¡Aguardo confirmación y datos para transferir!";
                     
@@ -447,7 +470,7 @@ new #[Layout('layouts.app')] class extends Component {
                         @if(tenant('id') === 'g3')
                         <div class="flex justify-between items-end">
                             <span class="text-xl font-bold text-[var(--color-primary)]">Total Especial (Efvo/Transf 10% OFF)</span>
-                            <span class="text-4xl font-black text-[var(--color-primary)]">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
+                        <span class="text-4xl font-black text-[var(--color-primary)]">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
                         </div>
                         @endif
                     </div>
@@ -458,26 +481,26 @@ new #[Layout('layouts.app')] class extends Component {
     </div>
 @elseif($theme === 'modern-light')
     {{-- =========================================================
-         MODERN-LIGHT THEME: CHECKOUT (WhatsApp)
+         MODERN-LIGHT THEME: CHECKOUT (JCG - WhatsApp, fondo blanco)
          ========================================================= --}}
     <x-slot name="header">
-        <h2 class="font-bold text-2xl text-white tracking-tight">
+        <h2 class="font-bold text-2xl text-gray-900 tracking-tight">
             {{ __('Checkout: Confirmar Pedido') }}
         </h2>
     </x-slot>
 
     <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
         @if (session()->has('error'))
-            <div class="mb-6 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl relative shadow-sm">
+            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl relative shadow-sm">
                 {{ session('error') }}
             </div>
         @endif
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- Order Summary -->
-            <div class="bg-zinc-900 border border-zinc-800 shadow-xl shadow-black/50 rounded-3xl p-8">
-                <h3 class="text-xl font-bold text-white mb-6">Tu Pedido</h3>
-                <ul class="divide-y divide-zinc-800">
+            <div class="bg-white border border-gray-200 shadow-sm rounded-3xl p-8">
+                <h3 class="text-xl font-bold text-gray-900 mb-6">Tu Pedido</h3>
+                <ul class="divide-y divide-gray-100">
                     @foreach($cart as $productId => $quantity)
                         @if(isset($products[$productId]))
                             @php
@@ -486,28 +509,28 @@ new #[Layout('layouts.app')] class extends Component {
                             @endphp
                             <li class="py-4 flex justify-between items-center">
                                 <div class="flex items-center">
-                                    <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950 mr-4 p-1">
+                                    <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-gray-50 mr-4 p-1">
                                         @if($product->image_url)
-                                            <img src="{{ asset('storage/' . $product->image_url) }}" class="h-full w-full object-contain">
+                                            <img src="{{ asset('storage/' . $product->image_url) }}" class="h-full w-full object-contain mix-blend-multiply">
                                         @endif
                                     </div>
                                     <div>
-                                        <p class="font-bold text-white line-clamp-2 text-sm">{{ $product->name }}</p>
-                                        <p class="text-xs text-gray-400 mt-1">${{ number_format($price, 0, ',', '.') }} c/u</p>
+                                        <p class="font-bold text-gray-900 line-clamp-2 text-sm">{{ $product->name }}</p>
+                                        <p class="text-xs text-gray-500 mt-1">${{ number_format($price, 0, ',', '.') }} c/u</p>
                                         <div class="flex items-center gap-3 mt-2">
-                                            <div class="flex items-center border border-zinc-700 rounded-lg bg-zinc-800 p-1">
-                                                <button wire:click.prevent="updateQuantity({{ $productId }}, 'decrement')" wire:loading.attr="disabled" type="button" class="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-900 text-gray-300 hover:bg-zinc-700 shadow-sm transition-colors">
+                                            <div class="flex items-center border border-gray-200 rounded-lg bg-gray-50 p-1">
+                                                <button wire:click.prevent="updateQuantity({{ $productId }}, 'decrement')" wire:loading.attr="disabled" type="button" class="w-6 h-6 flex items-center justify-center rounded-md bg-white text-gray-600 hover:bg-gray-100 shadow-sm transition-colors">
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>
                                                 </button>
-                                                <span class="w-8 text-center text-xs font-bold text-white">
-                                                    <span wire:loading.remove wire:target="updateQuantity">{{ $quantity }}</span>
-                                                    <span wire:loading wire:target="updateQuantity" class="inline-block animate-pulse w-2 h-2 bg-zinc-600 rounded-full"></span>
+                                                <span class="w-8 text-center text-xs font-bold text-gray-900">
+                                                    <span wire:loading.remove wire:target="updateQuantity({{ $productId }}, 'decrement'), updateQuantity({{ $productId }}, 'increment')">{{ $quantity }}</span>
+                                                    <span wire:loading wire:target="updateQuantity({{ $productId }}, 'decrement'), updateQuantity({{ $productId }}, 'increment')" class="inline-block animate-pulse w-2 h-2 bg-gray-400 rounded-full"></span>
                                                 </span>
-                                                <button wire:click.prevent="updateQuantity({{ $productId }}, 'increment')" wire:loading.attr="disabled" type="button" class="w-6 h-6 flex items-center justify-center rounded-md bg-zinc-900 text-gray-300 hover:bg-zinc-700 shadow-sm transition-colors" @if($quantity >= $product->stock) disabled @endif>
+                                                <button wire:click.prevent="updateQuantity({{ $productId }}, 'increment')" wire:loading.attr="disabled" type="button" class="w-6 h-6 flex items-center justify-center rounded-md bg-white text-gray-600 hover:bg-gray-100 shadow-sm transition-colors" @if($quantity >= $product->stock) disabled @endif>
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
                                                 </button>
                                             </div>
-                                            <button wire:click.prevent="removeItem({{ $productId }})" wire:loading.attr="disabled" type="button" class="text-xs text-red-500 hover:text-red-400 font-bold transition-colors inline-flex items-center gap-1">
+                                            <button wire:click.prevent="removeItem({{ $productId }})" wire:loading.attr="disabled" type="button" class="text-xs text-red-500 hover:text-red-700 font-bold transition-colors inline-flex items-center gap-1">
                                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                 Eliminar
                                             </button>
@@ -515,105 +538,49 @@ new #[Layout('layouts.app')] class extends Component {
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <div class="font-black text-white text-lg">
+                                    <div class="font-black text-gray-900 text-lg">
                                         ${{ number_format($price * $quantity, 0, ',', '.') }}
                                     </div>
+                                    @if($price == $product->wholesale_price)
+                                        <span class="text-[9px] font-bold uppercase tracking-widest text-[var(--color-primary)] mt-1 block">Mayorista</span>
+                                    @endif
                                 </div>
                             </li>
                         @endif
                     @endforeach
                 </ul>
-                </ul>
-                <div class="mt-6 pt-6 border-t border-zinc-800 flex justify-between items-center mb-2">
-                    <span class="text-lg font-bold text-gray-400">{{ tenant('id') === 'g3' ? 'Total Normal (Tarjetas)' : 'Total' }}</span>
-                    <span class="text-2xl font-bold text-gray-300">${{ number_format($subtotal, 0, ',', '.') }}</span>
+                <div class="mt-6 pt-6 border-t border-gray-100 flex justify-between items-center">
+                    <span class="text-xl font-bold text-gray-500">Total</span>
+                    <span class="text-3xl font-black text-gray-900">${{ number_format($subtotal, 0, ',', '.') }}</span>
                 </div>
-                @if(tenant('id') === 'g3')
-                <div class="mt-2 flex justify-between items-center">
-                    <span class="text-xl font-bold text-[var(--color-primary)]">Total Especial (Efvo/Transf 10% OFF)</span>
-                    <span class="text-3xl font-black text-[var(--color-primary)]">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
-                </div>
-                @endif
             </div>
 
-            <!-- Payment Form -->
-            <div class="bg-zinc-900 border border-zinc-800 shadow-xl shadow-black/50 rounded-3xl p-8">
-                <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-[var(--color-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                    </svg>
-                    Pago y Envío
+            <!-- WhatsApp Form -->
+            <div class="bg-white border border-gray-200 shadow-sm rounded-3xl p-8">
+                <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.487-1.761-1.663-2.06-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 00-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    Confirmar por WhatsApp
                 </h3>
-                
+
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-6 text-sm text-blue-900">
+                    <p class="font-bold mb-1">Pagos y Envíos</p>
+                    <p>¡Excelente elección! Una vez que confirmes tu pedido, nos comunicaremos por WhatsApp para coordinar juntos los detalles del pago y la entrega.</p>
+                </div>
+
                 <form wire:submit="placeOrder">
-                    
-                    <div class="mb-8">
-                        <label class="block text-gray-400 text-xs font-bold mb-3 uppercase tracking-wider">Método de Pago</label>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Transferencia / Efectivo -->
-                            <label class="relative flex cursor-pointer rounded-xl border p-4 shadow-sm focus:outline-none transition-all"
-                                   :class="$wire.payment_method === 'transfer' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 ring-1 ring-[var(--color-primary)]' : 'border-zinc-700 bg-zinc-950 hover:bg-zinc-800'">
-                                <input type="radio" wire:model.live="payment_method" value="transfer" class="sr-only">
-                                <span class="flex flex-1">
-                                    <span class="flex flex-col">
-                                        <span class="block text-sm font-bold text-white">Efectivo / Transferencia</span>
-                                        @if(tenant('id') === 'g3')
-                                        <span class="mt-1 flex items-center text-xs font-bold text-[var(--color-primary)]">10% OFF Aplicado</span>
-                                        @endif
-                                        <span class="mt-2 text-xs text-gray-400">Pagas al retirar o coordinamos por WhatsApp.</span>
-                                    </span>
-                                </span>
-                                <svg class="h-5 w-5 text-[var(--color-primary)] transition-opacity" :class="$wire.payment_method === 'transfer' ? 'opacity-100' : 'opacity-0'" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                            </label>
-
-                            <!-- Mercado Pago -->
-                            @if($has_mp_token)
-                            <div class="relative flex items-center p-4 border rounded-xl cursor-pointer transition-all duration-300"
-                                   :class="$wire.payment_method === 'mercadopago' ? 'border-blue-500 bg-blue-500/10 ring-1 ring-blue-500' : 'border-zinc-700 bg-zinc-950 hover:bg-zinc-800'">
-                                <input type="radio" wire:model.live="payment_method" value="mercadopago" class="sr-only">
-                                <div class="flex-1 ml-3 flex justify-between items-center">
-                                    <div>
-                                        <span class="block text-sm font-bold text-white">Mercado Pago</span>
-                                        <span class="block text-xs text-gray-400 mt-0.5">Tarjetas, Rapipago, etc.</span>
-                                    </div>
-                                </div>
-                                <svg class="h-5 w-5 text-blue-500 transition-opacity" :class="$wire.payment_method === 'mercadopago' ? 'opacity-100' : 'opacity-0'" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-
                     <div class="mb-6">
-                        <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wider">Tu Nombre</label>
-                        <input type="text" value="{{ auth()->user()->name }}" disabled class="w-full py-3 px-4 bg-zinc-950 border border-zinc-800 rounded-xl text-gray-500 shadow-sm cursor-not-allowed">
+                        <label class="block text-gray-700 text-xs font-bold mb-2 uppercase tracking-wider">Tu Nombre</label>
+                        <input type="text" value="{{ auth()->user()->name }}" disabled class="w-full py-3 px-4 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 shadow-sm cursor-not-allowed">
                     </div>
 
                     <div class="mb-8">
-                        <label class="block text-gray-400 text-xs font-bold mb-2 uppercase tracking-wider">Celular / WhatsApp <span class="text-red-500">*</span></label>
+                        <label class="block text-gray-700 text-xs font-bold mb-2 uppercase tracking-wider">Celular / WhatsApp <span class="text-red-500">*</span></label>
                         <div class="flex">
-                            <span class="inline-flex items-center px-4 rounded-l-xl border border-r-0 border-zinc-700 bg-zinc-800 text-gray-400 font-bold">
-                                📞
-                            </span>
-                            <input wire:model="phone" type="tel" class="w-full py-3 px-4 bg-zinc-950 border border-zinc-700 rounded-r-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all shadow-sm" placeholder="Ej: 3704 123456">
+                            <span class="inline-flex items-center px-4 rounded-l-xl border border-r-0 border-gray-200 bg-gray-50 text-gray-500 font-bold">📞</span>
+                            <input wire:model="phone" type="tel" class="w-full py-3 px-4 bg-white border border-gray-200 rounded-r-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all shadow-sm" placeholder="Ej: 3704 123456">
                         </div>
-                        <p class="text-[10px] text-gray-500 mt-1.5 uppercase tracking-wider font-bold">Para coordinar el retiro / envío</p>
+                        <p class="text-[10px] text-gray-500 mt-1.5 uppercase tracking-wider font-bold">Para coordinar el retiro</p>
                         @error('phone') <span class="text-red-500 text-xs mt-1 block font-bold">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div x-show="$wire.payment_method === 'mercadopago'" class="mb-8">
-                        <div class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 transition-all">
-                            <p class="text-sm text-blue-400">
-                                <strong>Pago seguro:</strong> Al confirmar, serás redirigido a Mercado Pago para completar tu pago de forma segura.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div x-show="$wire.payment_method === 'transfer'" class="mb-8">
-                        <div class="bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 rounded-xl p-4 transition-all">
-                            <p class="text-sm text-[var(--color-primary)]">
-                                <strong>Coordinación por WhatsApp:</strong> Una vez que confirmes, te enviaremos al chat de WhatsApp para coordinar el pago y envío de los productos.
-                            </p>
-                        </div>
                     </div>
 
                     <!-- Turnstile -->
@@ -634,16 +601,9 @@ new #[Layout('layouts.app')] class extends Component {
 
                     <button type="submit"
                             wire:loading.attr="disabled"
-                            class="w-full inline-flex items-center justify-center gap-2 py-4 px-8 rounded-xl text-white font-bold text-lg tracking-wide transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed"
-                            :class="$wire.payment_method === 'transfer' ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-600 hover:bg-blue-700'">
-                        
-                        <span wire:loading.remove wire:target="placeOrder">
-                            {{ $payment_method === 'transfer' ? 'Confirmar Pedido por WhatsApp' : 'Pagar con Mercado Pago' }}
-                        </span>
-                        
-                        <span wire:loading wire:target="placeOrder">
-                            {{ $payment_method === 'transfer' ? 'Procesando...' : 'Redirigiendo a Mercado Pago...' }}
-                        </span>
+                            class="w-full inline-flex items-center justify-center gap-2 py-4 px-8 rounded-xl text-white font-bold text-lg tracking-wide transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed bg-green-500 hover:bg-green-600">
+                        <span wire:loading.remove wire:target="placeOrder">Confirmar Pedido</span>
+                        <span wire:loading wire:target="placeOrder">Procesando...</span>
                     </button>
                 </form>
             </div>
@@ -793,7 +753,106 @@ new #[Layout('layouts.app')] class extends Component {
                         <p class="text-xs text-gray-500 mt-1">Obligatorio para avisarte cuando despachemos tu pedido.</p>
                         @error('phone') <span class="text-red-500 dark:text-red-400 text-xs mt-1 block font-bold">{{ $message }}</span> @enderror
                     </div>
-                    
+
+                    {{-- G3: Selector de tipo de pago (solo para g3 y cuando payment_method = transfer) --}}
+                    @if(tenant('id') === 'g3')
+                    <div x-data="{
+                            payType: @entangle('g3_payment_type').live,
+                            cashAmt: @entangle('g3_cash_amount').live,
+                            cardAmt: @entangle('g3_card_amount').live,
+                            subtotal: {{ $subtotal }},
+                            get cashDisc() { return this.cashAmt * 0.90; },
+                            get totalMixto() { return this.cashDisc + parseFloat(this.cardAmt); },
+                            get cardRemaining() { return Math.max(0, this.subtotal - parseFloat(this.cashAmt)); }
+                        }" class="mb-8">
+                        <label class="block text-gray-700 dark:text-gray-400 text-xs font-bold mb-3 uppercase tracking-wider">¿Cómo vas a pagar?</label>
+                        <div class="grid grid-cols-3 gap-3 mb-4">
+                            {{-- Efectivo --}}
+                            <label class="cursor-pointer">
+                                <input type="radio" x-model="payType" value="efectivo" class="sr-only">
+                                <div :class="payType === 'efectivo' ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750'"
+                                     class="rounded-xl border p-3 text-center transition-all cursor-pointer">
+                                    <span class="block text-xl mb-1">💵</span>
+                                    <span class="block text-xs font-bold text-gray-900 dark:text-white">Efectivo</span>
+                                    <span class="block text-[10px] text-emerald-500 font-bold">10% OFF</span>
+                                </div>
+                            </label>
+                            {{-- Tarjeta --}}
+                            <label class="cursor-pointer">
+                                <input type="radio" x-model="payType" value="tarjeta" class="sr-only">
+                                <div :class="payType === 'tarjeta' ? 'border-blue-500 bg-blue-500/10 ring-1 ring-blue-500' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750'"
+                                     class="rounded-xl border p-3 text-center transition-all cursor-pointer">
+                                    <span class="block text-xl mb-1">💳</span>
+                                    <span class="block text-xs font-bold text-gray-900 dark:text-white">Tarjeta</span>
+                                    <span class="block text-[10px] text-gray-500">Precio lista</span>
+                                </div>
+                            </label>
+                            {{-- Mixto --}}
+                            <label class="cursor-pointer">
+                                <input type="radio" x-model="payType" value="mixto" class="sr-only">
+                                <div :class="payType === 'mixto' ? 'border-purple-500 bg-purple-500/10 ring-1 ring-purple-500' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750'"
+                                     class="rounded-xl border p-3 text-center transition-all cursor-pointer">
+                                    <span class="block text-xl mb-1">💳+💵</span>
+                                    <span class="block text-xs font-bold text-gray-900 dark:text-white">Mixto</span>
+                                    <span class="block text-[10px] text-gray-500">Combo</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        {{-- Resumen por tipo --}}
+                        <div x-show="payType === 'efectivo'" class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">Total lista:</span>
+                                <span class="text-gray-300 line-through">${{ number_format($subtotal, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="flex justify-between text-base font-black">
+                                <span class="text-emerald-400">Total con 10% OFF:</span>
+                                <span class="text-emerald-400">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
+                            </div>
+                        </div>
+
+                        <div x-show="payType === 'tarjeta'" class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+                            <div class="flex justify-between text-base font-black">
+                                <span class="text-blue-400">Total a pagar (precio lista):</span>
+                                <span class="text-blue-400">${{ number_format($subtotal, 0, ',', '.') }}</span>
+                            </div>
+                        </div>
+
+                        <div x-show="payType === 'mixto'" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Monto Efectivo/Transf.</label>
+                                    <input type="number" x-model.number="cashAmt" min="0" :max="subtotal" step="100"
+                                           @input="cardAmt = Math.max(0, subtotal - cashAmt)"
+                                           class="w-full py-2 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                                    <p class="text-[10px] text-emerald-400 mt-1">Con 10% OFF = $<span x-text="Math.round(cashDisc).toLocaleString('es-AR')"></span></p>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">Monto Tarjeta</label>
+                                    <input type="number" x-model.number="cardAmt" min="0" :max="subtotal" step="100"
+                                           @input="cashAmt = Math.max(0, subtotal - cardAmt)"
+                                           class="w-full py-2 px-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <p class="text-[10px] text-blue-400 mt-1">Precio lista</p>
+                                </div>
+                            </div>
+                            <div class="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
+                                <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                    <span>Efectivo (<span x-text="'$'+Math.round(cashAmt).toLocaleString('es-AR')"></span>) con 10% OFF:</span>
+                                    <span class="text-emerald-400">$<span x-text="Math.round(cashDisc).toLocaleString('es-AR')"></span></span>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-400 mb-2">
+                                    <span>Tarjeta:</span>
+                                    <span class="text-blue-400">$<span x-text="parseFloat(cardAmt).toLocaleString('es-AR')"></span></span>
+                                </div>
+                                <div class="flex justify-between text-base font-black border-t border-purple-500/30 pt-2">
+                                    <span class="text-purple-300">Total Final:</span>
+                                    <span class="text-purple-300">$<span x-text="Math.round(totalMixto).toLocaleString('es-AR')"></span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                     @if($has_mp_token)
                     <div class="mb-8">
                         <label class="block text-gray-700 dark:text-gray-400 text-xs font-bold mb-3 uppercase tracking-wider">Método de Pago</label>
