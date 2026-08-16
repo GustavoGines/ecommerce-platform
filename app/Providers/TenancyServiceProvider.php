@@ -109,9 +109,28 @@ class TenancyServiceProvider extends ServiceProvider
         // forzamos a que se vuelva a resolver usando la conexión del tenant.
         Event::listen(Events\TenancyInitialized::class, function () {
             \Illuminate\Support\Facades\Cache::purge();
+
+            // FIX-09: Configuración SMTP Dinámica por Tenant (Multi-Gmail)
+            $tenantId = strtoupper(tenant('id')); // ej: 'jcg' -> 'JCG'
+            
+            $mailUsername = env("MAIL_USERNAME_{$tenantId}");
+            $mailPassword = env("MAIL_PASSWORD_{$tenantId}");
+            
+            if ($mailUsername && $mailPassword) {
+                config([
+                    'mail.mailers.smtp.username' => $mailUsername,
+                    'mail.mailers.smtp.password' => $mailPassword,
+                    'mail.from.address' => $mailUsername,
+                    'mail.from.name' => tenant('id') === 'g3' ? 'G3 Tecnología' : 'JCG Electrónica',
+                ]);
+                
+                // Forzar a Laravel a destruir la conexión SMTP previa y crear una nueva con estas credenciales
+                app('mail.manager')->purge('smtp');
+            }
         });
         Event::listen(Events\TenancyEnded::class, function () {
             \Illuminate\Support\Facades\Cache::purge();
+            app('mail.manager')->purge('smtp'); // Limpiar al salir del tenant
         });
 
         // FIX-08: Integración de Livewire 3 con Tenancy.
