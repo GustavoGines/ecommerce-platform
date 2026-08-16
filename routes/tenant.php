@@ -28,6 +28,7 @@ Route::middleware([
     'web',
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
+    \App\Http\Middleware\PreventCrossTenantSession::class,
 ])->group(function () {
     // SEO Sitemap — FIX-06: throttle para limitar crawlers agresivos (máx 30 req/min)
     Route::get('/sitemap.xml', [SitemapController::class, 'index'])
