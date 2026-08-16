@@ -104,7 +104,8 @@ new #[Layout('layouts.app')] class extends Component {
             'payment_method' => 'required|in:transfer,mercadopago',
         ];
 
-        if ($this->theme === 'luxury') {
+        // Solo requerir datos de envío si la tienda no es luxury (JCG) y tiene activo MP
+        if ($this->theme !== 'luxury' && $this->has_mp_token) {
             $rules = array_merge($rules, [
                 'address_street' => 'required|string|max:255',
                 'address_number' => 'required|string|max:50',
@@ -167,12 +168,12 @@ new #[Layout('layouts.app')] class extends Component {
                     'status'          => 'pendiente',
                     'total'           => $freshTotal, // Usar total fresco recalculado
                     'phone'           => $this->phone,
-                    'address_street'  => $this->theme !== 'luxury' ? 'Retiro en Local' : $this->address_street,
-                    'address_number'  => $this->theme !== 'luxury' ? '-' : $this->address_number,
-                    'city'            => $this->theme !== 'luxury' ? '-' : $this->city,
-                    'state'           => $this->theme !== 'luxury' ? '-' : $this->state,
-                    'zip_code'        => $this->theme !== 'luxury' ? '-' : $this->zip_code,
-                    'delivery_method' => $this->theme !== 'luxury' ? 'retiro' : 'envio', // Fix BUG-12
+                    'address_street'  => ($this->theme !== 'luxury' && $this->has_mp_token) ? $this->address_street : 'Retiro en Local',
+                    'address_number'  => ($this->theme !== 'luxury' && $this->has_mp_token) ? $this->address_number : '-',
+                    'city'            => ($this->theme !== 'luxury' && $this->has_mp_token) ? $this->city : '-',
+                    'state'           => ($this->theme !== 'luxury' && $this->has_mp_token) ? $this->state : '-',
+                    'zip_code'        => ($this->theme !== 'luxury' && $this->has_mp_token) ? $this->zip_code : '-',
+                    'delivery_method' => ($this->theme !== 'luxury' && $this->has_mp_token) ? 'envio' : 'retiro', // Fix BUG-12
                     'payment_method'  => $this->payment_method, // Fix BUG-12
                     'role_applied'    => (auth()->user() && auth()->user()->isWholesaleCustomer()) 
                                             ? 'vip_mayorista' 
@@ -733,6 +734,7 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
 
             <!-- Shipping Form -->
+            @if($has_mp_token)
             <div class="bg-white/80 dark:bg-gray-800/40 backdrop-blur-md border border-gray-200 dark:border-gray-700/50 shadow-xl dark:shadow-2xl sm:rounded-3xl p-8" :style="$store.theme.dark ? 'box-shadow: 0 10px 30px -10px var(--color-primary-glow);' : ''">
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Detalles de Envío</h3>
                 <form wire:submit="placeOrder">
@@ -765,6 +767,20 @@ new #[Layout('layouts.app')] class extends Component {
                             @error('zip_code') <span class="text-red-500 dark:text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
                         </div>
                     </div>
+                    @else
+                    <!-- Simple Contact Form (When MP is disabled) -->
+                    <div class="bg-white/80 dark:bg-gray-800/40 backdrop-blur-md border border-gray-200 dark:border-gray-700/50 shadow-xl dark:shadow-2xl sm:rounded-3xl p-8" :style="$store.theme.dark ? 'box-shadow: 0 10px 30px -10px var(--color-primary-glow);' : ''">
+                        <div class="mb-6 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-4">
+                            <h3 class="text-lg font-bold text-emerald-800 dark:text-emerald-400 mb-2 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                Confirmar por WhatsApp
+                            </h3>
+                            <p class="text-sm text-emerald-700 dark:text-emerald-300">
+                                ¡Excelente elección! Una vez que confirmes tu pedido, nos comunicaremos por WhatsApp para coordinar juntos los detalles del pago y la entrega.
+                            </p>
+                        </div>
+                        <form wire:submit="placeOrder">
+                    @endif
                     
                     <div class="mb-6">
                         <label class="block text-gray-700 dark:text-gray-400 text-xs font-bold mb-2 uppercase tracking-wider">Número de Celular / WhatsApp</label>
@@ -778,6 +794,7 @@ new #[Layout('layouts.app')] class extends Component {
                         @error('phone') <span class="text-red-500 dark:text-red-400 text-xs mt-1 block font-bold">{{ $message }}</span> @enderror
                     </div>
                     
+                    @if($has_mp_token)
                     <div class="mb-8">
                         <label class="block text-gray-700 dark:text-gray-400 text-xs font-bold mb-3 uppercase tracking-wider">Método de Pago</label>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -813,7 +830,9 @@ new #[Layout('layouts.app')] class extends Component {
                             @endif
                         </div>
                     </div>
+                    @endif
                     
+                    @if($has_mp_token)
                     <div x-show="$wire.payment_method === 'mercadopago'" x-collapse class="mb-8">
                         <div class="bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/30 rounded-xl p-4">
                             <p class="text-sm text-[var(--color-primary)]">
@@ -821,6 +840,7 @@ new #[Layout('layouts.app')] class extends Component {
                             </p>
                         </div>
                     </div>
+                    @endif
 
                     <!-- Turnstile -->
                     @if(config('services.turnstile.enabled'))
@@ -858,12 +878,12 @@ new #[Layout('layouts.app')] class extends Component {
 
                         {{-- Texto normal --}}
                         <span wire:loading.remove wire:target="placeOrder">
-                            {{ $payment_method === 'transfer' ? 'Confirmar Pedido por WhatsApp' : 'Pagar con Mercado Pago' }}
+                            {{ $has_mp_token && $payment_method === 'mercadopago' ? 'Pagar con Mercado Pago' : 'Confirmar Pedido por WhatsApp' }}
                         </span>
 
                         {{-- Texto cargando --}}
                         <span wire:loading wire:target="placeOrder">
-                            {{ $payment_method === 'transfer' ? 'Procesando...' : 'Redirigiendo a Mercado Pago...' }}
+                            {{ $has_mp_token && $payment_method === 'mercadopago' ? 'Redirigiendo a Mercado Pago...' : 'Procesando...' }}
                         </span>
 
                     </button>
