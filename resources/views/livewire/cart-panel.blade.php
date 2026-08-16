@@ -138,7 +138,7 @@ new class extends Component {
             return isNaN(total) ? 0 : total;
         },
         get globalQuantity() {
-            return Object.values(this.itemQuantities).reduce((a, b) => a + b, 0);
+            return Object.values(this.itemQuantities).reduce((a, b) => Number(a) + Number(b), 0);
         },
         get globalCashTotal() {
             return this.globalSubtotal * 0.90;
