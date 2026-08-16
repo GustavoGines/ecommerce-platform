@@ -431,10 +431,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <span class="text-gray-400">Subtotal</span>
                             <span class="font-medium">${{ number_format($subtotal, 0, ',', '.') }}</span>
                         </div>
-                        <div class="flex justify-between items-center mb-6">
-                            <span class="text-gray-400">Envío</span>
-                            <span class="text-emerald-400 font-bold text-sm uppercase tracking-widest">Gratis</span>
-                        </div>
+
                         
                         <hr class="my-6 border-white/5">
 

@@ -397,9 +397,7 @@ new class extends Component {
                                     <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1.5 mt-1 overflow-hidden">
                                         <div class="bg-[var(--color-primary)] h-1.5 rounded-full transition-all duration-500" :style="`width: ${(globalQuantity / 10) * 100}%`"></div>
                                     </div>
-                                </div>
                                 @endif
-                                <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">Impuestos y envío calculados en el checkout.</p>
                                 <div class="mt-6">
                                     <button wire:click="goToCheckout"
                                        @click="$store.cart.hide()"
