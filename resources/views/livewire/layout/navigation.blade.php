@@ -305,12 +305,12 @@ new class extends Component
                 {{-- ── Izquierda: Logo + Links ── --}}
                 <div class="flex items-center gap-8 flex-1">
                     {{-- Logo --}}
-                    <a href="{{ url('/') }}" class="shrink-0 flex items-center">
+                    <a wire:navigate href="{{ url('/') }}" class="shrink-0 flex items-center group">
                         @if(isset($settings) && $settings->logo_url)
                             <img src="{{ tenant_asset($settings->logo_url) }}"
-                                 alt="Logo" class="h-16 w-auto object-contain drop-shadow-md">
+                                 alt="Logo" class="h-16 w-auto object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-300">
                         @else
-                            <x-application-logo class="block h-16 w-auto fill-current text-slate-800 dark:text-slate-200 transition-colors"/>
+                            <x-application-logo class="block h-16 w-auto fill-current text-slate-800 dark:text-slate-200 transition-colors group-hover:scale-105 duration-300"/>
                         @endif
                     </a>
 

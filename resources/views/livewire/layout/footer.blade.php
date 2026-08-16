@@ -107,18 +107,20 @@ new class extends Component {
                 <div class="lg:col-span-1 flex flex-col items-center md:items-start text-center md:text-left">
                     <div class="mb-6 w-full flex justify-center md:justify-start items-center">
                         @php $settings = \App\Models\StoreSetting::getSettings(); @endphp
-                        @if(isset($settings) && $settings->logo_url)
-                            @if($theme === 'modern-light')
-                                <img src="{{ tenant_asset($settings->logo_url) }}" alt="Logo" class="pointer-events-none drop-shadow-md" style="width: 220px; height: auto;">
+                        <a wire:navigate href="{{ url('/') }}" class="group inline-flex items-center justify-center md:justify-start">
+                            @if(isset($settings) && $settings->logo_url)
+                                @if($theme === 'modern-light')
+                                    <img src="{{ tenant_asset($settings->logo_url) }}" alt="Logo" class="drop-shadow-md group-hover:scale-105 transition-transform duration-300" style="width: 220px; height: auto;">
+                                @else
+                                    <img src="{{ tenant_asset($settings->logo_url) }}" alt="Logo" class="drop-shadow-md h-16 sm:h-20 w-auto object-contain group-hover:scale-105 transition-transform duration-300">
+                                @endif
                             @else
-                                <img src="{{ tenant_asset($settings->logo_url) }}" alt="Logo" class="pointer-events-none drop-shadow-md h-16 sm:h-20 w-auto object-contain">
+                                <div class="flex items-center gap-2 group-hover:scale-105 transition-transform duration-300">
+                                    <svg class="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13h-13L12 6.5z"/></svg>
+                                    <h4 class="text-xl font-black text-gray-100 dark:text-gray-300 tracking-tight">{{ $storeName }}</h4>
+                                </div>
                             @endif
-                        @else
-                            <div class="flex items-center gap-2">
-                                <svg class="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13h-13L12 6.5z"/></svg>
-                                <h4 class="text-xl font-black text-gray-100 dark:text-gray-300 tracking-tight">{{ $storeName }}</h4>
-                            </div>
-                        @endif
+                        </a>
                     </div>
                     <p class="text-gray-400 text-xs md:text-sm mb-6 leading-relaxed">
                         {{ $tagline }}
