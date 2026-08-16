@@ -163,7 +163,7 @@ new #[Layout('layouts.app')] class extends Component {
                     if (isset($freshProducts[$productId])) {
                         $price = $this->getPrice($freshProducts[$productId], $quantity);
                         if ($applyUniformDiscount) {
-                            $price = $price * 0.90;
+                            $price = $price / 1.10;
                         }
                         $freshTotal += $price * $quantity;
                     }
@@ -173,9 +173,9 @@ new #[Layout('layouts.app')] class extends Component {
                 // (Los items quedarán con precio de lista, pero el total de la orden será exacto)
                 if ($isG3Transfer && $g3Type === 'mixto') {
                     $cashAmt  = floatval($this->g3_cash_amount);
-                    $precioContado = $freshTotal * 0.90; // El freshTotal aquí es a precio de lista
+                    $precioContado = $freshTotal / 1.10; // El freshTotal aquí es a precio de lista
                     $restoContado = max(0, $precioContado - $cashAmt);
-                    $cardAmt = $restoContado / 0.90;
+                    $cardAmt = $restoContado * 1.10;
                     $freshTotal = $cashAmt + $cardAmt;
                 }
                 
@@ -209,7 +209,7 @@ new #[Layout('layouts.app')] class extends Component {
                         $product = $freshProducts[$productId];
                         $price = $this->getPrice($product, $quantity);
                         if ($applyUniformDiscount) {
-                            $price = $price * 0.90;
+                            $price = $price / 1.10;
                         }
 
                         OrderItem::create([
@@ -273,15 +273,15 @@ new #[Layout('layouts.app')] class extends Component {
                             $message .= "\n*Método de pago elegido:* Tarjeta (precio de lista)";
                             $message .= "\n*Total a Pagar:* $" . number_format($subtotalBase, 0, ',', '.') . "\n\n";
                         } elseif ($g3Type === 'efectivo') {
-                            $totalConDescuento = $subtotalBase * 0.90;
+                            $totalConDescuento = $subtotalBase / 1.10;
                             $message .= "\n*Método de pago elegido:* Efectivo / Transferencia (10% OFF)";
                             $message .= "\n*Total Lista:* $" . number_format($subtotalBase, 0, ',', '.') . "\n";
-                            $message .= "*Total con 10% OFF:* $" . number_format($totalConDescuento, 0, ',', '.') . "\n\n";
+                            $message .= "*Total con Descuento:* $" . number_format($totalConDescuento, 0, ',', '.') . "\n\n";
                         } else { // mixto
-                            $cashAmt  = floatval($this->g3_cash_amount);
-                            $precioContado = $subtotalBase * 0.90;
+                            $cashAmt = floatval($this->g3_cash_amount);
+                            $precioContado = $subtotalBase / 1.10;
                             $restoContado = max(0, $precioContado - $cashAmt);
-                            $cardAmt = $restoContado / 0.90;
+                            $cardAmt = $restoContado * 1.10;
                             $totalMixto = $cashAmt + $cardAmt;
                             
                             $message .= "\n*Método de pago elegido:* Pago Mixto (Efectivo + Tarjeta)";
@@ -489,8 +489,8 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                         @if(tenant('id') === 'g3')
                         <div class="flex justify-between items-end">
-                            <span class="text-xl font-bold text-[var(--color-primary)]">Total Especial (Efvo/Transf 10% OFF)</span>
-                        <span class="text-4xl font-black text-[var(--color-primary)]">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
+                            <span class="text-xl font-bold text-[var(--color-primary)]">Total Especial (Efvo/Transf)</span>
+                        <span class="text-4xl font-black text-[var(--color-primary)]">${{ number_format($subtotal / 1.10, 0, ',', '.') }}</span>
                         </div>
                         @endif
                     </div>
@@ -684,10 +684,10 @@ new #[Layout('layouts.app')] class extends Component {
                 payType: @entangle('g3_payment_type').live,
                 cashAmt: @entangle('g3_cash_amount').live,
                 cardAmt: @entangle('g3_card_amount').live,
-                subtotal: {{ $subtotal }},
-                get precioContado() { return this.subtotal * 0.90; },
+                subtotalBase: {{ $subtotal }},
+                get precioContado() { return this.subtotalBase / 1.10; },
                 get restoContado() { return Math.max(0, this.precioContado - parseFloat(this.cashAmt || 0)); },
-                get calculatedCardAmt() { return this.restoContado / 0.90; },
+                get calculatedCardAmt() { return this.restoContado * 1.10; },
                 get totalMixto() { return parseFloat(this.cashAmt || 0) + this.calculatedCardAmt; }
              }"
              x-effect="if(payType === 'mixto') { cardAmt = calculatedCardAmt }"
@@ -990,7 +990,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div class="mb-4 text-center">
                         <span class="text-sm font-bold text-gray-500 dark:text-gray-400 block mb-1">Total a Pagar</span>
                         <div x-show="payType === 'efectivo'">
-                            <span class="text-3xl font-black text-emerald-500">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
+                            <span class="text-3xl font-black text-emerald-500">${{ number_format($subtotal / 1.10, 0, ',', '.') }}</span>
                         </div>
                         <div x-show="payType === 'tarjeta'" style="display: none;">
                             <span class="text-3xl font-black text-gray-900 dark:text-white">${{ number_format($subtotal, 0, ',', '.') }}</span>
