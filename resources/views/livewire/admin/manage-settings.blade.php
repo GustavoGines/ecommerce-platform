@@ -34,8 +34,13 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $settings = StoreSetting::getSettings();
         if ($settings) {
-            $this->store_name = $settings->store_name;
-            $this->theme_name = $settings->theme_name ?? 'stealth';
+            $this->store_name = $settings->store_name ?? '';
+            $this->theme_name = $settings->theme_name ?? 'tech-dark';
+            
+            // Migración automática de temas antiguos
+            if ($this->theme_name === 'stealth') $this->theme_name = 'tech-dark';
+            if ($this->theme_name === 'luxury') $this->theme_name = 'modern-light';
+            
             $this->store_tagline = $settings->store_tagline ?? '';
             
             $social = is_array($settings->social_links) ? $settings->social_links : json_decode($settings->social_links ?? '{}', true);
