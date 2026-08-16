@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 #[Fillable(['name', 'email', 'password', 'role', 'table_preferences', 'google_id', 'phone', 'is_banned'])]
 #[Hidden(['password', 'remember_token'])]
@@ -41,23 +42,21 @@ class User extends Authenticatable
     public function isWholesaleCustomer(): bool
     {
         // First check if the user has been manually assigned the Mayorista role
-        if ((is_string($this->role) && $this->role === 'mayorista') || 
-            ($this->role instanceof \App\Enums\UserRole && $this->role->value === 'mayorista')) {
+        if ($this->role === \App\Enums\UserRole::Mayorista) {
             return true;
         }
 
-        // Fallback: buscar en historial de compras si alguna orden pagada suma >= GLOBAL_WHOLESALE_MIN unidades
+        // Fallback: verificar si el total histórico de unidades compradas y pagadas
+        // supera el umbral global mayorista. La caché evita la consulta en cada request.
+        $tenantId = tenant('id') ?? 'global';
         return \Illuminate\Support\Facades\Cache::remember(
-            "user.{$this->id}.wholesale", 
-            300, 
-            fn() => $this->orders()
-                ->whereIn('status', ['pagado', 'completado'])
-                ->where(function ($query) {
-                    $query->selectRaw('COALESCE(SUM(quantity), 0)')
-                          ->from('order_items')
-                          ->whereColumn('order_items.order_id', 'orders.id');
-                }, '>=', \App\Services\PricingService::GLOBAL_WHOLESALE_MIN)
-                ->exists()
+            "user.{$tenantId}.{$this->id}.wholesale",
+            300,
+            fn() => \Illuminate\Support\Facades\DB::table('order_items')
+                ->join('orders', 'orders.id', '=', 'order_items.order_id')
+                ->where('orders.user_id', $this->id)
+                ->whereIn('orders.status', [\App\Models\Order::STATUS_PAID, \App\Models\Order::STATUS_COMPLETED])
+                ->sum('order_items.quantity') >= \App\Services\PricingService::GLOBAL_WHOLESALE_MIN
         );
     }
 
@@ -66,7 +65,6 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return (is_string($this->role) && $this->role === 'admin') 
-            || ($this->role instanceof \App\Enums\UserRole && $this->role->value === 'admin');
+        return $this->role === \App\Enums\UserRole::Admin;
     }
 }

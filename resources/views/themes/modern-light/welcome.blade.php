@@ -1,7 +1,7 @@
 <x-app-layout>
     @php
         $settings = \App\Models\StoreSetting::getSettings();
-        $storeName = $settings ? $settings->store_name : 'G3 Tecnología';
+        $storeName = $settings ? $settings->store_name : 'JCG Electrónica';
         
         // Obtenemos los últimos 8 productos para la página de inicio
         $latestProducts = \App\Models\Product::with('category')->latest()->take(8)->get();
@@ -9,109 +9,163 @@
         $categories = \App\Models\Category::take(4)->get();
     @endphp
 
-    <div class="bg-white min-h-screen">
+    <div class="bg-white dark:bg-zinc-900 min-h-screen">
         
         {{-- ════════════════════════════════════════════════════════
-             G3 TECH HERO SECTION
+             HERO SECTION — Limpio, centrado en Búsqueda
         ════════════════════════════════════════════════════════ --}}
-        <div class="relative bg-g3-dark overflow-hidden min-h-[600px] flex items-center border-b border-zinc-900">
-            <!-- Efectos de iluminación de fondo -->
-            <div class="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-20 pointer-events-none">
-                <div class="absolute inset-0 bg-g3-blue blur-[120px] rounded-full mix-blend-screen"></div>
-            </div>
-            <div class="absolute bottom-0 right-1/4 translate-x-1/4 translate-y-1/4 w-[500px] h-[500px] opacity-20 pointer-events-none">
-                <div class="absolute inset-0 bg-g3-green blur-[120px] rounded-full mix-blend-screen"></div>
+        <section class="relative z-20 bg-gray-50 dark:bg-zinc-950 border-b border-gray-100 dark:border-zinc-800" x-data="{ loaded: false }" x-init="setTimeout(() => loaded = true, 100)">
+            {{-- Elementos decorativos de fondo --}}
+            <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-red-50 opacity-50 blur-3xl transition-all duration-1000 transform" :class="loaded ? 'scale-100 translate-y-0' : 'scale-50 -translate-y-12'"></div>
+                <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-gray-100 dark:bg-zinc-800 opacity-50 blur-3xl transition-all duration-1000 delay-300 transform" :class="loaded ? 'scale-100 translate-x-0' : 'scale-50 -translate-x-12'"></div>
             </div>
             
-            <!-- Patrón de puntos (Grid tech) -->
-            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] [mask-image:linear-gradient(to_bottom,white,transparent)]"></div>
-
-            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full z-10 py-16">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 flex flex-col lg:flex-row items-center gap-12">
+                
+                {{-- Texto y Búsqueda --}}
+                <div class="flex-1 text-center lg:text-left z-10 transition-all duration-1000 transform" :class="loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'">
+                    <span class="inline-block py-1 px-3 rounded-full bg-red-100 text-[var(--color-primary)] text-xs font-bold uppercase tracking-wider mb-6 animate-pulse">
+                        Mayorista y Minorista
+                    </span>
+                    <h1 class="text-5xl lg:text-7xl font-black text-gray-900 dark:text-white tracking-tight leading-[1.1] mb-6">
+                        Encuentra tu <br class="hidden lg:block">
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-400">Control Remoto</span>
+                    </h1>
+                    <p class="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto lg:mx-0">
+                        Tenemos el catálogo más completo de controles remotos para TV, Smart TV, Aire Acondicionado y TV Box. Busca por marca o modelo.
+                    </p>
                     
-                    <!-- Contenido Izquierdo -->
-                    <div class="text-left">
-                        <!-- Badge de Novedad -->
-                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900/80 border border-zinc-800 mb-6 backdrop-blur-sm">
-                            <span class="flex h-2 w-2 relative">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-g3-green opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-g3-green"></span>
-                            </span>
-                            <span class="text-xs font-bold text-zinc-300 uppercase tracking-widest">Nuevos Ingresos 2026</span>
-                        </div>
-                        
-                        <h1 class="text-5xl md:text-7xl font-extrabold text-white tracking-tight leading-[1.1] mb-6">
-                            Lo último en <br>
-                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-g3-blue to-g3-green">Tecnología</span> para vos.
-                        </h1>
-                        
-                        <p class="text-lg text-g3-silver mb-8 max-w-xl leading-relaxed font-medium">
-                            El catálogo más amplio en smartphones, electrónica, hogar y mucho más. Innovación y los mejores precios con G3 Tecnología.
-                        </p>
-                        
-                        <!-- Botones CTA -->
-                        <div class="flex flex-col sm:flex-row gap-4">
-                            <a href="{{ route('shop') }}" class="group relative inline-flex items-center justify-center px-8 py-4 text-sm font-bold text-zinc-950 transition-all duration-200 bg-gradient-to-r from-g3-blue to-g3-green rounded-xl hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] focus:outline-none overflow-hidden">
-                                <!-- Brillo sobre el botón -->
-                                <div class="absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-150%)] group-hover:duration-1000 group-hover:[transform:skew(-12deg)_translateX(150%)]">
-                                    <div class="relative h-full w-8 bg-white/20"></div>
-                                </div>
-                                <span class="relative z-10 flex items-center gap-2">
-                                    Ver Catálogo
-                                    <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                    </svg>
-                                </span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Gráfico / Imagen Derecha -->
-                    <div class="relative hidden lg:block">
-                        <div class="relative w-full aspect-square rounded-2xl border border-zinc-800/50 bg-gradient-to-b from-zinc-900/50 to-zinc-950/50 backdrop-blur-sm flex items-center justify-center shadow-2xl overflow-hidden group">
-                             <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1616348436168-de43ad0db179?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center opacity-30 group-hover:opacity-50 transition-opacity duration-700 mix-blend-luminosity"></div>
-                             <div class="absolute inset-0 bg-gradient-to-t from-g3-dark via-transparent to-transparent"></div>
-                             
-                             <div class="relative z-10 text-center p-8 bg-zinc-950/40 backdrop-blur-md border border-zinc-800 rounded-xl transform transition-transform group-hover:scale-105 duration-500">
-                                <span class="block text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-zinc-500 mb-1">iPhone 15 Pro</span>
-                                <span class="block text-xs font-bold text-g3-green uppercase tracking-[0.3em]">Stock Disponible</span>
-                             </div>
-                        </div>
+                    {{-- Buscador Hero (Live Search) --}}
+                    <div class="transition-all duration-1000 delay-200 transform relative z-50" 
+                         :class="loaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'">
+                        @livewire('search-bar', ['variant' => 'hero'])
                     </div>
                     
+                    {{-- Marcas --}}
+                    <div class="mt-10 pt-8 border-t border-gray-200 dark:border-zinc-800 transition-all duration-1000 delay-300 transform" :class="loaded ? 'opacity-100' : 'opacity-0'">
+                        <p class="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">Trabajamos con todas las marcas</p>
+                        <div class="flex flex-wrap justify-center lg:justify-start gap-4 text-gray-500 dark:text-gray-400 dark:text-gray-500 font-bold text-sm">
+                            <span class="hover:text-gray-800 dark:text-gray-200 transition-colors cursor-default">SAMSUNG</span>
+                            <span>&bull;</span>
+                            <span class="hover:text-gray-800 dark:text-gray-200 transition-colors cursor-default">LG</span>
+                            <span>&bull;</span>
+                            <span class="hover:text-gray-800 dark:text-gray-200 transition-colors cursor-default">NOBLEX</span>
+                            <span>&bull;</span>
+                            <span class="hover:text-gray-800 dark:text-gray-200 transition-colors cursor-default">PHILIPS</span>
+                            <span>&bull;</span>
+                            <span class="hover:text-gray-800 dark:text-gray-200 transition-colors cursor-default">BGH</span>
+                        </div>
+                    </div>
+                </div>
+                
+                {{-- Imagen Destacada --}}
+                <div class="flex-1 w-full max-w-md lg:max-w-full relative z-10 hidden md:block transition-all duration-1000 delay-300 transform" :class="loaded ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12'">
+                    <div class="relative w-full aspect-square flex items-center justify-center">
+                        <div class="absolute inset-0 bg-white dark:bg-zinc-900 rounded-full shadow-2xl opacity-80 scale-75 animate-[pulse_4s_ease-in-out_infinite]"></div>
+                        <img src="{{ asset('storage/banners/tv_remote.png') }}" alt="Control Remoto Moderno" class="relative z-10 w-3/4 object-contain drop-shadow-2xl hover:scale-110 transition-transform duration-500 hover:-rotate-6 mix-blend-multiply cursor-crosshair">
+                        <img src="{{ asset('storage/banners/ac_remote.png') }}" alt="Control de Aire" class="absolute z-0 w-1/2 object-contain drop-shadow-xl -bottom-10 -right-10 opacity-90 -rotate-12 blur-[1px] mix-blend-multiply animate-[bounce_5s_infinite]">
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
+
+        {{-- ════════════════════════════════════════════════════════
+             HERO CAROUSEL (FLYERS PROMOCIONALES)
+        ════════════════════════════════════════════════════════ --}}
+        <section class="w-full bg-gray-950 border-b border-gray-900" x-data="{ activeSlide: 1, slides: [1, 2, 3], autoSlide: null }"
+                 x-init="autoSlide = setInterval(() => { activeSlide = activeSlide === slides.length ? 1 : activeSlide + 1 }, 5000)">
+            <div class="relative w-full h-[400px] md:h-[500px] overflow-hidden">
+                
+                {{-- Slide 1: Mayorista --}}
+                <div class="absolute inset-0 transition-opacity duration-1000"
+                     :class="activeSlide === 1 ? 'opacity-100 z-10' : 'opacity-0 z-0'">
+                    <img src="{{ asset('storage/banners/bg_slider_1.png') }}" class="absolute inset-0 w-full h-full object-cover opacity-60" alt="Precios Mayoristas">
+                    <div class="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
+                    <div class="relative z-20 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
+                        <span class="inline-block py-1 px-3 rounded-full bg-red-600/20 text-red-500 border border-red-500/50 text-xs font-bold uppercase tracking-wider mb-4 w-max">Promo Exclusiva</span>
+                        <h2 class="text-4xl md:text-6xl font-black text-white dark:text-black mb-4 leading-tight">Llevá más, <br><span class="text-red-500">pagá menos.</span></h2>
+                        <p class="text-gray-300 max-w-lg md:text-lg mb-8">Llevá 10 unidades o más en tu primera compra y accedé al beneficio de <strong>PRECIO MAYORISTA</strong> para siempre, incluso comprando por unidad.</p>
+                        <a href="{{ route('shop') }}" class="inline-flex items-center justify-center px-8 py-3 rounded-full bg-red-600 text-white dark:text-black font-bold hover:bg-red-700 transition-colors w-max shadow-[0_0_20px_rgba(220,38,38,0.3)]">Ver Catálogo</a>
+                    </div>
+                </div>
+
+                {{-- Slide 2: Retiro en Local --}}
+                <div class="absolute inset-0 transition-opacity duration-1000"
+                     :class="activeSlide === 2 ? 'opacity-100 z-10' : 'opacity-0 z-0'">
+                    <img src="{{ asset('storage/banners/bg_slider_2.png') }}" class="absolute inset-0 w-full h-full object-cover opacity-60" alt="Retiro Inmediato">
+                    <div class="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
+                    <div class="relative z-20 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
+                        <span class="inline-block py-1 px-3 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 text-xs font-bold uppercase tracking-wider mb-4 w-max">Sin demoras</span>
+                        <h2 class="text-4xl md:text-6xl font-black text-white dark:text-black mb-4 leading-tight">Retiro Inmediato <br><span class="text-yellow-400">en Nuestro Local</span></h2>
+                        <p class="text-gray-300 max-w-lg md:text-lg mb-8">Hacé tu pedido online y pasá a buscarlo por nuestra tienda sin hacer filas ni esperar tiempos de envío. ¡Fácil y rápido!</p>
+                        <a href="{{ route('shop') }}" class="inline-flex items-center justify-center px-8 py-3 rounded-full bg-yellow-500 text-black font-bold hover:bg-yellow-400 transition-colors w-max shadow-[0_0_20px_rgba(234,179,8,0.3)]">Comprar Ahora</a>
+                    </div>
+                </div>
+
+                {{-- Slide 3: Accesorios --}}
+                <div class="absolute inset-0 transition-opacity duration-1000"
+                     :class="activeSlide === 3 ? 'opacity-100 z-10' : 'opacity-0 z-0'">
+                    <img src="{{ asset('storage/banners/bg_slider_3.png') }}" class="absolute inset-0 w-full h-full object-cover opacity-60" alt="Accesorios">
+                    <div class="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
+                    <div class="relative z-20 h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
+                        <span class="inline-block py-1 px-3 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/50 text-xs font-bold uppercase tracking-wider mb-4 w-max">Nuevo Catálogo</span>
+                        <h2 class="text-4xl md:text-6xl font-black text-white dark:text-black mb-4 leading-tight">Accesorios <br><span class="text-blue-400">Premium</span></h2>
+                        <p class="text-gray-300 max-w-lg md:text-lg mb-8">Descubrí nuestra nueva línea de fundas, cargadores rápidos, cables reforzados y mucho más para tu celular.</p>
+                        <a href="{{ route('shop', ['categoria' => 'Accesorios']) }}" class="inline-flex items-center justify-center px-8 py-3 rounded-full bg-blue-600 text-white dark:text-black font-bold hover:bg-blue-500 transition-colors w-max shadow-[0_0_20px_rgba(37,99,235,0.3)]">Ver Accesorios</a>
+                    </div>
+                </div>
+
+                {{-- Navegación Puntos --}}
+                <div class="absolute bottom-6 left-0 right-0 z-30 flex justify-center gap-3">
+                    <template x-for="slide in slides" :key="slide">
+                        <button @click="activeSlide = slide; clearInterval(autoSlide); autoSlide = setInterval(() => { activeSlide = activeSlide === slides.length ? 1 : activeSlide + 1 }, 5000)"
+                                class="w-10 h-1 rounded-full transition-all duration-300"
+                                :class="activeSlide === slide ? 'bg-red-600 scale-y-150' : 'bg-white dark:bg-zinc-900/30 hover:bg-white dark:bg-zinc-900/60'"></button>
+                    </template>
+                </div>
+                
+                {{-- Flechas Laterales --}}
+                <button @click="activeSlide = activeSlide === 1 ? slides.length : activeSlide - 1; clearInterval(autoSlide); autoSlide = setInterval(() => { activeSlide = activeSlide === slides.length ? 1 : activeSlide + 1 }, 5000)" 
+                        class="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 flex items-center justify-center rounded-full bg-black dark:bg-white/20 hover:bg-black dark:bg-white/50 text-white dark:text-black backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 lg:opacity-100">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <button @click="activeSlide = activeSlide === slides.length ? 1 : activeSlide + 1; clearInterval(autoSlide); autoSlide = setInterval(() => { activeSlide = activeSlide === slides.length ? 1 : activeSlide + 1 }, 5000)" 
+                        class="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 flex items-center justify-center rounded-full bg-black dark:bg-white/20 hover:bg-black dark:bg-white/50 text-white dark:text-black backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 lg:opacity-100">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </button>
+            </div>
+        </section>
 
         {{-- ════════════════════════════════════════════════════════
              CATEGORÍAS DESTACADAS
         ════════════════════════════════════════════════════════ --}}
-        <section class="py-16 bg-g3-dark border-b border-zinc-900" x-data="{ intersecting: false }" x-intersect.once="intersecting = true">
+        <section class="py-16 bg-white dark:bg-zinc-900 border-b border-gray-100 dark:border-zinc-800" x-data="{ intersecting: false }" x-intersect.once="intersecting = true">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 transition-all duration-1000 delay-100 transform" :class="intersecting ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'">
                     
-                    <a href="{{ route('shop', ['categoria' => 'Xiaomi']) }}" class="group relative h-32 md:h-40 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-zinc-900 hover:shadow-[0_8px_30px_rgba(59,130,246,0.3)] transition-all duration-300">
-                        <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent opacity-80 z-10"></div>
-                        <img src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=400&auto=format&fit=crop" alt="Xiaomi" class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-110 group-hover:opacity-60 transition-all duration-500">
-                        <span class="relative z-20 text-white font-bold text-sm md:text-base text-center px-4 tracking-wide group-hover:-translate-y-1 transition-transform drop-shadow-md">XIAOMI</span>
+                    <a href="{{ route('shop', ['categoria' => 'TV']) }}" class="group relative h-32 md:h-40 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-gray-900 hover:shadow-[0_8px_30px_rgba(220,38,38,0.2)] transition-all duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent opacity-80 z-10"></div>
+                        <img src="{{ asset('storage/banners/cat_tv.png') }}" alt="Controles TV" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 group-hover:opacity-80 transition-all duration-500">
+                        <span class="relative z-20 text-white dark:text-black font-bold text-sm md:text-base text-center px-4 tracking-wide group-hover:-translate-y-1 transition-transform drop-shadow-md">CONTROLES TV / SMART</span>
                     </a>
                     
-                    <a href="{{ route('shop', ['categoria' => 'Apple']) }}" class="group relative h-32 md:h-40 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-zinc-900 hover:shadow-[0_8px_30px_rgba(126,211,33,0.3)] transition-all duration-300">
-                        <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent opacity-80 z-10"></div>
-                        <img src="https://images.unsplash.com/photo-1616348436168-de43ad0db179?q=80&w=400&auto=format&fit=crop" alt="Apple" class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-110 group-hover:opacity-60 transition-all duration-500">
-                        <span class="relative z-20 text-white font-bold text-sm md:text-base text-center px-4 tracking-wide group-hover:-translate-y-1 transition-transform drop-shadow-md">APPLE</span>
+                    <a href="{{ route('shop', ['categoria' => 'Aire']) }}" class="group relative h-32 md:h-40 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-gray-900 hover:shadow-[0_8px_30px_rgba(37,99,235,0.2)] transition-all duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent opacity-80 z-10"></div>
+                        <img src="{{ asset('storage/banners/cat_ac.png') }}" alt="Aire Acondicionado" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 group-hover:opacity-80 transition-all duration-500">
+                        <span class="relative z-20 text-white dark:text-black font-bold text-sm md:text-base text-center px-4 tracking-wide group-hover:-translate-y-1 transition-transform drop-shadow-md">AIRE ACONDICIONADO</span>
                     </a>
 
-                    <a href="{{ route('shop', ['categoria' => 'Samsung']) }}" class="group relative h-32 md:h-40 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-zinc-900 hover:shadow-[0_8px_30px_rgba(59,130,246,0.3)] transition-all duration-300">
-                        <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent opacity-80 z-10"></div>
-                        <img src="https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?q=80&w=400&auto=format&fit=crop" alt="Samsung" class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-110 group-hover:opacity-60 transition-all duration-500">
-                        <span class="relative z-20 text-white font-bold text-sm md:text-base text-center px-4 tracking-wide group-hover:-translate-y-1 transition-transform drop-shadow-md">SAMSUNG</span>
+                    <a href="{{ route('shop', ['categoria' => 'TV Box']) }}" class="group relative h-32 md:h-40 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-gray-900 hover:shadow-[0_8px_30px_rgba(245,158,11,0.2)] transition-all duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent opacity-80 z-10"></div>
+                        <img src="{{ asset('storage/banners/cat_tvbox.png') }}" alt="TV Box" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 group-hover:opacity-80 transition-all duration-500">
+                        <span class="relative z-20 text-white dark:text-black font-bold text-sm md:text-base text-center px-4 tracking-wide group-hover:-translate-y-1 transition-transform drop-shadow-md">TV BOX</span>
                     </a>
 
-                    <a href="{{ route('shop', ['categoria' => 'Notebook']) }}" class="group relative h-32 md:h-40 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-zinc-900 hover:shadow-[0_8px_30px_rgba(126,211,33,0.3)] transition-all duration-300">
-                        <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent opacity-80 z-10"></div>
-                        <img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=400&auto=format&fit=crop" alt="Notebooks" class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-110 group-hover:opacity-60 transition-all duration-500">
-                        <span class="relative z-20 text-white font-bold text-sm md:text-base text-center px-4 tracking-wide group-hover:-translate-y-1 transition-transform drop-shadow-md">NOTEBOOKS</span>
+                    <a href="{{ route('shop', ['categoria' => 'Accesorios']) }}" class="group relative h-32 md:h-40 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-gray-900 hover:shadow-[0_8px_30px_rgba(16,185,129,0.2)] transition-all duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent opacity-80 z-10"></div>
+                        <img src="{{ asset('storage/banners/cat_accesorios.png') }}" alt="Accesorios Celulares" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-110 group-hover:opacity-80 transition-all duration-500">
+                        <span class="relative z-20 text-white dark:text-black font-bold text-sm md:text-base text-center px-4 tracking-wide group-hover:-translate-y-1 transition-transform drop-shadow-md">ACCESORIOS Y CELULARES</span>
                     </a>
                     
                 </div>
@@ -121,15 +175,15 @@
         {{-- ════════════════════════════════════════════════════════
              ÚLTIMOS INGRESOS (Reutilizando diseño de tarjeta)
         ════════════════════════════════════════════════════════ --}}
-        <section class="py-20 bg-g3-dark">
+        <section class="py-20 bg-white dark:bg-zinc-900">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 
                 <div class="flex items-end justify-between mb-10">
                     <div>
-                        <h2 class="text-3xl font-black text-white tracking-tight">Últimos Ingresos</h2>
-                        <p class="text-g3-silver mt-2">Novedades y reposición de stock</p>
+                        <h2 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Últimos Ingresos</h2>
+                        <p class="text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-2">Novedades y reposición de stock</p>
                     </div>
-                    <a href="{{ route('shop') }}" class="hidden sm:inline-flex items-center gap-2 font-bold text-g3-green hover:text-white transition-colors">
+                    <a href="{{ route('shop') }}" class="hidden sm:inline-flex items-center gap-2 font-bold text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors">
                         Ver todo el catálogo
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                     </a>
@@ -137,17 +191,17 @@
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-3 sm:gap-4">
                     @forelse ($latestProducts as $product)
-                        <article class="group relative flex flex-col bg-g3-card border border-zinc-800 rounded-lg overflow-hidden shadow-sm hover:shadow-[0_0_15px_rgba(59,130,246,0.2)] hover:-translate-y-0.5 transition-all duration-300">
+                        <article class="group relative flex flex-col bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg overflow-hidden shadow-sm hover:shadow hover:-translate-y-0.5 transition-all duration-300">
                             
                             {{-- Contenedor de Imagen (Más compacto) --}}
-                            <a href="{{ route('product.detail', $product->slug) }}" wire:navigate class="relative block aspect-square bg-zinc-900 overflow-hidden p-3 border-b border-zinc-800 flex items-center justify-center">
+                            <a href="{{ route('product.detail', $product->slug) }}" wire:navigate class="relative block aspect-square bg-white dark:bg-zinc-900 overflow-hidden p-3 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-center">
                                 @if($product->image_url)
                                     <img src="{{ asset('storage/' . $product->image_url) }}"
                                          alt="{{ $product->name }}"
-                                         class="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-sm mix-blend-screen"
+                                         class="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-sm"
                                          onerror="this.src='https://images.unsplash.com/photo-1591488320449-011701bb6704?q=80&w=400&auto=format&fit=crop'">
                                 @else
-                                    <svg class="h-10 w-10 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="h-10 w-10 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 @endif
@@ -157,21 +211,21 @@
                             </a>
 
                             {{-- Contenido (Más compacto) --}}
-                            <div class="flex flex-col flex-grow p-3 bg-g3-card">
+                            <div class="flex flex-col flex-grow p-3 bg-white dark:bg-zinc-900">
                                 <div class="flex-grow">
                                     @if($product->category)
-                                        <span class="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1 block truncate">{{ $product->category->name }}</span>
+                                        <span class="text-[9px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1 block truncate">{{ $product->category->name }}</span>
                                     @endif
                                     <a href="{{ route('product.detail', $product->slug) }}" wire:navigate>
-                                        <h3 class="text-xs sm:text-sm font-bold text-white leading-tight hover:text-g3-blue transition-colors line-clamp-2" title="{{ $product->name }}">
+                                        <h3 class="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200 leading-tight hover:text-[var(--color-primary)] transition-colors line-clamp-2" title="{{ $product->name }}">
                                             {{ $product->name }}
                                         </h3>
                                     </a>
                                 </div>
-                                <div class="mt-2 pt-2 border-t border-zinc-800 flex flex-col gap-2">
+                                <div class="mt-2 pt-2 border-t border-gray-100 dark:border-zinc-800 flex flex-col gap-2">
                                     <div class="flex items-end justify-between">
                                         <div>
-                                            <p class="text-lg font-black text-g3-green leading-none">${{ number_format($product->retail_price, 0, ',', '.') }}</p>
+                                            <p class="text-lg font-black text-[var(--color-primary)] leading-none">${{ number_format($product->retail_price, 2) }}</p>
                                         </div>
                                     </div>
                                     <div class="w-full">
@@ -181,14 +235,14 @@
                             </div>
                         </article>
                     @empty
-                        <div class="col-span-full py-12 text-center text-gray-500">
+                        <div class="col-span-full py-12 text-center text-gray-500 dark:text-gray-400 dark:text-gray-500">
                             No hay productos disponibles por el momento.
                         </div>
                     @endforelse
                 </div>
                 
                 <div class="mt-10 text-center sm:hidden">
-                    <a href="{{ route('shop') }}" class="inline-flex items-center justify-center w-full py-3 px-4 bg-gray-100 text-gray-900 font-bold rounded-xl hover:bg-gray-200 transition-colors">
+                    <a href="{{ route('shop') }}" class="inline-flex items-center justify-center w-full py-3 px-4 bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-white font-bold rounded-xl hover:bg-gray-200 transition-colors">
                         Ver todo el catálogo
                     </a>
                 </div>

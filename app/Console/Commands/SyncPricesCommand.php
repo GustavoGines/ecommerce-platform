@@ -14,7 +14,7 @@ class SyncPricesCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'g3:sync-prices {--url= : URL pública del CSV de Google Sheets}';
+    protected $signature = 'shop:sync-prices {--url= : URL pública del CSV de Google Sheets}';
 
     /**
      * The console command description.
@@ -116,12 +116,13 @@ class SyncPricesCommand extends Command
             $this->info("- Productos del Excel no encontrados en la web: {$notFoundCount}");
             
             Log::info("Sincronización automática completada: {$updatedCount} actualizados.");
+            cache()->put('last_price_sync_at', now()->timestamp);
 
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
             $this->error("Error crítico durante la sincronización: " . $e->getMessage());
-            Log::error("Error en g3:sync-prices: " . $e->getMessage());
+            Log::error("Error en shop:sync-prices: " . $e->getMessage());
             return Command::FAILURE;
         }
     }

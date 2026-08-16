@@ -6,4 +6,5 @@ use App\Providers\VoltServiceProvider;
 return [
     AppServiceProvider::class,
     VoltServiceProvider::class,
+    App\Providers\TenancyServiceProvider::class,
 ];

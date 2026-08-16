@@ -15,9 +15,12 @@ class StoreSetting extends Model
         'store_name',
         'store_tagline',
         'theme_name',
+        'offers_cash_discount',
         'logo_url',
         'favicon_url',
         'social_links',
+        'mp_access_token',
+        'mp_public_key',
     ];
 
     protected $casts = [
@@ -31,7 +34,10 @@ class StoreSetting extends Model
         // porque el cache serializa/deserializa con unserialize() y si la clase no está
         // cargada aún en ese punto, lanza "incomplete object". Con un array, ese problema
         // no existe. Reconstruimos la instancia después de leer el caché.
-        $attributes = Cache::remember('store_settings', 3600, function () {
+        $tenantId = tenant('id') ?? 'global';
+        $cacheKey = 'store_settings_' . $tenantId;
+
+        $attributes = Cache::remember($cacheKey, 3600, function () {
             try {
                 if (! Schema::hasTable('store_settings')) {
                     return [];

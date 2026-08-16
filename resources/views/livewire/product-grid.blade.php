@@ -23,7 +23,7 @@ new class extends Component {
     {
         $query = Product::with(['category', 'brands']);
 
-        // Prioridad de Stock: Los productos sin stock van al final
+        // Priorizar SIEMPRE los productos con stock
         $query->orderByRaw('stock > 0 DESC');
 
         if ($this->selectedCategory) {
@@ -145,7 +145,7 @@ new class extends Component {
                             <div class="flex items-end justify-between">
                                 <div>
                                     <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Precio Unitario</p>
-                                    <p class="text-xl font-black text-slate-900 dark:text-white leading-none">${{ number_format($product->retail_price, 0, ',', '.') }}</p>
+                                    <p class="text-xl font-black text-slate-900 dark:text-white leading-none">${{ number_format($product->retail_price, 2) }}</p>
                                 </div>
                                 <div class="text-right flex flex-col items-end">
                                     <span class="inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-1">
@@ -155,15 +155,15 @@ new class extends Component {
                                         </span>
                                         Precio Mayorista
                                     </span>
-                                    <div class="relative group cursor-help mt-0.5" title="Descuento automático al llevar {{ $product->wholesale_min_quantity }} o más unidades">
+                                    <div class="relative group cursor-help mt-0.5" title="Descuento automático al llevar {{ \App\Services\PricingService::GLOBAL_WHOLESALE_MIN }} o más artículos en total">
                                         <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-lg blur opacity-30 group-hover:opacity-70 transition duration-500"></div>
                                         <span class="relative flex items-center gap-1 text-xs font-black text-emerald-900 dark:text-emerald-100 bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-slate-800 dark:to-slate-900 border border-emerald-200/50 dark:border-emerald-700/50 px-2.5 py-1 rounded-lg shadow-sm">
-                                            ${{ number_format($product->wholesale_price, 0, ',', '.') }} 
+                                            ${{ number_format($product->wholesale_price, 2) }} 
                                             <span class="opacity-75 font-bold text-[9px] bg-emerald-200/50 dark:bg-emerald-900/50 px-1 py-0.5 rounded">C/U</span>
                                         </span>
                                     </div>
                                     <span class="text-[8px] font-semibold text-slate-400 dark:text-slate-500 mt-1.5 uppercase tracking-wider">
-                                        Llevando {{ $product->wholesale_min_quantity }} o más
+                                        Llevando {{ \App\Services\PricingService::GLOBAL_WHOLESALE_MIN }} o más artículos en total
                                     </span>
                                 </div>
                             </div>

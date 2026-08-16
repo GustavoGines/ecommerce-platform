@@ -18,7 +18,6 @@ new #[Layout('layouts.app')] class extends Component {
         $this->dispatch('visitsResetted');
     }
 
-
     public function with(): array
     {
         $today = Carbon::today();
@@ -57,8 +56,10 @@ new #[Layout('layouts.app')] class extends Component {
             ->where('created_at', '<', Carbon::now()->subHours(24))
             ->count();
 
-        // Stock Valor (Costo) - Ignoramos los que tienen stock 999 (Modelo a Pedido)
-        $stockValue = Product::where('stock', '<', 900)->select(DB::raw('SUM(stock * cost_price) as total_value'))->value('total_value') ?? 0;
+        // Stock Valor (Costo) excluyendo productos a pedido (stock = 999)
+        $stockValue = Product::where('stock', '!=', 999)
+            ->select(DB::raw('SUM(stock * cost_price) as total_value'))
+            ->value('total_value') ?? 0;
 
         // Ticket Promedio (Mes)
         $avgTicket = Order::whereIn('status', [\App\Enums\OrderStatus::Paid, \App\Enums\OrderStatus::Completed])
@@ -132,7 +133,6 @@ new #[Layout('layouts.app')] class extends Component {
             <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Resumen de estadísticas y salud del negocio</p>
         </div>
         <div class="grid grid-cols-2 sm:flex sm:flex-row gap-2 w-full sm:w-auto">
-
             <a href="{{ route('admin.orders') }}" class="w-full inline-flex justify-center items-center gap-1.5 px-2 sm:px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 Órdenes
             </a>
@@ -262,7 +262,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <div class="text-sm font-bold text-gray-900 dark:text-white">{{ $order->user?->name ?? 'Invitado' }}</div>
                                 <div class="text-xs font-medium text-gray-500">{{ $order->user?->email }}</div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-black text-gray-900 dark:text-white">${{ number_format($order->total, 0, ',', '.') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-black text-gray-900 dark:text-white">${{ number_format($order->total, 2) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2.5 py-1 inline-flex text-[10px] font-black uppercase tracking-widest rounded-md 
                                     @if($order->status === 'pagado' || $order->status === 'completado') bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400
@@ -302,7 +302,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="text-xs font-medium text-gray-500">{{ $order->user?->email }}</div>
                         </div>
                         <div class="flex justify-between items-center mt-1">
-                            <span class="text-sm font-black text-[var(--color-primary)]">${{ number_format($order->total, 0, ',', '.') }}</span>
+                            <span class="text-sm font-black text-[var(--color-primary)]">${{ number_format($order->total, 2) }}</span>
                             <span class="text-xs font-medium text-gray-500">{{ $order->created_at->diffForHumans() }}</span>
                         </div>
                     </div>
@@ -332,7 +332,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 </div>
                                 <div class="flex-grow min-w-0">
                                     <h4 class="text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-[var(--color-primary)] transition-colors">{{ $item->product->name }}</h4>
-                                    <p class="text-xs font-semibold text-gray-400 dark:text-gray-500">${{ number_format($item->product->retail_price, 0, ',', '.') }}</p>
+                                    <p class="text-xs font-semibold text-gray-400 dark:text-gray-500">${{ number_format($item->product->retail_price, 2) }}</p>
                                 </div>
                                 <div class="text-right shrink-0">
                                     <span class="inline-flex items-center justify-center px-2 py-1 rounded bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-xs font-black">
@@ -415,7 +415,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <span class="text-[9px] font-black uppercase tracking-widest text-white/90">Capital Inmovilizado</span>
                 </div>
                 <h3 class="text-4xl sm:text-5xl font-black tracking-tighter">${{ number_format($stockValue, 0, ',', '.') }}</h3>
-                <p class="text-sm font-medium text-gray-400 mt-2 max-w-xs">Valorización del inventario real (excluye stock de productos bajo pedido).</p>
+                <p class="text-sm font-medium text-gray-400 mt-2 max-w-xs">Valorización calculada con base en el precio de costo del inventario actual.</p>
             </div>
             
             <div class="relative z-10 mt-10 pt-6 border-t border-gray-700/50 flex justify-between items-end">
@@ -428,7 +428,6 @@ new #[Layout('layouts.app')] class extends Component {
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>

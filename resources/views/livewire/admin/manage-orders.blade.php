@@ -70,14 +70,19 @@ new #[Layout('layouts.app')] class extends Component {
             // Si se marca como pagado/completado manualmente (WhatsApp o pago externo)
             if ($oldStatus === 'pendiente' && in_array($status, ['pagado', 'completado'])) {
                 if ($order->user) {
-                    // Lógica para convertir a mayorista de por vida si compra 10+ unidades totales
-                    $totalUnits = $order->items->sum('quantity');
+                    // Lógica para convertir a mayorista de por vida usando mínimo global
+                    $totalQty = 0;
+                    foreach ($order->items as $item) {
+                        $totalQty += $item->quantity;
+                    }
 
-                    if ($totalUnits >= \App\Services\PricingService::GLOBAL_WHOLESALE_MIN && $order->user->role !== 'mayorista') {
+                    if ($totalQty >= \App\Services\PricingService::GLOBAL_WHOLESALE_MIN && $order->user->role !== 'mayorista') {
                         $order->user->role = 'mayorista';
                         $order->user->save();
-                        // Opcional: enviar correo avisando que ahora es mayorista VIP
                     }
+
+                    // Siempre limpiar la caché cuando se confirma manual
+                    \Illuminate\Support\Facades\Cache::forget("user.{$order->user->id}.wholesale");
 
                     if ($order->user->email) {
                         \Illuminate\Support\Facades\Mail::to($order->user->email)->queue(new \App\Mail\OrderPaid($order));
@@ -103,20 +108,29 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $order = Order::with('items.product')->find($orderId);
         if ($order && $order->status === 'pendiente') {
-            $newTotal = 0;
+            $totalQty = 0;
             foreach ($order->items as $item) {
-                if ($item->product) {
-                    $item->price = $item->product->wholesale_price;
-                    $item->save();
-                    $newTotal += $item->price * $item->quantity;
-                }
+                $totalQty += $item->quantity;
             }
-            $order->total = $newTotal;
-            $order->role_applied = 'vip_mayorista';
-            $order->save();
 
-            $this->loadOrders();
-            $this->dispatch('notify', message: 'Orden recalculada a precios mayoristas correctamente.');
+            if ($totalQty >= \App\Services\PricingService::GLOBAL_WHOLESALE_MIN) {
+                $newTotal = 0;
+                foreach ($order->items as $item) {
+                    if ($item->product) {
+                        $item->price = $item->product->wholesale_price;
+                        $item->save();
+                        $newTotal += ($item->price * $item->quantity);
+                    }
+                }
+                $order->total = $newTotal;
+                $order->role_applied = 'por_volumen';
+                $order->save();
+
+                $this->loadOrders();
+                $this->dispatch('notify', message: 'Orden recalculada a precios mayoristas exitosamente.');
+            } else {
+                $this->dispatch('notify', message: 'La orden no alcanza el mínimo global para ser mayorista.', type: 'error');
+            }
         }
     }
 
@@ -154,7 +168,7 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
     </x-slot>
 
-    <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
+    <div class="w-full mx-auto py-10 px-4 sm:px-6 lg:px-8">
         <div class="bg-white/80 dark:bg-gray-800/40 backdrop-blur-md border border-gray-200 dark:border-gray-700/50 shadow-xl dark:shadow-2xl sm:rounded-3xl p-6 transition-colors duration-300">
             
             <!-- Filtros (PC y Móvil) -->
@@ -205,7 +219,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     <div class="text-xs text-gray-500 dark:text-gray-400">{{ $order->user->email }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-[var(--color-primary)]">
-                                    ${{ number_format($order->total, 0, ',', '.') }}
+                                    ${{ number_format($order->total, 2) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide
@@ -229,6 +243,27 @@ new #[Layout('layouts.app')] class extends Component {
                                             <option value="completado" {{ $order->status === 'completado' ? 'selected' : '' }}>Completado</option>
                                             <option value="cancelado" {{ $order->status === 'cancelado' ? 'selected' : '' }}>Cancelado</option>
                                         </select>
+                                        
+                                        @php
+                                            $totalQty = $order->items->sum('quantity');
+                                            $actualTotal = 0;
+                                            $isAlreadyWholesale = true;
+                                            foreach($order->items as $item) {
+                                                $actualTotal += ($item->price * $item->quantity);
+                                                if($item->product && $item->price > $item->product->wholesale_price) {
+                                                    $isAlreadyWholesale = false;
+                                                }
+                                            }
+                                            $needsRecalculation = !$isAlreadyWholesale || abs($order->total - $actualTotal) > 0.01;
+                                            $canRecalculate = $order->status === 'pendiente' && $totalQty >= \App\Services\PricingService::GLOBAL_WHOLESALE_MIN && $needsRecalculation;
+                                        @endphp
+                                        @if($canRecalculate)
+                                            <button wire:click="recalculateToWholesale({{ $order->id }})" wire:confirm="¿Aplicar descuento mayorista a esta orden? El total bajará automáticamente." class="text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-1" title="Aplicar Mayorista">
+                                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </button>
+                                        @endif
                                         
                                         <button wire:click="deleteOrder({{ $order->id }})" wire:confirm="¿Seguro que deseas eliminar esta orden del sistema?" class="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors p-1" title="Eliminar Orden">
                                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -273,7 +308,7 @@ new #[Layout('layouts.app')] class extends Component {
                                                     <div class="font-medium mb-2">{{ $order->phone }}</div>
                                                     @php
                                                         $cleanPhone = preg_replace('/[^0-9]/', '', $order->phone);
-                                                        $waMessage = urlencode("Hola {$order->user->name}, te escribo de G3 Tecnología por tu orden #".str_pad($order->id, 5, '0', STR_PAD_LEFT).".");
+                                                        $waMessage = urlencode("Hola {$order->user->name}, te escribo de JCG Electrónica por tu orden #".str_pad($order->id, 5, '0', STR_PAD_LEFT).".");
                                                     @endphp
                                                     <a href="https://wa.me/{{ $cleanPhone }}?text={{ $waMessage }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-md text-xs font-bold transition-colors">
                                                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564c.173.087.289.129.332.202.043.073.043.423-.101.827z"></path></svg>
@@ -305,23 +340,16 @@ new #[Layout('layouts.app')] class extends Component {
                                                     <span>{{ $item->product ? $item->product->name : '⚠ Producto Eliminado' }}</span>
                                                 </div>
                                                 <div class="text-gray-500 dark:text-gray-400 text-right">
-                                                    {{ $item->quantity }} × ${{ number_format($item->price, 0, ',', '.') }} = <span class="font-bold text-gray-900 dark:text-white">${{ number_format($item->quantity * $item->price, 0, ',', '.') }}</span>
+                                                    {{ $item->quantity }} × ${{ number_format($item->price, 2) }} = <span class="font-bold text-gray-900 dark:text-white">${{ number_format($item->quantity * $item->price, 2) }}</span>
                                                 </div>
                                             </li>
                                         @endforeach
-                                        <li class="px-4 py-3 flex justify-between items-center bg-gray-50 dark:bg-gray-900/30 font-bold text-sm">
+                                        <li class="px-3 py-3 sm:px-4 bg-gray-50/50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center rounded-b-xl">
                                             <div class="flex flex-col">
-                                                <span class="text-gray-700 dark:text-gray-300">TOTAL</span>
-                                                <span class="text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Total de unidades: {{ $order->items->sum('quantity') }}</span>
+                                                <span class="text-gray-700 dark:text-gray-300 font-bold tracking-wide">TOTAL</span>
+                                                <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 mt-0.5">{{ $order->items->sum('quantity') }} unidades en total</span>
                                             </div>
-                                            <div class="flex items-center gap-4">
-                                                @if($order->status === 'pendiente')
-                                                    <button wire:click.stop="recalculateToWholesale({{ $order->id }})" wire:confirm="¿Aplicar precios mayoristas a todos los ítems y recalcular el total de esta orden?" class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded hover:bg-purple-200 dark:hover:bg-purple-800/50 transition-colors border border-purple-200 dark:border-purple-800">
-                                                        Recalcular a Mayorista
-                                                    </button>
-                                                @endif
-                                                <span class="text-[var(--color-primary)] text-base">${{ number_format($order->total, 0, ',', '.') }}</span>
-                                            </div>
+                                            <span class="text-lg font-black text-[var(--color-primary)]">${{ number_format($order->total, 2) }}</span>
                                         </li>
                                     </ul>
                                 </td>
@@ -358,7 +386,7 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                         
                         <div class="flex items-center gap-2">
-                            <span class="text-sm font-black text-[var(--color-primary)]">${{ number_format($order->total, 0, ',', '.') }}</span>
+                            <span class="text-sm font-black text-[var(--color-primary)]">${{ number_format($order->total, 2) }}</span>
                             <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="expanded ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                         </div>
                     </div>
@@ -369,12 +397,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <!-- Controles de Estado y Borrar -->
                         <div class="flex items-center justify-between mb-3">
                             <div class="flex items-center gap-2 w-full" @click.stop>
-                                <select wire:key="select-mob-{{ $order->id }}-{{ $order->status }}" wire:change="updateStatus({{ $order->id }}, $event.target.value)" class="flex-1 text-[10px] uppercase font-bold py-1 px-2 border-0 rounded-md ring-1 ring-inset focus:ring-2 focus:ring-inset focus:ring-[var(--color-primary)] transition-colors cursor-pointer outline-none
-                                    @if($order->status === 'pendiente') bg-yellow-50 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-500/10 dark:text-yellow-500 dark:ring-yellow-500/20
-                                    @elseif($order->status === 'pagado') bg-blue-50 text-blue-800 ring-blue-600/20 dark:bg-blue-500/10 dark:text-blue-500 dark:ring-blue-500/20
-                                    @elseif($order->status === 'completado') bg-green-50 text-green-800 ring-green-600/20 dark:bg-green-500/10 dark:text-green-500 dark:ring-green-500/20
-                                    @elseif($order->status === 'cancelado') bg-red-50 text-red-800 ring-red-600/20 dark:bg-red-500/10 dark:text-red-500 dark:ring-red-500/20
-                                    @endif">
+                                <select wire:key="select-mob-{{ $order->id }}-{{ $order->status }}" wire:change="updateStatus({{ $order->id }}, $event.target.value)" class="flex-1 text-[10px] uppercase font-bold py-1 px-2 border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-md focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-colors cursor-pointer outline-none">
                                     <option value="pendiente" {{ $order->status === 'pendiente' ? 'selected' : '' }}>Pendiente</option>
                                     <option value="pagado" {{ $order->status === 'pagado' ? 'selected' : '' }}>Pagado</option>
                                     <option value="completado" {{ $order->status === 'completado' ? 'selected' : '' }}>Completado</option>
@@ -428,7 +451,7 @@ new #[Layout('layouts.app')] class extends Component {
                                         <div class="text-[11px] font-medium text-gray-800 dark:text-gray-200 truncate">{{ $item->product ? $item->product->name : '⚠ Producto Eliminado' }}</div>
                                     </div>
                                     <div class="text-[10px] whitespace-nowrap text-right text-gray-500">
-                                        {{ $item->quantity }}x ${{ number_format($item->price, 0, ',', '.') }}
+                                        {{ $item->quantity }}x ${{ number_format($item->price, 2) }}
                                     </div>
                                 </li>
                             @endforeach

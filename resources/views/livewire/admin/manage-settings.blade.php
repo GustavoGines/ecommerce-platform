@@ -5,6 +5,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 new #[Layout('layouts.app')] class extends Component {
     use WithFileUploads;
@@ -20,6 +21,10 @@ new #[Layout('layouts.app')] class extends Component {
     public $social_tiktok = '';
     public $social_whatsapp = '';
 
+    // Credenciales de Mercado Pago
+    public $mp_access_token = '';
+    public $mp_public_key = '';
+
     public $favicon;
     public $current_favicon_url;
     public $logo;
@@ -29,8 +34,13 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $settings = StoreSetting::getSettings();
         if ($settings) {
-            $this->store_name = $settings->store_name;
-            $this->theme_name = $settings->theme_name ?? 'stealth';
+            $this->store_name = $settings->store_name ?? '';
+            $this->theme_name = $settings->theme_name ?? 'tech-dark';
+            
+            // Migración automática de temas antiguos
+            if ($this->theme_name === 'stealth') $this->theme_name = 'tech-dark';
+            if ($this->theme_name === 'luxury') $this->theme_name = 'modern-light';
+            
             $this->store_tagline = $settings->store_tagline ?? '';
             
             $social = is_array($settings->social_links) ? $settings->social_links : json_decode($settings->social_links ?? '{}', true);
@@ -41,6 +51,9 @@ new #[Layout('layouts.app')] class extends Component {
                 $this->social_tiktok = $social['tiktok'] ?? '';
                 $this->social_whatsapp = $social['whatsapp'] ?? '';
             }
+
+            $this->mp_access_token = $settings->mp_access_token ?? '';
+            $this->mp_public_key = $settings->mp_public_key ?? '';
 
             $this->current_favicon_url = $settings->favicon_url;
             $this->current_logo_url = $settings->logo_url;
@@ -54,6 +67,9 @@ new #[Layout('layouts.app')] class extends Component {
             Storage::disk('public')->delete($settings->favicon_url);
             $settings->favicon_url = null;
             $settings->save();
+            $tenantId = tenant('id') ?? 'global';
+            Cache::forget('store_settings_' . $tenantId); // BUG-04 FIX
+            Cache::forget('store_settings');
         }
         $this->current_favicon_url = null;
         $this->favicon = null;
@@ -67,6 +83,9 @@ new #[Layout('layouts.app')] class extends Component {
             Storage::disk('public')->delete($settings->logo_url);
             $settings->logo_url = null;
             $settings->save();
+            $tenantId = tenant('id') ?? 'global';
+            Cache::forget('store_settings_' . $tenantId); // BUG-04 FIX
+            Cache::forget('store_settings');
         }
         $this->current_logo_url = null;
         $this->logo = null;
@@ -85,15 +104,17 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $this->validate([
             'store_name'       => 'required|string|max:255',
-            'theme_name'       => 'required|string|in:stealth,luxury,modern-light',
+            'theme_name'       => 'required|string|in:modern-light,tech-dark',
             'store_tagline'    => 'nullable|string|max:255',
             'social_facebook'  => 'nullable|url|max:255',
             'social_instagram' => 'nullable|url|max:255',
             'social_twitter'   => 'nullable|url|max:255',
             'social_tiktok'    => 'nullable|url|max:255',
             'social_whatsapp'  => 'nullable|string|max:50',
-            'favicon'          => 'nullable|image|max:2048', // 2MB
-            'logo'             => 'nullable|image|max:10240', // 10MB
+            'favicon'          => 'nullable|image|max:1024',
+            'logo'             => 'nullable|image|max:2048',
+            'mp_access_token'  => 'nullable|string',
+            'mp_public_key'    => 'nullable|string',
         ]);
 
         $settings = StoreSetting::first() ?? new StoreSetting();
@@ -108,7 +129,12 @@ new #[Layout('layouts.app')] class extends Component {
             'tiktok'    => $this->social_tiktok,
             'whatsapp'  => $this->social_whatsapp,
         ];
-        $settings->social_links = array_filter($social); // Remueve vacíos
+        $settings->social_links = array_filter($social);
+        
+        $settings->mp_access_token = $this->mp_access_token;
+        $settings->mp_public_key = $this->mp_public_key;
+
+        $settings->save();
 
         if ($this->favicon) {
             if ($settings->favicon_url) {
@@ -132,10 +158,9 @@ new #[Layout('layouts.app')] class extends Component {
         }
 
         $settings->save();
-        
-        // Limpiar la caché de configuraciones para que los cambios se vean en toda la web
-        \Illuminate\Support\Facades\Cache::forget('store_settings');
-
+        $tenantId = tenant('id') ?? 'global';
+        Cache::forget('store_settings_' . $tenantId); // BUG-04 FIX: invalidar caché al guardar
+        Cache::forget('store_settings'); // Por si acaso también borramos el global viejo
         session()->flash('message', 'Configuración guardada exitosamente.');
         
         // Redirigir (recargar) la página sin 'navigate' para que los cambios de layout se apliquen instantáneamente.
@@ -172,9 +197,8 @@ new #[Layout('layouts.app')] class extends Component {
                         Tema de la Tienda
                     </label>
                     <select wire:model="theme_name" id="theme_name" class="w-full py-3 px-4 bg-gray-50 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 leading-tight focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all shadow-sm dark:shadow-none">
-                        <option value="stealth">Stealth (Tema Claro Predeterminado)</option>
-                        <option value="luxury">Luxury (Tema Premium Oscuro)</option>
-                        <option value="modern-light">Modern Light (Tema Limpio y Claro)</option>
+                        <option value="modern-light">Modern Light (Tema Claro - JCG)</option>
+                        <option value="tech-dark">Tech Dark (Tema Oscuro - G3)</option>
                     </select>
                     @error('theme_name') <span class="text-red-500 dark:text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
@@ -195,7 +219,7 @@ new #[Layout('layouts.app')] class extends Component {
 
                     @if($current_favicon_url)
                         <div class="flex items-center gap-4 mb-4 p-3 bg-white dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700">
-                            <img src="{{ asset('storage/' . $current_favicon_url) }}"
+                            <img src="{{ tenant_asset($current_favicon_url) }}"
                                  alt="Favicon Actual"
                                  class="h-10 w-10 object-contain rounded bg-gray-100 dark:bg-gray-800 p-1 border border-gray-200 dark:border-gray-600">
                             <div class="flex-1">
@@ -240,7 +264,7 @@ new #[Layout('layouts.app')] class extends Component {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1" for="social_whatsapp">WhatsApp (Solo números con código de país)</label>
-                            <input wire:model="social_whatsapp" id="social_whatsapp" type="text" class="w-full py-2.5 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm" placeholder="Ej: 5493704022685">
+                            <input wire:model="social_whatsapp" id="social_whatsapp" type="text" class="w-full py-2.5 px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm" placeholder="Ej: 5493705075839">
                             @error('social_whatsapp') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                         </div>
                         <div>
@@ -270,7 +294,7 @@ new #[Layout('layouts.app')] class extends Component {
                     {{-- Logo actual --}}
                     @if($current_logo_url)
                         <div class="flex items-center gap-4 mb-4 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700">
-                            <img src="{{ asset('storage/' . $current_logo_url) }}"
+                            <img src="{{ tenant_asset($current_logo_url) }}"
                                  alt="Logo Actual"
                                  class="h-16 w-auto object-contain rounded-lg bg-white dark:bg-gray-800 p-1 border border-gray-200 dark:border-gray-600">
                             <div class="flex-1">
@@ -316,6 +340,38 @@ new #[Layout('layouts.app')] class extends Component {
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                         </svg>
                         Procesando imagen...
+                    </div>
+                </div>
+
+                <!-- Configuración Mercado Pago -->
+                <div class="bg-white dark:bg-gray-800 shadow sm:rounded-xl mb-8 border border-gray-200 dark:border-gray-700">
+                    <div class="px-4 py-5 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                            Integración con Mercado Pago
+                        </h3>
+                        <div class="mt-2 max-w-xl text-sm text-gray-500 dark:text-gray-400">
+                            <p>Ingresá tus credenciales de Mercado Pago. Si dejás esto vacío, el botón de Mercado Pago no aparecerá en el Checkout y el único medio será coordinar por WhatsApp.</p>
+                        </div>
+                    </div>
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <div class="sm:col-span-6">
+                                <label for="mp_access_token" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Access Token
+                                </label>
+                                <input type="password" wire:model="mp_access_token" id="mp_access_token" class="w-full py-2.5 px-4 bg-gray-50 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all shadow-sm dark:shadow-none" placeholder="APP_USR-...">
+                                @error('mp_access_token') <p class="mt-2 text-sm font-bold text-red-500">{{ $message }}</p> @enderror
+                            </div>
+
+                            <div class="sm:col-span-6">
+                                <label for="mp_public_key" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Public Key
+                                </label>
+                                <input type="text" wire:model="mp_public_key" id="mp_public_key" class="w-full py-2.5 px-4 bg-gray-50 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all shadow-sm dark:shadow-none" placeholder="APP_USR-...">
+                                @error('mp_public_key') <p class="mt-2 text-sm font-bold text-red-500">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
                     </div>
                 </div>
 

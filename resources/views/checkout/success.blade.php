@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comprobante de Compra #{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }} — {{ config('app.name') }}</title>
+    <title>Comprobante de Compra #{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }} — {{ \App\Models\StoreSetting::getSettings()->store_name ?? config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 print:bg-white text-gray-900 min-h-screen py-10 px-4 sm:px-6">
@@ -54,7 +54,7 @@
                     <p class="text-emerald-50 print:text-gray-500 mt-1 font-medium">Orden #{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</p>
                 </div>
                 <div class="text-left sm:text-right mt-4 sm:mt-0">
-                    <div class="text-3xl sm:text-4xl font-black print:text-gray-900">${{ number_format($order->total, 0, ',', '.') }}</div>
+                    <div class="text-3xl sm:text-4xl font-black print:text-gray-900">${{ number_format($order->total, 2) }}</div>
                     <div class="text-emerald-50 print:text-gray-500 text-sm mt-1 font-medium">Total pagado</div>
                 </div>
             </div>
@@ -156,10 +156,10 @@
                                     <span class="sm:hidden font-bold mr-1 text-[10px] uppercase">Cant:</span>{{ $item->quantity }}
                                 </div>
                                 <div class="w-auto sm:w-32 text-gray-500 text-right print:text-gray-900">
-                                    <span class="sm:hidden font-bold mr-1 text-[10px] uppercase">P.U:</span>${{ number_format($item->price, 0, ',', '.') }}
+                                    <span class="sm:hidden font-bold mr-1 text-[10px] uppercase">P.U:</span>${{ number_format($item->price, 2) }}
                                 </div>
                                 <div class="w-auto sm:w-32 font-bold text-gray-900 text-right">
-                                    <span class="sm:hidden mr-1 text-[10px] uppercase text-gray-400">Total:</span>${{ number_format($item->price * $item->quantity, 0, ',', '.') }}
+                                    <span class="sm:hidden mr-1 text-[10px] uppercase text-gray-400">Total:</span>${{ number_format($item->price * $item->quantity, 2) }}
                                 </div>
                             </div>
                         </div>
@@ -169,7 +169,7 @@
                     {{-- Footer del total --}}
                     <div class="bg-gray-100 flex justify-between sm:justify-end items-center px-4 sm:px-6 py-4 sm:py-5 border-t border-gray-200 print:bg-transparent print:border-gray-800 print:px-0">
                         <span class="text-gray-500 font-bold uppercase tracking-wider text-sm sm:mr-8 print:text-gray-900">Total pagado</span>
-                        <span class="text-2xl sm:text-3xl font-black text-gray-900 print:!text-gray-900 text-emerald-600">${{ number_format($order->total, 0, ',', '.') }}</span>
+                        <span class="text-2xl sm:text-3xl font-black text-gray-900 print:!text-gray-900 text-emerald-600">${{ number_format($order->total, 2) }}</span>
                     </div>
                 </div>
             </div>
@@ -177,7 +177,7 @@
             {{-- Footer Legal del comprobante --}}
             <div class="text-center text-gray-400 text-xs pt-6">
                 <p class="font-bold text-gray-300 uppercase tracking-widest mb-2 print:text-gray-600">Documento no válido como factura</p>
-                <p class="print:text-gray-700">{{ config('app.name') }} • Comprobante generado el {{ now()->format('d/m/Y H:i') }}</p>
+                <p class="print:text-gray-700">{{ \App\Models\StoreSetting::getSettings()->store_name ?? config('app.name') }} • Comprobante generado el {{ now()->format('d/m/Y H:i') }}</p>
                 <p class="mt-1 print:text-gray-700">Este comprobante es únicamente una constancia interna de tu pedido.</p>
             </div>
         </div>

@@ -38,17 +38,25 @@ class PricingService
      */
     public function unitPrice(Product $product, int $quantity, $user = null, int $totalCartQuantity = 0): float
     {
-        // 1. Cliente VIP Mayorista
-        if ($user && $user->isWholesaleCustomer()) {
-            return (float) $product->wholesale_price;
+        // G3: No aplica mayorista por cantidad; el descuento es 10% efectivo al finalizar.
+        if (tenant('id') === 'g3') {
+            return (float) $product->retail_price;
         }
 
-        // 2. Compra por volumen (cantidad total del carrito supera el mínimo global)
-        if ($totalCartQuantity >= self::GLOBAL_WHOLESALE_MIN) {
-            return (float) $product->wholesale_price;
+        // JCG y otros tenants: aplica precio mayorista si:
+        // 1. El usuario es cliente VIP mayorista, O
+        // 2. El carrito total >= GLOBAL_WHOLESALE_MIN (10 unidades)
+        $hasWholesale = !is_null($product->wholesale_price) && $product->wholesale_price > 0;
+
+        if ($hasWholesale) {
+            if ($user && method_exists($user, 'isWholesaleCustomer') && $user->isWholesaleCustomer()) {
+                return (float) $product->wholesale_price;
+            }
+            if ($totalCartQuantity >= self::GLOBAL_WHOLESALE_MIN) {
+                return (float) $product->wholesale_price;
+            }
         }
 
-        // 3. Cliente Minorista
         return (float) $product->retail_price;
     }
 }

@@ -13,7 +13,9 @@
         "livewire/livewire": "^3.6.4",
         "livewire/volt": "^1.7.0",
         "maatwebsite/excel": "^3.1",
-        "mercadopago/dx-php": "^3.10"
+        "mercadopago/dx-php": "^3.10",
+        "predis/predis": "^3.5",
+        "stancl/tenancy": "^3.10"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -24,6 +26,7 @@
         "laravel/pint": "^1.27",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
+        "phpstan/phpstan": "^2.2",
         "phpunit/phpunit": "^12.5.12"
     },
     "autoload": {

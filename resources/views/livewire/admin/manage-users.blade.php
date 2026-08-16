@@ -31,7 +31,7 @@ new #[Layout('layouts.app')] class extends Component {
     public function updateRole($userId, $newRole)
     {
         $user = User::findOrFail($userId);
-        
+
         // Prevent changing own role
         if ($user->id === auth()->id()) {
             session()->flash('error', 'No puedes cambiar tu propio rol.');
@@ -40,6 +40,11 @@ new #[Layout('layouts.app')] class extends Component {
 
         $user->role = UserRole::from($newRole);
         $user->save();
+
+        // BUG-06 FIX: Invalidar caché de precios mayoristas del usuario.
+        // Sin esto, el usuario seguía viendo precios del rol anterior hasta
+        // que el caché expirara (TTL de 1 hora), aunque el rol ya había cambiado.
+        \Illuminate\Support\Facades\Cache::forget("user.{$userId}.wholesale");
 
         session()->flash('message', 'Rol actualizado exitosamente.');
     }

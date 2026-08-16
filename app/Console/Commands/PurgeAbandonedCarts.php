@@ -20,10 +20,12 @@ class PurgeAbandonedCarts extends Command
      */
     public function handle()
     {
-        $deleted = \App\Models\Cart::whereNull('user_id')
-            ->where('updated_at', '<', now()->subDays(7))
-            ->delete();
+        \App\Models\Tenant::all()->runForEach(function ($tenant) {
+            $deleted = \App\Models\Cart::whereNull('user_id')
+                ->where('updated_at', '<', now()->subDays(7))
+                ->delete();
 
-        $this->info("Purged {$deleted} abandoned carts.");
+            $this->info("Purged {$deleted} abandoned carts for tenant {$tenant->id}.");
+        });
     }
 }

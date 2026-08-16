@@ -66,12 +66,12 @@ class UpdateOrderOnPayment implements ShouldQueue
                 default                 => $order->status,
             };
 
-            $order->save();
-
-            // Invalidar caché de mayorista cuando se confirma un pago
             if ($order->user_id) {
-                Cache::forget("user.{$order->user_id}.wholesale");
+                $tenantId = tenant('id') ?? 'global';
+                Cache::forget("user.{$tenantId}.{$order->user_id}.wholesale");
             }
+
+            $order->save();
 
             Log::info('Evento: orden actualizada', [
                 'order_id'   => $orderId,

@@ -8,7 +8,7 @@ El estado de tu pedido ha sido actualizado a **Pagado** y ya estamos preparando 
 <x-mail::table>
 | Detalle | Valor |
 |:---|:---|
-| **Monto Pagado:** | ${{ number_format($order->total, 0, ',', '.') }} |
+| **Monto Pagado:** | ${{ number_format($order->total, 2) }} |
 | **Forma de Entrega:** | {{ $order->delivery_label }} |
 </x-mail::table>
 
@@ -19,5 +19,5 @@ Ver Comprobante de Pago
 O podés ver todo tu historial ingresando a [Mis Compras]({{ route('my-orders') }}).
 
 ¡Gracias por tu compra!<br>
-{{ config('app.name') }}
+{{ \App\Models\StoreSetting::getSettings()->store_name ?? config('app.name') }}
 </x-mail::message>
