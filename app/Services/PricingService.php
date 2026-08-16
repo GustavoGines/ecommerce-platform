@@ -38,8 +38,25 @@ class PricingService
      */
     public function unitPrice(Product $product, int $quantity, $user = null, int $totalCartQuantity = 0): float
     {
-        // Para G3 (ecommerce-platform) NO se aplica descuento mayorista de ningún tipo.
-        // Solo aplica descuento en efectivo/transferencia al final de la compra.
+        // G3: No aplica mayorista por cantidad; el descuento es 10% efectivo al finalizar.
+        if (tenant('id') === 'g3') {
+            return (float) $product->retail_price;
+        }
+
+        // JCG y otros tenants: aplica precio mayorista si:
+        // 1. El usuario es cliente VIP mayorista, O
+        // 2. El carrito total >= GLOBAL_WHOLESALE_MIN (10 unidades)
+        $hasWholesale = !is_null($product->wholesale_price) && $product->wholesale_price > 0;
+
+        if ($hasWholesale) {
+            if ($user && method_exists($user, 'isWholesaleCustomer') && $user->isWholesaleCustomer()) {
+                return (float) $product->wholesale_price;
+            }
+            if ($totalCartQuantity >= self::GLOBAL_WHOLESALE_MIN) {
+                return (float) $product->wholesale_price;
+            }
+        }
+
         return (float) $product->retail_price;
     }
 }

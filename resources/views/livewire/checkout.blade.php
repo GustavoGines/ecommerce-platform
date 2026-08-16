@@ -505,7 +505,10 @@ new #[Layout('layouts.app')] class extends Component {
                         @if(isset($products[$productId]))
                             @php
                                 $product = $products[$productId];
+                                $cartTotalQty = array_sum($cart);
                                 $price = $this->getPrice($product, $quantity);
+                                $isWholesale = $product->wholesale_price && $price == $product->wholesale_price;
+                                $retailPrice = $product->retail_price;
                             @endphp
                             <li class="py-4 flex justify-between items-center">
                                 <div class="flex items-center">
@@ -516,7 +519,17 @@ new #[Layout('layouts.app')] class extends Component {
                                     </div>
                                     <div>
                                         <p class="font-bold text-gray-900 line-clamp-2 text-sm">{{ $product->name }}</p>
-                                        <p class="text-xs text-gray-500 mt-1">${{ number_format($price, 0, ',', '.') }} c/u</p>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            @if($isWholesale)
+                                                <p class="text-xs text-gray-400 line-through">${{ number_format($retailPrice, 0, ',', '.') }} c/u</p>
+                                                <p class="text-xs font-bold text-[var(--color-primary)]">${{ number_format($price, 0, ',', '.') }} c/u</p>
+                                            @else
+                                                <p class="text-xs text-gray-500">${{ number_format($price, 0, ',', '.') }} c/u</p>
+                                            @endif
+                                            @if($isWholesale)
+                                                <span class="text-[9px] font-black uppercase tracking-widest bg-[var(--color-primary)] text-white px-1.5 py-0.5 rounded-full">MAYORISTA</span>
+                                            @endif
+                                        </div>
                                         <div class="flex items-center gap-3 mt-2">
                                             <div class="flex items-center border border-gray-200 rounded-lg bg-gray-50 p-1">
                                                 <button wire:click.prevent="updateQuantity({{ $productId }}, 'decrement')" wire:loading.attr="disabled" type="button" class="w-6 h-6 flex items-center justify-center rounded-md bg-white text-gray-600 hover:bg-gray-100 shadow-sm transition-colors">
@@ -541,17 +554,36 @@ new #[Layout('layouts.app')] class extends Component {
                                     <div class="font-black text-gray-900 text-lg">
                                         ${{ number_format($price * $quantity, 0, ',', '.') }}
                                     </div>
-                                    @if($price == $product->wholesale_price)
-                                        <span class="text-[9px] font-bold uppercase tracking-widest text-[var(--color-primary)] mt-1 block">Mayorista</span>
+                                    @if($isWholesale)
+                                        <p class="text-xs text-gray-400 line-through mt-0.5">${{ number_format($retailPrice * $quantity, 0, ',', '.') }}</p>
+                                        <span class="text-[9px] font-bold uppercase tracking-widest text-[var(--color-primary)] mt-0.5 block">Mayorista</span>
                                     @endif
                                 </div>
                             </li>
                         @endif
                     @endforeach
                 </ul>
-                <div class="mt-6 pt-6 border-t border-gray-100 flex justify-between items-center">
-                    <span class="text-xl font-bold text-gray-500">Total</span>
-                    <span class="text-3xl font-black text-gray-900">${{ number_format($subtotal, 0, ',', '.') }}</span>
+                @php
+                    $cartTotalQty = array_sum($cart);
+                    $hasWholesaleActive = $cartTotalQty >= 10;
+                    $originalTotal = collect($cart)->sum(function($qty, $prodId) {
+                        return isset($this->products[$prodId]) ? $this->products[$prodId]->retail_price * $qty : 0;
+                    });
+                @endphp
+                <div class="mt-6 pt-6 border-t border-gray-100">
+                    @if($hasWholesaleActive && $originalTotal > $subtotal)
+                        <div class="flex justify-between items-center mb-2 text-sm">
+                            <span class="text-gray-400">Precio lista:</span>
+                            <span class="text-gray-400 line-through">${{ number_format($originalTotal, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-2 py-0.5 rounded-full">Ahorrás ${{{ number_format($originalTotal - $subtotal, 0, ',', '.') }}}</span>
+                        </div>
+                    @endif
+                    <div class="flex justify-between items-center">
+                        <span class="text-xl font-bold text-gray-{{ $hasWholesaleActive && $originalTotal > $subtotal ? '500' : '500' }}">Total @if($hasWholesaleActive && $originalTotal > $subtotal)<span class="text-xs font-normal text-[var(--color-primary)]">(Mayorista)</span>@endif</span>
+                        <span class="text-3xl font-black text-gray-900">${{ number_format($subtotal, 0, ',', '.') }}</span>
+                    </div>
                 </div>
             </div>
 
