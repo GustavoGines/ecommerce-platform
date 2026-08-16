@@ -149,7 +149,7 @@ new #[Layout('layouts.app')] class extends Component {
                 $freshTotal = 0;
                 $totalUnits = array_sum($this->cart);
                 
-                $discountApplied = ($this->theme !== 'modern-light' && $this->payment_method === 'transfer');
+                $discountApplied = (tenant('id') === 'g3' && $this->theme !== 'modern-light' && $this->payment_method === 'transfer');
 
                 foreach ($this->cart as $productId => $quantity) {
                     if (isset($freshProducts[$productId])) {
@@ -244,7 +244,11 @@ new #[Layout('layouts.app')] class extends Component {
                     }
                     
                     $message .= "\n*Total Normal:* $" . number_format($this->subtotal, 0, ',', '.') . "\n";
-                    $message .= "*Total Efectivo/Transferencia (10% OFF):* $" . number_format($this->subtotal * 0.90, 0, ',', '.') . "\n\n";
+                    if (tenant('id') === 'g3') {
+                        $message .= "*Total Efectivo/Transferencia (10% OFF):* $" . number_format($this->subtotal * 0.90, 0, ',', '.') . "\n\n";
+                    } else {
+                        $message .= "*Total a Pagar:* $" . number_format($this->subtotal, 0, ',', '.') . "\n\n";
+                    }
                     $message .= "Mi nombre es: *" . auth()->user()->name . "*\n\n";
                     $message .= "Ya cargué mis datos de envío en la web. ¡Aguardo confirmación y datos para transferir!";
                     
@@ -436,13 +440,15 @@ new #[Layout('layouts.app')] class extends Component {
                         <hr class="my-6 border-white/5">
 
                         <div class="flex justify-between items-end mb-4">
-                            <span class="text-lg font-bold text-gray-400">Total Normal (Tarjetas)</span>
+                            <span class="text-lg font-bold text-gray-400">{{ tenant('id') === 'g3' ? 'Total Normal (Tarjetas)' : 'Total' }}</span>
                             <span class="text-2xl font-bold text-gray-300">${{ number_format($subtotal, 0, ',', '.') }}</span>
                         </div>
+                        @if(tenant('id') === 'g3')
                         <div class="flex justify-between items-end">
                             <span class="text-xl font-bold text-[var(--color-primary)]">Total Especial (Efvo/Transf 10% OFF)</span>
                             <span class="text-4xl font-black text-[var(--color-primary)]">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
                         </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -518,13 +524,15 @@ new #[Layout('layouts.app')] class extends Component {
                 </ul>
                 </ul>
                 <div class="mt-6 pt-6 border-t border-zinc-800 flex justify-between items-center mb-2">
-                    <span class="text-lg font-bold text-gray-400">Total Normal (Tarjetas)</span>
-<span class="text-2xl font-bold text-gray-300">${{ number_format($subtotal, 0, ',', '.') }}</span>
+                    <span class="text-lg font-bold text-gray-400">{{ tenant('id') === 'g3' ? 'Total Normal (Tarjetas)' : 'Total' }}</span>
+                    <span class="text-2xl font-bold text-gray-300">${{ number_format($subtotal, 0, ',', '.') }}</span>
                 </div>
+                @if(tenant('id') === 'g3')
                 <div class="mt-2 flex justify-between items-center">
                     <span class="text-xl font-bold text-[var(--color-primary)]">Total Especial (Efvo/Transf 10% OFF)</span>
                     <span class="text-3xl font-black text-[var(--color-primary)]">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
                 </div>
+                @endif
             </div>
 
             <!-- Payment Form -->
@@ -548,7 +556,9 @@ new #[Layout('layouts.app')] class extends Component {
                                 <span class="flex flex-1">
                                     <span class="flex flex-col">
                                         <span class="block text-sm font-bold text-white">Efectivo / Transferencia</span>
+                                        @if(tenant('id') === 'g3')
                                         <span class="mt-1 flex items-center text-xs font-bold text-[var(--color-primary)]">10% OFF Aplicado</span>
+                                        @endif
                                         <span class="mt-2 text-xs text-gray-400">Pagas al retirar o coordinamos por WhatsApp.</span>
                                     </span>
                                 </span>
@@ -712,7 +722,7 @@ new #[Layout('layouts.app')] class extends Component {
                 <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700/50 flex justify-between items-center">
                     <span class="text-xl font-bold text-gray-900 dark:text-white">Total a Pagar</span>
                     <div class="text-right">
-                        @if($payment_method === 'transfer')
+                        @if($payment_method === 'transfer' && tenant('id') === 'g3')
                             <p class="text-sm font-bold line-through text-gray-400 mb-1">${{ number_format($subtotal, 0, ',', '.') }}</p>
                             <span class="text-3xl font-black text-emerald-500">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
                         @else
@@ -778,7 +788,9 @@ new #[Layout('layouts.app')] class extends Component {
                                 <span class="flex flex-1">
                                     <span class="flex flex-col">
                                         <span class="block text-sm font-bold text-gray-900 dark:text-white">Efectivo / Transferencia</span>
+                                        @if(tenant('id') === 'g3')
                                         <span class="mt-1 flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">10% OFF Aplicado</span>
+                                        @endif
                                         <span class="mt-2 text-xs text-gray-500 dark:text-gray-400">Pagas al retirar o coordinamos envío por WhatsApp.</span>
                                     </span>
                                 </span>
