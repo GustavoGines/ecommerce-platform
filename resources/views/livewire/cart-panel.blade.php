@@ -267,16 +267,15 @@ new class extends Component {
                                                         }
                                                     }"
                                                     x-init="
-                                                        itemQuantities[{{ $productId }}] = parseInt(qty) || 0;
                                                         $watch('qty', val => { 
                                                             let parsed = parseInt(val);
-                                                            itemQuantities[{{ $productId }}] = parsed || 0;
                                                             if(isNaN(parsed)) return;
                                                             if(parsed > stock) { qty = stock; sync(); }
                                                             else if(parsed < 1) { qty = 1; sync(); }
                                                         });
                                                     "
                                                     x-effect="
+                                                        itemQuantities[{{ $productId }}] = parseInt(qty) || 0;
                                                         itemTotals[{{ $productId }}] = itemTotal;
                                                     "
                                                 >
@@ -397,6 +396,7 @@ new class extends Component {
                                     <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1.5 mt-1 overflow-hidden">
                                         <div class="bg-[var(--color-primary)] h-1.5 rounded-full transition-all duration-500" :style="`width: ${(globalQuantity / 10) * 100}%`"></div>
                                     </div>
+                                </div>
                                 @endif
                                 <div class="mt-6">
                                     <button wire:click="goToCheckout"
