@@ -237,7 +237,7 @@ new #[Layout('layouts.app')] class extends Component {
                     $rawWhatsapp = (is_array($social) && !empty($social['whatsapp'])) ? $social['whatsapp'] : '';
                     $whatsappNumber = !empty($rawWhatsapp) ? preg_replace('/[^0-9]/', '', $rawWhatsapp) : '5493704022685';
                     $sellerPhone = $whatsappNumber;
-                    $message = "Hola {$settings->store_name}! 🚀\n\nAcabo de realizar el pedido *#{$order->id}* en la web.\n\n*Detalle del pedido:*\n";
+                    $message = "Hola {$settings->store_name}!\n\nAcabo de realizar el pedido *#{$order->id}* en la web.\n\n*Detalle del pedido:*\n";
                     
                     foreach ($cartSnapshot as $productId => $quantity) {
                         if (isset($this->products[$productId])) {
@@ -252,11 +252,11 @@ new #[Layout('layouts.app')] class extends Component {
                         $subtotalBase = $this->subtotal;
 
                         if ($g3Type === 'tarjeta') {
-                            $message .= "\n*Método de pago elegido:* 💳 Tarjeta (precio de lista)";
+                            $message .= "\n*Método de pago elegido:* Tarjeta (precio de lista)";
                             $message .= "\n*Total a Pagar:* $" . number_format($subtotalBase, 0, ',', '.') . "\n\n";
                         } elseif ($g3Type === 'efectivo') {
                             $totalConDescuento = $subtotalBase * 0.90;
-                            $message .= "\n*Método de pago elegido:* 💵 Efectivo / Transferencia (10% OFF)";
+                            $message .= "\n*Método de pago elegido:* Efectivo / Transferencia (10% OFF)";
                             $message .= "\n*Total Lista:* $" . number_format($subtotalBase, 0, ',', '.') . "\n";
                             $message .= "*Total con 10% OFF:* $" . number_format($totalConDescuento, 0, ',', '.') . "\n\n";
                         } else { // mixto
@@ -266,7 +266,7 @@ new #[Layout('layouts.app')] class extends Component {
                             $cardAmt = $restoContado / 0.90;
                             $totalMixto = $cashAmt + $cardAmt;
                             
-                            $message .= "\n*Método de pago elegido:* 💳+💵 Pago Mixto";
+                            $message .= "\n*Método de pago elegido:* Pago Mixto (Efectivo + Tarjeta)";
                             $message .= "\n  - Pagará en Efectivo: $" . number_format($cashAmt, 0, ',', '.') . "\n";
                             $message .= "  - Pagará con Tarjeta (saldo a precio lista): $" . number_format($cardAmt, 0, ',', '.') . "\n";
                             $message .= "*Total Final Mixto:* $" . number_format($totalMixto, 0, ',', '.') . "\n\n";
