@@ -155,16 +155,34 @@ new #[Layout('layouts.app')] class extends Component {
                 $freshTotal = 0;
                 $totalUnits = array_sum($this->cart);
                 
-                $discountApplied = (tenant('id') === 'g3' && $this->theme !== 'modern-light' && $this->payment_method === 'transfer');
+                $g3Type = $this->g3_payment_type;
+                $isG3Transfer = (tenant('id') === 'g3' && $this->theme !== 'modern-light' && $this->payment_method === 'transfer');
+                $applyUniformDiscount = ($isG3Transfer && $g3Type === 'efectivo');
 
                 foreach ($this->cart as $productId => $quantity) {
                     if (isset($freshProducts[$productId])) {
                         $price = $this->getPrice($freshProducts[$productId], $quantity);
-                        if ($discountApplied) {
+                        if ($applyUniformDiscount) {
                             $price = $price * 0.90;
                         }
                         $freshTotal += $price * $quantity;
                     }
+                }
+
+                // Si es Mixto, el total de la orden se calcula con la formula especial
+                // (Los items quedarán con precio de lista, pero el total de la orden será exacto)
+                if ($isG3Transfer && $g3Type === 'mixto') {
+                    $cashAmt  = floatval($this->g3_cash_amount);
+                    $precioContado = $freshTotal * 0.90; // El freshTotal aquí es a precio de lista
+                    $restoContado = max(0, $precioContado - $cashAmt);
+                    $cardAmt = $restoContado / 0.90;
+                    $freshTotal = $cashAmt + $cardAmt;
+                }
+                
+                // Determinar el string a guardar en payment_method
+                $savedPaymentMethod = $this->payment_method;
+                if ($isG3Transfer) {
+                    $savedPaymentMethod = "Transferencia/Local ({$g3Type})";
                 }
 
                 // 1. Crear la Orden en DB con estado 'pendiente'
@@ -179,7 +197,7 @@ new #[Layout('layouts.app')] class extends Component {
                     'state'           => ($this->theme !== 'luxury' && $this->has_mp_token) ? $this->state : '-',
                     'zip_code'        => ($this->theme !== 'luxury' && $this->has_mp_token) ? $this->zip_code : '-',
                     'delivery_method' => ($this->theme !== 'luxury' && $this->has_mp_token) ? 'envio' : 'retiro', // Fix BUG-12
-                    'payment_method'  => $this->payment_method, // Fix BUG-12
+                    'payment_method'  => $savedPaymentMethod, // Fix BUG-12 + G3 payment types
                     'role_applied'    => (auth()->user() && auth()->user()->isWholesaleCustomer()) 
                                             ? 'vip_mayorista' 
                                             : ($totalUnits >= \App\Services\PricingService::GLOBAL_WHOLESALE_MIN ? 'por_volumen' : 'minorista'),
@@ -190,7 +208,7 @@ new #[Layout('layouts.app')] class extends Component {
                     if (isset($freshProducts[$productId])) {
                         $product = $freshProducts[$productId];
                         $price = $this->getPrice($product, $quantity);
-                        if ($discountApplied) {
+                        if ($applyUniformDiscount) {
                             $price = $price * 0.90;
                         }
 
@@ -676,7 +694,7 @@ new #[Layout('layouts.app')] class extends Component {
              @endif
         >
             <!-- Order Summary -->
-            <div class="bg-white/80 dark:bg-gray-800/40 backdrop-blur-md border border-gray-200 dark:border-gray-700/50 shadow-xl dark:shadow-2xl sm:rounded-3xl p-8">
+            <div class="order-2 md:order-1 bg-white/80 dark:bg-gray-800/40 backdrop-blur-md border border-gray-200 dark:border-gray-700/50 shadow-xl dark:shadow-2xl sm:rounded-3xl p-8 h-fit sticky top-8">
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Resumen de tu Orden</h3>
                 <ul class="divide-y divide-gray-200 dark:divide-gray-700/50">
                     @foreach($cart as $productId => $quantity)
@@ -751,8 +769,9 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
 
             <!-- Shipping Form -->
-            @if($has_mp_token)
-            <div class="bg-white/80 dark:bg-gray-800/40 backdrop-blur-md border border-gray-200 dark:border-gray-700/50 shadow-xl dark:shadow-2xl sm:rounded-3xl p-8" :style="$store.theme.dark ? 'box-shadow: 0 10px 30px -10px var(--color-primary-glow);' : ''">
+            <div class="order-1 md:order-2">
+                @if($has_mp_token)
+                <div class="bg-white/80 dark:bg-gray-800/40 backdrop-blur-md border border-gray-200 dark:border-gray-700/50 shadow-xl dark:shadow-2xl sm:rounded-3xl p-8" :style="$store.theme.dark ? 'box-shadow: 0 10px 30px -10px var(--color-primary-glow);' : ''">
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Detalles de Envío</h3>
                 <form wire:submit="placeOrder">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -964,6 +983,22 @@ new #[Layout('layouts.app')] class extends Component {
                             @endonce
                         </div>
                         @error('turnstileToken') <span class="text-red-500 dark:text-red-400 text-xs mt-1 block font-bold mb-4">{{ $message }}</span> @enderror
+                    @endif
+
+                    <!-- Total Final Reminder (Mobile friendly) -->
+                    @if(tenant('id') === 'g3')
+                    <div class="mb-4 text-center">
+                        <span class="text-sm font-bold text-gray-500 dark:text-gray-400 block mb-1">Total a Pagar</span>
+                        <div x-show="payType === 'efectivo'">
+                            <span class="text-3xl font-black text-emerald-500">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
+                        </div>
+                        <div x-show="payType === 'tarjeta'" style="display: none;">
+                            <span class="text-3xl font-black text-gray-900 dark:text-white">${{ number_format($subtotal, 0, ',', '.') }}</span>
+                        </div>
+                        <div x-show="payType === 'mixto'" style="display: none;">
+                            <span class="text-3xl font-black text-purple-500">$<span x-text="Math.round(totalMixto).toLocaleString('es-AR')"></span></span>
+                        </div>
+                    </div>
                     @endif
 
                     <button type="submit"
