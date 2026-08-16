@@ -67,19 +67,16 @@ class SyncPricesCommand extends Command
 
                 $row = str_getcsv($line);
 
-                // Estructura del nuevo Excel: 
-                // Col 0: Categoria
-                // Col 1: Producto
-                // Col 6: Precio Pesos G3 (Contado)
-                // Col 7: Precio Costo G3 (Costo)
-                
+                $categoryName = trim($row[0]);
+
+                // Estructura: Col 0: Categoria, Col 1: Producto, Col 6: Precio G3, Col 7: Costo G3
                 if (count($row) < 8) continue;
 
-                $productName = trim($row[1]);
+                $productName  = trim($row[1]);
                 $rawCashPrice = $row[6];
                 $rawCostPrice = $row[7];
 
-                // Función auxiliar para limpiar precios argentinos
+                // Limpiar precios argentinos (puntos de miles, comas decimales)
                 $cleanPriceFunc = function($rawPrice) {
                     $priceStr = str_replace('.', '', $rawPrice);
                     $priceStr = str_replace(',', '.', $priceStr);
@@ -91,23 +88,41 @@ class SyncPricesCommand extends Command
 
                 if (empty($productName) || $cashPrice <= 0) continue;
 
-                // 4. Lógica de Negocio: Sumar 10% para precio web (Precio de Lista)
+
+                // Lógica de negocio: precio web = precio contado + 10%
                 $webPrice = $cashPrice * 1.10;
 
-                // 5. Buscar y Actualizar
+                // Buscar o crear la categoría
+                $category = \App\Models\Category::firstOrCreate(
+                    ['name' => $categoryName ?: 'General'],
+                    ['slug' => \Illuminate\Support\Str::slug($categoryName ?: 'General')]
+                );
+
+                // 5. Buscar y actualizar, o crear si no existe (upsert por nombre)
                 $product = Product::where('name', $productName)->first();
 
                 if ($product) {
                     $product->update([
-                        'retail_price' => $webPrice,
+                        'retail_price'    => $webPrice,
                         'wholesale_price' => $cashPrice,
-                        'cost_price' => $costPrice,
-                        // Al encontrar el producto, le damos stock infinito (o suficiente) para el modelo a pedido
-                        'stock' => 999
+                        'cost_price'      => $costPrice,
+                        'stock'           => 999,
+                        'category_id'     => $category->id,
                     ]);
                     $updatedCount++;
                 } else {
-                    $notFoundCount++;
+                    Product::create([
+                        'name'            => $productName,
+                        'retail_price'    => $webPrice,
+                        'wholesale_price' => $cashPrice,
+                        'cost_price'      => $costPrice,
+                        'stock'           => 999,
+                        'category_id'     => $category->id,
+                        'profit_margin'   => 10,
+                        'wholesale_discount' => 0,
+                        'wholesale_min_quantity' => 1,
+                    ]);
+                    $updatedCount++;
                 }
             }
 

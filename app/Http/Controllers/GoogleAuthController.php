@@ -39,7 +39,12 @@ class GoogleAuthController extends Controller
             }
 
             $this->configureSslClient();
-            return Socialite::driver('google')->redirect();
+            // Construir la URL de callback dinámicamente según el dominio actual.
+            // Esto permite que funcione en múltiples dominios (JCG, G3, etc.)
+            // sin necesitar una URL fija en el .env.
+            return Socialite::driver('google')
+                ->redirectUrl(url('/auth/google/callback'))
+                ->redirect();
         } catch (Exception $e) {
             \Illuminate\Support\Facades\Log::error('Error en redirect Google: ' . $e->getMessage());
             return redirect()->route('login')->with('error', 'Error de conexión con Google. Por favor, intenta nuevamente.');
@@ -53,7 +58,9 @@ class GoogleAuthController extends Controller
     {
         try {
             $this->configureSslClient();
-            $googleUser = Socialite::driver('google')->user();
+            $googleUser = Socialite::driver('google')
+                ->redirectUrl(url('/auth/google/callback'))
+                ->user();
 
             // Check if user already exists
             $user = User::where('google_id', $googleUser->id)->first();
