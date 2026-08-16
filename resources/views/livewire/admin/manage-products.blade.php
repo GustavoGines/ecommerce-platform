@@ -696,17 +696,6 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
                     </button>
                     
-                    @if(tenant('id') === 'g3')
-                    <button type="button" wire:click="syncPrices" wire:loading.attr="disabled" wire:target="syncPrices"
-                        class="group flex items-center justify-center p-2.5 rounded-full transition-all hover:bg-emerald-50 dark:hover:bg-emerald-900/30 border border-emerald-300 dark:border-emerald-700 shadow-sm text-emerald-700 dark:text-emerald-400 font-bold"
-                        title="Sincronizar precios desde Google Sheets">
-                        <svg wire:loading.remove wire:target="syncPrices" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        <svg wire:loading wire:target="syncPrices" class="animate-spin w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                        <div class="grid grid-cols-[0fr] group-hover:grid-cols-[1fr] transition-all duration-300 ease-in-out">
-                            <span class="overflow-hidden whitespace-nowrap text-sm"><span class="pl-2">Sincronizar</span></span>
-                        </div>
-                    </button>
-                    @endif
 
                     <button type="button" @click="isProductLoading = true; modalOpen = true; $wire.create().then(() => isProductLoading = false)" class="group flex items-center justify-center p-2.5 rounded-full transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-white font-bold" style="background-color: var(--color-primary); box-shadow: 0 4px 14px 0 var(--color-primary-glow);">
                         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
