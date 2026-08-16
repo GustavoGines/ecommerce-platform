@@ -752,7 +752,7 @@ new #[Layout('layouts.app')] class extends Component {
                         @if($payment_method === 'transfer' && tenant('id') === 'g3')
                             <div x-show="payType === 'efectivo'" x-cloak>
                                 <p class="text-sm font-bold line-through text-gray-400 mb-1">${{ number_format($subtotal, 0, ',', '.') }}</p>
-                                <span class="text-3xl font-black text-emerald-500">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
+                                <span class="text-3xl font-black text-emerald-500">${{ number_format($subtotal / 1.10, 0, ',', '.') }}</span>
                             </div>
                             <div x-show="payType === 'tarjeta'" x-cloak>
                                 <span class="text-3xl font-black text-gray-900 dark:text-white">${{ number_format($subtotal, 0, ',', '.') }}</span>
@@ -874,8 +874,8 @@ new #[Layout('layouts.app')] class extends Component {
                                 <span class="text-gray-300 line-through">${{ number_format($subtotal, 0, ',', '.') }}</span>
                             </div>
                             <div class="flex justify-between text-base font-black">
-                                <span class="text-emerald-400">Total con 10% OFF:</span>
-                                <span class="text-emerald-400">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
+                                <span class="text-emerald-400">Total con Descuento:</span>
+                                <span class="text-emerald-400">${{ number_format($subtotal / 1.10, 0, ',', '.') }}</span>
                             </div>
                         </div>
 
@@ -890,7 +890,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <div class="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 mb-2">
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-purple-300 font-bold">Total a pagar de Contado:</span>
-                                    <span class="text-lg font-black text-emerald-400">${{ number_format($subtotal * 0.90, 0, ',', '.') }}</span>
+                                    <span class="text-lg font-black text-emerald-400">${{ number_format($subtotal / 1.10, 0, ',', '.') }}</span>
                                 </div>
                                 <p class="text-[10px] text-gray-400 mt-1">Si no completas este monto en efectivo, el resto vuelve al precio de lista para pagar con tarjeta.</p>
                             </div>
