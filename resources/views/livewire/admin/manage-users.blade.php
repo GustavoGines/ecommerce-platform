@@ -65,6 +65,24 @@ new #[Layout('layouts.app')] class extends Component {
         session()->flash('message', "Usuario {$status} exitosamente.");
     }
 
+    public function deleteUser($userId)
+    {
+        $user = User::findOrFail($userId);
+        
+        if ($user->id === auth()->id()) {
+            session()->flash('error', 'No puedes eliminarte a ti mismo.');
+            return;
+        }
+
+        if ($user->orders()->count() > 0) {
+            session()->flash('error', 'Por seguridad, no se puede eliminar un cliente que tiene órdenes de compra. Usa la opción "Bloquear" para prohibirle el acceso.');
+            return;
+        }
+
+        $user->delete();
+        session()->flash('message', 'Usuario eliminado permanentemente.');
+    }
+
     public function editUser($userId)
     {
         $user = User::findOrFail($userId);
@@ -226,6 +244,10 @@ new #[Layout('layouts.app')] class extends Component {
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                                             @endif
                                         </button>
+                                        
+                                        <button wire:click="deleteUser({{ $user->id }})" wire:confirm="¿Estás seguro de eliminar PERMANENTEMENTE a este usuario? Esto no se puede deshacer." title="Eliminar Usuario" class="text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors p-1.5 rounded-lg">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
                                     @endif
                                 </div>
                             </div>
@@ -290,6 +312,10 @@ new #[Layout('layouts.app')] class extends Component {
                                 @else
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                                 @endif
+                            </button>
+                            
+                            <button wire:click="deleteUser({{ $user->id }})" wire:confirm="¿Estás seguro de eliminar PERMANENTEMENTE a este usuario? Esto no se puede deshacer." class="text-gray-400 hover:text-red-600 bg-gray-50 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
                         @endif
                     </div>
