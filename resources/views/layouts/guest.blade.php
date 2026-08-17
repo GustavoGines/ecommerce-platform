@@ -47,7 +47,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <style>
             :root {
-                @if(($settings->theme_name ?? 'stealth') === 'modern-light')
+                @if(($settings->theme_name ?? 'modern-light') === 'modern-light')
                     /* JCG Electrónica Primary Color: Tailwind red-600 */
                     --color-primary: #DC2626;
                     --color-primary-hover: #B91C1C; /* red-700 */
@@ -76,7 +76,7 @@
 
         <div class="min-h-screen flex flex-col items-center pt-6 sm:pt-0 relative z-10 w-full">
             
-            @if(($settings->theme_name ?? 'stealth') !== 'modern-light' && ($settings->theme_name ?? 'stealth') !== 'luxury')
+            @if(($settings->theme_name ?? 'modern-light') !== 'modern-light')
             <div class="absolute top-6 right-6 z-50">
                 <!-- Theme Toggle Button -->
                 <button @click="$store.theme.toggle()" class="p-2 rounded-full bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-[var(--color-primary)] transition-colors focus:outline-none shadow-md">

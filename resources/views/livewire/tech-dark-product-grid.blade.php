@@ -62,14 +62,35 @@ new class extends Component {
 
     public function with()
     {
+        $applyCommonFilters = function ($query) {
+            if ($this->inStockOnly) {
+                $query->where('stock', '>', 0)->where('stock', '!=', 999);
+            }
+            if ($this->search) {
+                $query->where(function($q) {
+                    $q->where('name', 'like', '%' . $this->search . '%')
+                      ->orWhere('sku', 'like', '%' . $this->search . '%')
+                      ->orWhere('description', 'like', '%' . $this->search . '%');
+                });
+            }
+            if ($this->minPrice) {
+                $query->where('retail_price', '>=', $this->minPrice);
+            }
+            if ($this->maxPrice) {
+                $query->where('retail_price', '<=', $this->maxPrice);
+            }
+        };
+
         $query = Product::with(['category', 'brands']);
 
-        // Prioridad de Stock: Los productos sin stock van al final
-        $query->orderByRaw('stock > 0 DESC');
+        $applyCommonFilters($query);
 
-        if ($this->inStockOnly) {
-            $query->where('stock', '>', 0);
+        // Calculate total products matching filters (without category filter)
+        $totalProductsQuery = clone $query;
+        if ($this->selectedBrand) {
+            $totalProductsQuery->whereHas('brands', fn($q) => $q->where('brands.id', $this->selectedBrand));
         }
+        $totalProductsCount = $totalProductsQuery->count();
 
         if ($this->selectedCategory) {
             $query->where('category_id', $this->selectedCategory);
@@ -79,21 +100,8 @@ new class extends Component {
             $query->whereHas('brands', fn($q) => $q->where('brands.id', $this->selectedBrand));
         }
         
-        if ($this->search) {
-            $query->where(function($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('sku', 'like', '%' . $this->search . '%')
-                  ->orWhere('description', 'like', '%' . $this->search . '%');
-            });
-        }
-        
-        if ($this->minPrice) {
-            $query->where('retail_price', '>=', $this->minPrice);
-        }
-        
-        if ($this->maxPrice) {
-            $query->where('retail_price', '<=', $this->maxPrice);
-        }
+        // Prioridad de Stock: Los productos sin stock van al final
+        $query->orderByRaw('stock > 0 DESC');
 
         if ($this->sort === 'price_asc') {
             $query->orderBy('retail_price', 'asc');
@@ -115,10 +123,21 @@ new class extends Component {
 
         return [
             'products' => $query->paginate(15),
+            'totalProductsCount' => $totalProductsCount,
             'popularProducts' => \Illuminate\Support\Facades\Cache::remember('popularProducts', 3600, fn() => Product::latest()->take(3)->get()),
             'recentlyViewedProducts' => $recentlyViewedProducts,
-            'categories' => Category::has('products')->withCount('products')->get(),
-            'brands' => Brand::has('products')->withCount('products')->get()
+            'categories' => Category::withCount(['products' => function($q) use ($applyCommonFilters) {
+                $applyCommonFilters($q);
+                if ($this->selectedBrand) {
+                    $q->whereHas('brands', fn($bq) => $bq->where('brands.id', $this->selectedBrand));
+                }
+            }])->having('products_count', '>', 0)->get(),
+            'brands' => Brand::withCount(['products' => function($q) use ($applyCommonFilters) {
+                $applyCommonFilters($q);
+                if ($this->selectedCategory) {
+                    $q->where('category_id', $this->selectedCategory);
+                }
+            }])->having('products_count', '>', 0)->get()
         ];
     }
 }; ?>
@@ -211,7 +230,7 @@ new class extends Component {
                                 <li>
                                     <button wire:click="setCategory(null)" class="w-full flex items-center justify-between text-sm transition-colors {{ $selectedCategory === null ? 'text-[var(--color-primary)] font-bold' : 'text-g3-silver hover:text-white' }}">
                                         <span>Todas</span>
-                                        <span class="text-[10px] bg-zinc-800 text-gray-300 px-2 py-0.5 rounded-full font-bold">{{ \App\Models\Product::count() }}</span>
+                                        <span class="text-[10px] bg-zinc-800 text-gray-300 px-2 py-0.5 rounded-full font-bold">{{ $totalProductsCount }}</span>
                                     </button>
                                 </li>
                                 @foreach($categories->take(5) as $category)
@@ -289,11 +308,11 @@ new class extends Component {
                     {{-- Stock Toggle --}}
                     <div>
                         <h4 class="text-white font-bold text-sm tracking-widest uppercase mb-4 pb-4 border-b border-zinc-800">Disponibilidad</h4>
-                        <label class="flex items-center cursor-pointer gap-3 p-3 rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 transition-colors">
+                        <label x-data="{ inStock: $wire.entangle('inStockOnly').live }" class="flex items-center cursor-pointer gap-3 p-3 rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 transition-colors">
                             <div class="relative">
-                                <input type="checkbox" wire:model.live="inStockOnly" class="sr-only">
-                                <div class="block bg-zinc-700 w-10 h-6 rounded-full transition-colors duration-300" :class="{'bg-[var(--color-primary)]': @entangle('inStockOnly')}"></div>
-                                <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300" :class="{'translate-x-4': @entangle('inStockOnly')}"></div>
+                                <input type="checkbox" x-model="inStock" class="sr-only">
+                                <div class="block w-10 h-6 rounded-full transition-colors duration-300" :class="inStock ? 'bg-[var(--color-primary)]' : 'bg-zinc-700'"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300" :class="inStock ? 'translate-x-4' : ''"></div>
                             </div>
                             <span class="text-sm font-medium text-g3-silver select-none">Mostrar solo en stock</span>
                         </label>

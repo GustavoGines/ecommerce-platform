@@ -59,10 +59,32 @@ new class extends Component {
 
     public function with()
     {
+        $applyCommonFilters = function ($query) {
+            if ($this->search) {
+                $query->where(function($q) {
+                    $q->where('name', 'like', '%' . $this->search . '%')
+                      ->orWhere('sku', 'like', '%' . $this->search . '%')
+                      ->orWhere('description', 'like', '%' . $this->search . '%');
+                });
+            }
+            if ($this->minPrice) {
+                $query->where('retail_price', '>=', $this->minPrice);
+            }
+            if ($this->maxPrice) {
+                $query->where('retail_price', '<=', $this->maxPrice);
+            }
+        };
+
         $query = Product::with(['category', 'brands']);
 
-        // Priorizar SIEMPRE los productos con stock, sin importar otros filtros
-        $query->orderByRaw('stock > 0 DESC');
+        $applyCommonFilters($query);
+
+        // Calculate total products matching filters (without category filter)
+        $totalProductsQuery = clone $query;
+        if ($this->selectedBrand) {
+            $totalProductsQuery->whereHas('brands', fn($q) => $q->where('brands.id', $this->selectedBrand));
+        }
+        $totalProductsCount = $totalProductsQuery->count();
 
         if ($this->selectedCategory) {
             $query->where('category_id', $this->selectedCategory);
@@ -72,21 +94,8 @@ new class extends Component {
             $query->whereHas('brands', fn($q) => $q->where('brands.id', $this->selectedBrand));
         }
         
-        if ($this->search) {
-            $query->where(function($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('sku', 'like', '%' . $this->search . '%')
-                  ->orWhere('description', 'like', '%' . $this->search . '%');
-            });
-        }
-        
-        if ($this->minPrice) {
-            $query->where('retail_price', '>=', $this->minPrice);
-        }
-        
-        if ($this->maxPrice) {
-            $query->where('retail_price', '<=', $this->maxPrice);
-        }
+        // Priorizar SIEMPRE los productos con stock, sin importar otros filtros
+        $query->orderByRaw('stock > 0 DESC');
 
         if ($this->sort === 'price_asc') {
             $query->orderBy('retail_price', 'asc');
@@ -108,10 +117,21 @@ new class extends Component {
 
         return [
             'products' => $query->paginate(15),
+            'totalProductsCount' => $totalProductsCount,
             'popularProducts' => \Illuminate\Support\Facades\Cache::remember('popularProducts', 3600, fn() => Product::latest()->take(3)->get()),
             'recentlyViewedProducts' => $recentlyViewedProducts,
-            'categories' => Category::has('products')->withCount('products')->get(),
-            'brands' => Brand::has('products')->withCount('products')->get()
+            'categories' => Category::withCount(['products' => function($q) use ($applyCommonFilters) {
+                $applyCommonFilters($q);
+                if ($this->selectedBrand) {
+                    $q->whereHas('brands', fn($bq) => $bq->where('brands.id', $this->selectedBrand));
+                }
+            }])->having('products_count', '>', 0)->get(),
+            'brands' => Brand::withCount(['products' => function($q) use ($applyCommonFilters) {
+                $applyCommonFilters($q);
+                if ($this->selectedCategory) {
+                    $q->where('category_id', $this->selectedCategory);
+                }
+            }])->having('products_count', '>', 0)->get()
         ];
     }
 }; ?>
@@ -204,7 +224,7 @@ new class extends Component {
                                 <li>
                                     <button wire:click="setCategory(null)" class="w-full flex items-center justify-between text-sm transition-colors {{ $selectedCategory === null ? 'text-[var(--color-primary)] font-bold' : 'text-gray-600 hover:text-gray-900' }}">
                                         <span>Todas</span>
-                                        <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-bold">{{ \App\Models\Product::count() }}</span>
+                                        <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-bold">{{ $totalProductsCount }}</span>
                                     </button>
                                 </li>
                                 @foreach($categories->take(5) as $category)

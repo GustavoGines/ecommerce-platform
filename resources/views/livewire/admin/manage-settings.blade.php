@@ -11,7 +11,7 @@ new #[Layout('layouts.app')] class extends Component {
     use WithFileUploads;
 
     public $store_name = '';
-    public $theme_name = 'stealth';
+    public $theme_name = 'modern-light';
     public $store_tagline = '';
     
     // Redes sociales individuales
@@ -35,11 +35,7 @@ new #[Layout('layouts.app')] class extends Component {
         $settings = StoreSetting::getSettings();
         if ($settings) {
             $this->store_name = $settings->store_name ?? '';
-            $this->theme_name = $settings->theme_name ?? 'tech-dark';
-            
-            // Migración automática de temas antiguos
-            if ($this->theme_name === 'stealth') $this->theme_name = 'tech-dark';
-            if ($this->theme_name === 'luxury') $this->theme_name = 'modern-light';
+            $this->theme_name = $settings->theme_name ?? 'modern-light';
             
             $this->store_tagline = $settings->store_tagline ?? '';
             

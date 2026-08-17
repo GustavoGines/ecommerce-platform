@@ -3,7 +3,7 @@
 use Livewire\Volt\Component;
 
 new class extends Component {
-    public $theme = 'stealth';
+    public $theme = 'modern-light';
     public $storeName = 'Premium Hardware';
     public $tagline = 'El mayor catálogo de controles remotos y electrónica. Ventas por mayor y menor.';
     public $social = [];
@@ -12,7 +12,7 @@ new class extends Component {
     {
         $settings = \App\Models\StoreSetting::getSettings();
         if ($settings) {
-            $this->theme = $settings->theme_name ?? 'stealth';
+            $this->theme = $settings->theme_name ?? 'modern-light';
             $this->storeName = $settings->store_name ?? 'Premium Hardware';
             
             // Siempre priorizamos el slogan configurado en la base de datos.
@@ -27,7 +27,6 @@ new class extends Component {
                 
             $this->social = is_array($settings->social_links) ? $settings->social_links : json_decode($settings->social_links ?? '{}', true);
             
-            // Si es G3, quitarle el 549 inicial al whatsapp
             if ($this->theme !== 'modern-light' && isset($this->social['whatsapp'])) {
                 if (str_starts_with($this->social['whatsapp'], '549')) {
                     $this->social['whatsapp'] = substr($this->social['whatsapp'], 3);
@@ -37,9 +36,9 @@ new class extends Component {
     }
 }; ?>
 
-<footer class="w-full mt-auto relative {{ $theme === 'luxury' ? 'bg-[#030712] border-t border-white/5' : 'bg-gray-950 text-gray-400' }} transition-colors duration-300">
+<footer class="w-full mt-auto relative bg-gray-950 text-gray-400 transition-colors duration-300">
         {{-- ==========================================
-             MODERN / STEALTH THEME FOOTER
+             FOOTER
              ========================================== --}}
         
         {{-- 1. Franja de Confianza (Trust Banner) Superior --}}

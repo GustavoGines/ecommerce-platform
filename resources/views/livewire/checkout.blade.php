@@ -23,7 +23,7 @@ new #[Layout('layouts.app')] class extends Component {
     public $state = '';
     public $zip_code = '';
     public $phone = '';
-    public $theme = 'stealth';
+    public $theme = 'modern-light';
     public string $turnstileToken = '';
     public string $payment_method = 'transfer'; // 'transfer' o 'mercadopago'
     public bool $has_mp_token = false;
@@ -37,7 +37,7 @@ new #[Layout('layouts.app')] class extends Component {
     {
         $settings = \App\Models\StoreSetting::getSettings();
         if ($settings) {
-            $this->theme = $settings->theme_name ?? 'stealth';
+            $this->theme = $settings->theme_name ?? 'modern-light';
             $this->has_mp_token = !empty($settings->mp_access_token);
         }
         $cartService = app(\App\Services\CartService::class);
@@ -109,8 +109,8 @@ new #[Layout('layouts.app')] class extends Component {
             'payment_method' => 'required|in:transfer,mercadopago',
         ];
 
-        // Solo requerir datos de envío si la tienda no es luxury (JCG) y tiene activo MP
-        if ($this->theme !== 'luxury' && $this->has_mp_token) {
+        // Solo requerir datos de envío si es tech-dark (G3) y tiene activo MP
+        if ($this->theme === 'tech-dark' && $this->has_mp_token) {
             $rules = array_merge($rules, [
                 'address_street' => 'required|string|max:255',
                 'address_number' => 'required|string|max:50',
@@ -191,12 +191,12 @@ new #[Layout('layouts.app')] class extends Component {
                     'status'          => 'pendiente',
                     'total'           => $freshTotal, // Usar total fresco recalculado
                     'phone'           => $this->phone,
-                    'address_street'  => ($this->theme !== 'luxury' && $this->has_mp_token) ? $this->address_street : 'Retiro en Local',
-                    'address_number'  => ($this->theme !== 'luxury' && $this->has_mp_token) ? $this->address_number : '-',
-                    'city'            => ($this->theme !== 'luxury' && $this->has_mp_token) ? $this->city : '-',
-                    'state'           => ($this->theme !== 'luxury' && $this->has_mp_token) ? $this->state : '-',
-                    'zip_code'        => ($this->theme !== 'luxury' && $this->has_mp_token) ? $this->zip_code : '-',
-                    'delivery_method' => ($this->theme !== 'luxury' && $this->has_mp_token) ? 'envio' : 'retiro', // Fix BUG-12
+                    'address_street'  => ($this->theme === 'tech-dark' && $this->has_mp_token) ? $this->address_street : 'Retiro en Local',
+                    'address_number'  => ($this->theme === 'tech-dark' && $this->has_mp_token) ? $this->address_number : '-',
+                    'city'            => ($this->theme === 'tech-dark' && $this->has_mp_token) ? $this->city : '-',
+                    'state'           => ($this->theme === 'tech-dark' && $this->has_mp_token) ? $this->state : '-',
+                    'zip_code'        => ($this->theme === 'tech-dark' && $this->has_mp_token) ? $this->zip_code : '-',
+                    'delivery_method' => ($this->theme === 'tech-dark' && $this->has_mp_token) ? 'envio' : 'retiro', // Fix BUG-12
                     'payment_method'  => $savedPaymentMethod, // Fix BUG-12 + G3 payment types
                     'role_applied'    => (auth()->user() && auth()->user()->isWholesaleCustomer()) 
                                             ? 'vip_mayorista' 
@@ -328,178 +328,7 @@ new #[Layout('layouts.app')] class extends Component {
 
 
 <div>
-@if($theme === 'luxury')
-    {{-- =========================================================
-         LUXURY THEME: CHECKOUT
-         ========================================================= --}}
-    <div class="bg-[#030712] min-h-screen text-white pt-24 pb-32">
-        <div class="max-w-6xl mx-auto px-6 lg:px-8">
-            
-            <div class="mb-12">
-                <h1 class="text-4xl font-black tracking-tight mb-2">Finalizar Compra</h1>
-                <p class="text-gray-400">Completa tus datos para coordinar el pedido y envío.</p>
-                
-                @if (session()->has('error'))
-                    <div class="mt-6 bg-red-500/10 border border-red-500/20 text-red-400 px-6 py-4 rounded-2xl flex items-center gap-3">
-                        <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        {{ session('error') }}
-                    </div>
-                @endif
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-                <!-- Shipping Form (Col-span 7) -->
-                <div class="lg:col-span-7">
-                    <form wire:submit="placeOrder">
-                        
-                        <div class="space-y-8">
-                            {{-- Section: Shipping --}}
-                            <div>
-                                <h3 class="text-xl font-bold mb-6 flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-sm">1</span> Datos de Envío</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Calle</label>
-                                        <input wire:model="address_street" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-1 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors placeholder-gray-700" placeholder="Ej: Av. Libertador">
-                                        @error('address_street') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
-                                    </div>
-                                    <div>
-                                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Número / Piso</label>
-                                        <input wire:model="address_number" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-1 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors placeholder-gray-700" placeholder="Ej: 1234 Piso 5">
-                                        @error('address_number') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div class="md:col-span-1">
-                                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">C. Postal</label>
-                                        <input wire:model="zip_code" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-1 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors placeholder-gray-700" placeholder="Ej: 1000">
-                                        @error('zip_code') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
-                                    </div>
-                                    <div class="md:col-span-1">
-                                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Ciudad</label>
-                                        <input wire:model="city" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-1 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors placeholder-gray-700" placeholder="CABA">
-                                        @error('city') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
-                                    </div>
-                                    <div class="md:col-span-1">
-                                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Provincia</label>
-                                        <input wire:model="state" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-1 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors placeholder-gray-700" placeholder="Buenos Aires">
-                                        @error('state') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr class="border-white/5">
-
-                            {{-- Section: Contact --}}
-                            <div>
-                                <h3 class="text-xl font-bold mb-6 flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-sm">2</span> Contacto</h3>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Celular / WhatsApp</label>
-                                    <input wire:model="phone" type="tel" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-1 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition-colors placeholder-gray-700" placeholder="Ej: 11 1234-5678">
-                                    <p class="text-[11px] text-gray-500 mt-2">Lo utilizaremos para enviarte notificaciones sobre el estado de tu orden.</p>
-                                    @error('phone') <span class="text-red-400 text-xs mt-1 block font-bold">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Turnstile -->
-                        @if(config('services.turnstile.enabled'))
-                            <div wire:ignore class="mt-6">
-                                <div class="cf-turnstile" data-sitekey="{{ config('services.turnstile.site_key') }}" data-callback="setTurnstileTokenCheckout"></div>
-                                <script>
-                                    function setTurnstileTokenCheckout(token) {
-                                        @this.set('turnstileToken', token);
-                                    }
-                                </script>
-                                @once
-                                    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-                                @endonce
-                            </div>
-                            @error('turnstileToken') <span class="text-red-400 text-xs mt-1 block font-bold">{{ $message }}</span> @enderror
-                        @endif
-
-                        <div class="mt-10">
-                            <button type="submit"
-                                    wire:loading.attr="disabled"
-                                    class="w-full inline-flex items-center justify-center gap-3 py-5 px-8 rounded-2xl text-white font-bold text-lg tracking-wide transition-all bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/90 shadow-[0_0_20px_var(--color-primary-glow)] hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed">
-                                
-                                <svg wire:loading.remove wire:target="placeOrder" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-
-                                <svg wire:loading wire:target="placeOrder" class="animate-spin w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                                </svg>
-
-                                <span wire:loading.remove wire:target="placeOrder">Pagar con MercadoPago</span>
-                                <span wire:loading wire:target="placeOrder">Generando pago seguro...</span>
-                            </button>
-                            <div class="mt-4 flex items-center justify-center gap-2 text-xs text-gray-500">
-                                <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Pago 100% encriptado
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Order Summary (Col-span 5) -->
-                <div class="lg:col-span-5">
-                    <div class="sticky top-32 bg-white/5 backdrop-blur-3xl border border-white/5 rounded-3xl p-8">
-                        <h3 class="text-lg font-bold mb-6">Tu Pedido</h3>
-                        
-                        <div class="space-y-6">
-                            @foreach($cart as $productId => $quantity)
-                                @if(isset($products[$productId]))
-                                    @php
-                                        $product = $products[$productId];
-                                        // DRY-01 FIX: usa PricingService vía getPrice() — cubre regla VIP mayorista
-                                        $price = $this->getPrice($product, $quantity);
-                                    @endphp
-                                    <div class="flex gap-4">
-                                        <div class="w-20 h-20 bg-[#0a0f1c] rounded-xl border border-white/5 flex items-center justify-center p-2 flex-shrink-0">
-                                            @if($product->image_url)
-                                                <img src="{{ asset('storage/' . $product->image_url) }}" class="w-full h-full object-contain">
-                                            @endif
-                                        </div>
-                                        <div class="flex-1">
-                                            <h4 class="font-bold text-sm leading-tight line-clamp-2 mb-1">{{ $product->name }}</h4>
-                                            <div class="flex items-center justify-between mt-2">
-                                                <span class="text-xs text-gray-400">{{ $quantity }} x ${{ number_format($price, 0, ',', '.') }}</span>
-                                                <span class="font-bold">${{ number_format($price * $quantity, 0, ',', '.') }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-                            @endforeach
-                        </div>
-                        
-                        <hr class="my-6 border-white/5">
-                        
-                        <div class="flex justify-between items-center mb-6">
-                            <span class="text-gray-400">Subtotal</span>
-                            <span class="font-medium">${{ number_format($subtotal, 0, ',', '.') }}</span>
-                        </div>
-
-                        
-                        <hr class="my-6 border-white/5">
-
-                        <div class="flex justify-between items-end mb-4">
-                            <span class="text-lg font-bold text-gray-400">{{ tenant('id') === 'g3' ? 'Total Normal (Tarjetas)' : 'Total' }}</span>
-                            <span class="text-2xl font-bold text-gray-300">${{ number_format($subtotal, 0, ',', '.') }}</span>
-                        </div>
-                        @if(tenant('id') === 'g3')
-                        <div class="flex justify-between items-end">
-                            <span class="text-xl font-bold text-[var(--color-primary)]">Total Especial (Efvo/Transf)</span>
-                        <span class="text-4xl font-black text-[var(--color-primary)]">${{ number_format($subtotal / 1.10, 0, ',', '.') }}</span>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-@elseif($theme === 'modern-light')
+@if($theme === 'modern-light')
     {{-- =========================================================
          MODERN-LIGHT THEME: CHECKOUT (JCG - WhatsApp, fondo blanco)
          ========================================================= --}}
@@ -663,7 +492,7 @@ new #[Layout('layouts.app')] class extends Component {
     </div>
 @else
     {{-- =========================================================
-         STEALTH THEME: CHECKOUT
+         TECH-DARK THEME: CHECKOUT
          ========================================================= --}}
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-100 leading-tight">
