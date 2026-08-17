@@ -94,8 +94,6 @@ new class extends Component
                 {{-- Bloque 1 --}}
                 <span class="flex items-center gap-2 text-white"><span class="animate-pulse text-g3-blue text-lg">⚡</span> LOS MEJORES PRECIOS EN HARDWARE</span>
                 <span class="text-zinc-700">&bull;</span>
-                <span class="flex items-center gap-2 text-white"><span class="text-lg">📦</span> ENVÍOS A TODO EL PAÍS</span>
-                <span class="text-zinc-700">&bull;</span>
                 <span class="flex items-center gap-2 text-g3-green"><span class="text-lg">✅</span> RETIRO INMEDIATO EN LOCAL</span>
                 <span class="text-zinc-700">&bull;</span>
                 <span class="flex items-center gap-2 text-white"><span class="text-lg text-g3-green">💵</span> EFECTIVO O TRANSFERENCIA</span>
@@ -105,8 +103,6 @@ new class extends Component
                 
                 {{-- Bloque 2 (Duplicado para el loop continuo) --}}
                 <span class="flex items-center gap-2 text-white"><span class="animate-pulse text-g3-blue text-lg">⚡</span> LOS MEJORES PRECIOS EN HARDWARE</span>
-                <span class="text-zinc-700">&bull;</span>
-                <span class="flex items-center gap-2 text-white"><span class="text-lg">📦</span> ENVÍOS A TODO EL PAÍS</span>
                 <span class="text-zinc-700">&bull;</span>
                 <span class="flex items-center gap-2 text-g3-green"><span class="text-lg">✅</span> RETIRO INMEDIATO EN LOCAL</span>
                 <span class="text-zinc-700">&bull;</span>
