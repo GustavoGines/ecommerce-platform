@@ -1226,10 +1226,26 @@ new #[Layout('layouts.app')] class extends Component {
                             <label class="block text-gray-700 dark:text-gray-400 text-[10px] sm:text-xs font-bold mb-2 uppercase tracking-wider">Imagen del Producto</label>
                             
                             <div class="flex flex-col sm:flex-row gap-3">
-                                @if($current_image_url)
+                                @if($image)
+                                    <div class="w-full sm:w-auto p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 transition-all duration-300 shrink-0">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="relative shrink-0">
+                                                <img src="{{ $image->temporaryUrl() }}" alt="Nueva imagen" class="h-14 w-14 sm:h-16 sm:w-16 object-cover rounded-lg border border-blue-300 dark:border-blue-700 shadow-sm bg-white dark:bg-gray-900">
+                                                <div class="absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">NUEVA</div>
+                                            </div>
+                                            <div class="flex flex-col flex-1">
+                                                <h5 class="text-[10px] sm:text-xs font-bold text-gray-900 dark:text-white mb-0.5">Lista para guardar</h5>
+                                                <button type="button" wire:click="$set('image', null)" class="inline-flex items-center text-[10px] font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition-colors w-max mt-1">
+                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                    Descartar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @elseif($current_image_url)
                                     <div class="w-full sm:w-auto p-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 transition-all duration-300 shrink-0">
                                         <!-- Imagen expandida (al hacer click) -->
-                                        <div x-show="expandedImage" x-transition class="mb-2 cursor-pointer" @click="expandedImage = false" title="Clic para reducir">
+                                        <div x-show="expandedImage" x-transition class="mb-2 cursor-pointer" @click="expandedImage = false" title="Clic para reducir" style="display: none;">
                                             <img src="{{ asset('storage/' . $current_image_url) }}" alt="Imagen actual ampliada" class="w-full max-h-64 object-contain rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 shadow-md">
                                             <p class="text-center text-[10px] text-gray-400 mt-1">Tocá para reducir</p>
                                         </div>
