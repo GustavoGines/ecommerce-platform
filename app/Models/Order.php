@@ -45,7 +45,6 @@ class Order extends Model
     protected $casts = [
         'status_updated_at' => 'datetime',
         'total'             => 'decimal:2',
-        'status'            => \App\Enums\OrderStatus::class,
     ];
 
     // ─── Relationships ────────────────────────────────────────────
