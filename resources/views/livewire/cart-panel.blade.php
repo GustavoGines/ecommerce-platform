@@ -384,7 +384,7 @@ new class extends Component {
 
                                 @if(tenant('id') === 'jcg')
                                     @php
-                                        $isPermanentWholesale = auth()->check() && auth()->user()->role === \App\Enums\UserRole::MAYORISTA;
+                                        $isPermanentWholesale = auth()->check() && auth()->user()->role === \App\Enums\UserRole::Mayorista;
                                     @endphp
 
                                     @if($isPermanentWholesale)
