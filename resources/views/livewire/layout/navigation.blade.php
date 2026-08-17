@@ -15,11 +15,10 @@ new class extends Component
 }; ?>
 
 <div class="contents">
-    {{-- ── Top Announcement Bar (Luxury only, injected via a check) ── --}}
+    {{-- ── Top Announcement Bar ── --}}
     @php
         $settings = \App\Models\StoreSetting::getSettings();
-        $themeName = $settings->theme_name ?? 'stealth';
-        $isLuxury = ($themeName === 'luxury');
+        $themeName = $settings->theme_name ?? 'modern-light';
         $isModernLight = ($themeName === 'modern-light');
         
         $pendingOrdersCount = 0;
@@ -31,40 +30,15 @@ new class extends Component
     <nav x-data="{ open: false, scrolled: false }"
      @scroll.window="scrolled = (window.pageYOffset > 20)"
      :class="{
-         'bg-[#0a0f1c]/90 backdrop-blur-xl border-b border-white/5 shadow-none': {{ $isLuxury ? 'true' : 'false' }} && (!{{ $transparent ? 'true' : 'false' }} || scrolled),
          'bg-gray-950 shadow-lg border-b-2 border-red-600': {{ $isModernLight ? 'true' : 'false' }} && (!{{ $transparent ? 'true' : 'false' }} || scrolled),
-         'bg-white dark:bg-zinc-900/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 shadow-sm dark:shadow-none': (!{{ $isLuxury ? 'true' : 'false' }} && !{{ $isModernLight ? 'true' : 'false' }}) && (!{{ $transparent ? 'true' : 'false' }} || scrolled),
+         'bg-white dark:bg-zinc-900/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 shadow-sm dark:shadow-none': !{{ $isModernLight ? 'true' : 'false' }} && (!{{ $transparent ? 'true' : 'false' }} || scrolled),
          'bg-transparent border-transparent': {{ $transparent ? 'true' : 'false' }} && !scrolled
      }"
      class="sticky top-0 z-50 transition-all duration-300 relative overflow-visible">
     
 
 
-    @if($isLuxury)
-        {{-- Top Bar Animada --}}
-        <div class="bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-gray-900 dark:text-white overflow-hidden relative z-[60] py-1 shadow-lg">
-            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
-            <div class="whitespace-nowrap animate-[marquee_20s_linear_infinite] flex items-center gap-8 text-[10px] font-bold uppercase tracking-widest relative z-10">
-                <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping"></span> PRECIOS MAYORISTAS DISPONIBLES</span>
-                <span class="text-gray-900 dark:text-white/30">&bull;</span>
-                <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-300 animate-pulse"></span> ENVÍOS A TODO EL PAÍS</span>
-                <span class="text-gray-900 dark:text-white/30">&bull;</span>
-                <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping"></span> PRECIOS MAYORISTAS DISPONIBLES</span>
-                <span class="text-gray-900 dark:text-white/30">&bull;</span>
-                <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-300 animate-pulse"></span> ENVÍOS A TODO EL PAÍS</span>
-                <span class="text-gray-900 dark:text-white/30">&bull;</span>
-                <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping"></span> PRECIOS MAYORISTAS DISPONIBLES</span>
-                <span class="text-gray-900 dark:text-white/30">&bull;</span>
-                <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-300 animate-pulse"></span> ENVÍOS A TODO EL PAÍS</span>
-            </div>
-            <style>
-                @keyframes marquee {
-                    0% { transform: translateX(0%); }
-                    100% { transform: translateX(-50%); }
-                }
-            </style>
-        </div>
-    @elseif($isModernLight)
+    @if($isModernLight)
         {{-- Ticker Animado (Marquesina) para Modern Light --}}
         <div class="bg-red-600 text-white overflow-hidden relative z-[60] py-1.5 flex shadow-md">
             {{-- Marca de Agua "JCG" intercalada en el fondo --}}
@@ -152,49 +126,7 @@ new class extends Component
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="flex justify-between items-center h-20 relative">
 
-            @if($isLuxury)
-                {{-- ════════════ LUXURY NAVBAR ════════════ --}}
-                {{-- Izquierda: Links --}}
-                <div class="hidden sm:flex flex-1 items-center gap-6">
-                    <x-nav-link wire:navigate :href="route('home')" :active="request()->routeIs('home')">
-                        {{ __('Inicio') }}
-                    </x-nav-link>
-                    <x-nav-link wire:navigate :href="route('shop')" :active="request()->routeIs('shop')">
-                        {{ __('Tienda') }}
-                    </x-nav-link>
-                    @if(auth()->check() && optional(auth()->user())->isAdmin())
-                        <x-nav-link wire:navigate :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                            {{ __('Panel') }}
-                        </x-nav-link>
-                        <x-nav-link wire:navigate :href="route('admin.products')" :active="request()->routeIs('admin.products')">
-                            {{ __('Productos') }}
-                        </x-nav-link>
-                    @endif
-                </div>
-
-                {{-- Centro: Logo (Absolute Center) --}}
-                <div class="hidden sm:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center">
-                    <a wire:navigate href="{{ url('/') }}" class="shrink-0 flex items-center">
-                        @if(isset($settings) && $settings->logo_url)
-                            <img src="{{ tenant_asset($settings->logo_url) }}"
-                                 alt="Logo" class="h-8 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform duration-300">
-                        @else
-                            <x-application-logo class="block h-8 w-auto fill-current text-gray-900 dark:text-white transition-colors"/>
-                        @endif
-                    </a>
-                </div>
-                
-                {{-- Mobile Solo Logo (se ve en movil cuando links estan ocultos) --}}
-                <div class="flex sm:hidden flex-1 items-center">
-                    <a wire:navigate href="{{ url('/') }}" class="shrink-0 flex items-center">
-                        @if(isset($settings) && $settings->logo_url)
-                            <img src="{{ tenant_asset($settings->logo_url) }}" alt="Logo" class="h-7 w-auto object-contain hover:scale-105 transition-transform duration-300">
-                        @else
-                            <x-application-logo class="block h-7 w-auto fill-current text-gray-900 dark:text-white"/>
-                        @endif
-                    </a>
-                </div>
-            @elseif($isModernLight)
+            @if($isModernLight)
                 {{-- ════════════ MODERN-LIGHT NAVBAR ════════════ --}}
                 
                 <div class="flex items-center justify-between flex-1 relative z-10">
@@ -301,7 +233,7 @@ new class extends Component
                     </div>
                 </div>
             @else
-                {{-- ════════════ STEALTH NAVBAR ════════════ --}}
+                {{-- ════════════ TECH-DARK NAVBAR ════════════ --}}
                 {{-- ── Izquierda: Logo + Links ── --}}
                 <div class="flex items-center gap-8 flex-1">
                     {{-- Logo --}}
@@ -343,24 +275,18 @@ new class extends Component
 
             {{-- ── Derecha: Acciones desktop (Compartido, pero adaptado) ── --}}
             @if(!$isModernLight)
-            <div class="hidden sm:flex {{ $isLuxury ? 'flex-1 justify-end' : '' }} items-center gap-4">
+            <div class="hidden sm:flex items-center gap-4">
 
-                {{-- Solo mostrar buscador compacto en Luxury --}}
-                @if($isLuxury)
-                    <div class="w-48 hidden lg:block">
-                        <livewire:search-bar />
-                    </div>
-                @endif
 
                 {{-- Carrito --}}
                 <livewire:cart-icon />
 
                 {{-- Usuario --}}
                 @auth
-                    <x-dropdown align="right" width="56" :contentClasses="$isLuxury ? 'py-1 bg-[#0a0f1c] border border-white/5' : 'py-1 bg-white dark:bg-gray-800'">
+                    <x-dropdown align="right" width="56">
                         <x-slot name="trigger">
                             <button class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium
-                                           text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-gray-900 dark:text-white
+                                           text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white dark:text-white
                                            focus:outline-none transition-all">
                                 <div class="w-7 h-7 rounded-full flex items-center justify-center text-gray-900 dark:text-white text-xs font-bold shadow-sm"
                                      style="background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 60%, #7c3aed))">
@@ -397,7 +323,7 @@ new class extends Component
                     </x-dropdown>
                 @else
                     <a wire:navigate href="{{ route('login') }}"
-                       class="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-gray-900 dark:text-white transition-colors whitespace-nowrap">
+                       class="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white dark:text-white transition-colors whitespace-nowrap">
                         Ingresar
                     </a>
                     <a wire:navigate href="{{ route('register') }}"
@@ -415,7 +341,7 @@ new class extends Component
                 <livewire:cart-icon />
 
                 <button @click="open = !open"
-                        class="relative p-2 rounded-xl {{ ($isModernLight || $isLuxury) ? 'text-white hover:bg-white/10' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }} transition-all"
+                        class="relative p-2 rounded-xl {{ $isModernLight ? 'text-white hover:bg-white/10' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' }} transition-all"
                         aria-label="Menú">
                     @if(optional(auth()->user())->isAdmin() && $pendingOrdersCount > 0)
                         <span class="absolute top-1 right-1 flex h-2.5 w-2.5">
@@ -438,7 +364,7 @@ new class extends Component
     {{-- ── Menú Móvil desplegable ── --}}
     {{-- ── Menú Móvil desplegable ── --}}
     <div :class="{'block': open, 'hidden': !open}"
-         class="hidden sm:hidden transition-colors duration-300 {{ $isLuxury ? 'bg-[#0a0f1c] border-t border-white/5' : 'bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800' }}">
+         class="hidden sm:hidden transition-colors duration-300 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
         <div class="pt-4 pb-3 space-y-1 px-4">
             <x-responsive-nav-link wire:navigate :href="route('home')" :active="request()->routeIs('home')">
                 <span class="w-5 text-center">🏠</span> <span>Inicio</span>
@@ -457,7 +383,7 @@ new class extends Component
         </div>
 
         @auth
-        <div class="pt-4 pb-3 {{ $isLuxury ? 'border-t border-white/5' : 'border-t border-slate-200 dark:border-slate-800' }}">
+        <div class="pt-4 pb-3 border-t border-slate-200 dark:border-slate-800">
             <div class="px-4 mb-4 mx-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex items-center gap-3 border border-slate-100 dark:border-slate-700/50">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center text-gray-900 dark:text-white text-sm font-bold shadow-sm shrink-0"
                      style="background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 60%, #7c3aed))">
@@ -506,7 +432,7 @@ new class extends Component
             </div>
         </div>
         @else
-        <div class="pt-4 pb-3 space-y-1 px-4 {{ $isLuxury ? 'border-t border-white/5' : 'border-t border-slate-200 dark:border-slate-800' }}">
+        <div class="pt-4 pb-3 space-y-1 px-4 border-t border-slate-200 dark:border-slate-800">
             <x-responsive-nav-link wire:navigate :href="route('login')">
                 <span class="w-5 text-center">🔑</span> <span>Iniciar Sesión</span>
             </x-responsive-nav-link>

@@ -80,7 +80,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <style>
             :root {
-                @if(($settings->theme_name ?? 'stealth') === 'modern-light')
+                @if(($settings->theme_name ?? 'modern-light') === 'modern-light')
                     /* JCG Electrónica Primary Color: Tailwind red-600 */
                     --color-primary: #DC2626;
                     --color-primary-hover: #B91C1C; /* red-700 */
@@ -96,11 +96,11 @@
             }
         </style>
     </head>
-    <body class="antialiased min-h-screen flex flex-col relative overflow-x-hidden selection:bg-[var(--color-primary)] selection:text-white bg-white text-gray-900 {{ ($settings->theme_name ?? 'stealth') === 'modern-light' ? '' : 'dark:bg-[#0b0f19] dark:text-gray-100' }} transition-colors duration-300">
+    <body class="antialiased min-h-screen flex flex-col relative overflow-x-hidden selection:bg-[var(--color-primary)] selection:text-white bg-white text-gray-900 {{ ($settings->theme_name ?? 'modern-light') === 'modern-light' ? '' : 'dark:bg-[#0b0f19] dark:text-gray-100' }} transition-colors duration-300">
         
 
         <!-- Subtle Background Glow (Dark Mode Only) -->
-        <div x-data="{}" x-show="$store.theme.dark && '{{ $settings->theme_name ?? 'stealth' }}' !== 'modern-light'" x-transition.opacity.duration.500ms class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] opacity-20 pointer-events-none" style="background: radial-gradient(circle, var(--color-primary-glow) 0%, transparent 70%);"></div>
+        <div x-data="{}" x-show="$store.theme.dark && '{{ $settings->theme_name ?? 'modern-light' }}' !== 'modern-light'" x-transition.opacity.duration.500ms class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] opacity-20 pointer-events-none" style="background: radial-gradient(circle, var(--color-primary-glow) 0%, transparent 70%);"></div>
 
         <div class="min-h-screen flex flex-col relative z-40 w-full">
             <livewire:layout.navigation />

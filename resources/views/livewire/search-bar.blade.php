@@ -30,7 +30,7 @@ new class extends Component {
     public function getThemeProperty()
     {
         $settings = \App\Models\StoreSetting::getSettings();
-        return $settings ? ($settings->theme_name ?? 'stealth') : 'stealth';
+        return $settings ? ($settings->theme_name ?? 'modern-light') : 'modern-light';
     }
 }; ?>
 
@@ -89,7 +89,7 @@ new class extends Component {
                 @keydown.enter.prevent="if($wire.search.length >= 2) { addHistory($wire.search); window.location.href = '{{ route('shop') }}?q=' + encodeURIComponent($wire.search) }"
                 type="text" 
                 placeholder="Buscar productos..." 
-                class="block w-full pl-10 pr-3 py-2 rounded-full leading-5 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all sm:text-sm shadow-sm {{ $this->theme === 'luxury' ? 'bg-[#0a0f1c] border border-white/10 text-white placeholder-gray-500' : 'border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500' }}"
+                class="block w-full pl-10 pr-3 py-2 rounded-full leading-5 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all sm:text-sm shadow-sm {{ $this->theme === 'tech-dark' ? 'bg-[#0a0f1c] border border-white/10 text-white placeholder-gray-500' : 'border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500' }}"
             >
             
             <!-- Loading Indicator -->
@@ -110,16 +110,16 @@ new class extends Component {
          x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 translate-y-1"
-         class="absolute z-50 mt-2 w-full rounded-2xl shadow-xl dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] overflow-hidden backdrop-blur-md {{ $this->theme === 'luxury' ? 'bg-[#0a0f1c]/95 border border-white/10' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700/50' }}"
+         class="absolute z-50 mt-2 w-full rounded-2xl shadow-xl dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] overflow-hidden backdrop-blur-md {{ $this->theme === 'tech-dark' ? 'bg-[#0a0f1c]/95 border border-white/10' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700/50' }}"
          style="display: none;">
         
         @if(strlen($search) >= 2)
             @if(count($results) > 0)
-                <ul class="max-h-96 overflow-y-auto divide-y {{ $this->theme === 'luxury' ? 'divide-white/5' : 'divide-gray-100 dark:divide-gray-700/50' }}">
+                <ul class="max-h-96 overflow-y-auto divide-y {{ $this->theme === 'tech-dark' ? 'divide-white/5' : 'divide-gray-100 dark:divide-gray-700/50' }}">
                     @foreach($results as $product)
                         <li>
-                            <a href="{{ route('product.detail', $product->slug) }}" wire:navigate @click="addHistory('{{ $search }}')" class="flex items-center px-4 py-3 transition-colors group {{ $this->theme === 'luxury' ? 'hover:bg-white/5' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50' }}">
-                                <div class="flex-shrink-0 h-10 w-10 rounded flex items-center justify-center overflow-hidden {{ $this->theme === 'luxury' ? 'bg-[#030712] border border-white/5' : 'bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700' }}">
+                            <a href="{{ route('product.detail', $product->slug) }}" wire:navigate @click="addHistory('{{ $search }}')" class="flex items-center px-4 py-3 transition-colors group {{ $this->theme === 'tech-dark' ? 'hover:bg-white/5' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50' }}">
+                                <div class="flex-shrink-0 h-10 w-10 rounded flex items-center justify-center overflow-hidden {{ $this->theme === 'tech-dark' ? 'bg-[#030712] border border-white/5' : 'bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700' }}">
                                     @if($product->image_url)
                                         <img src="{{ asset('storage/' . $product->image_url) }}" alt="" class="h-full object-contain">
                                     @endif
@@ -156,10 +156,10 @@ new class extends Component {
                         </h4>
                         <button type="button" @click="history = []; localStorage.removeItem('searchHistory')" class="text-[10px] text-gray-400 hover:text-red-500 hover:underline">Borrar todas</button>
                     </div>
-                    <ul class="divide-y {{ $this->theme === 'luxury' ? 'divide-white/5' : 'divide-gray-100 dark:divide-gray-700/50' }}">
+                    <ul class="divide-y {{ $this->theme === 'tech-dark' ? 'divide-white/5' : 'divide-gray-100 dark:divide-gray-700/50' }}">
                         <template x-for="item in history" :key="item">
                             <li>
-                                <button type="button" @click="$wire.set('search', item); open = true" class="w-full flex items-center px-4 py-2.5 transition-colors group {{ $this->theme === 'luxury' ? 'hover:bg-white/5' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50' }}">
+                                <button type="button" @click="$wire.set('search', item); open = true" class="w-full flex items-center px-4 py-2.5 transition-colors group {{ $this->theme === 'tech-dark' ? 'hover:bg-white/5' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50' }}">
                                     <svg class="h-4 w-4 text-gray-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>

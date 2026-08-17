@@ -5,13 +5,13 @@ use Livewire\Attributes\On;
 
 new class extends Component {
     public $count = 0;
-    public $theme = 'stealth';
+    public $theme = 'modern-light';
 
     public function mount()
     {
         $settings = \App\Models\StoreSetting::getSettings();
         if ($settings) {
-            $this->theme = $settings->theme_name ?? 'stealth';
+            $this->theme = $settings->theme_name ?? 'modern-light';
         }
         $this->updateCount();
     }
@@ -45,8 +45,7 @@ new class extends Component {
                 else if($event.detail && $event.detail.count !== undefined) count = $event.detail.count;
             }
         "
-        class="relative p-2.5 rounded-xl
-               {{ $theme === 'luxury' ? 'bg-[#0a0f1c] border border-white/5 text-gray-400 hover:bg-white/5 hover:text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white' }}
+               class="relative p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white
                transition-all focus:outline-none
                flex items-center justify-center"
         aria-label="Abrir carrito">
