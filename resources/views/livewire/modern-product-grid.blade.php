@@ -33,7 +33,10 @@ new class extends Component {
     public function mount()
     {
         if ($this->selectedCategory && !is_numeric($this->selectedCategory)) {
-            $cat = Category::where('name', 'like', '%' . $this->selectedCategory . '%')->first();
+            $cat = Category::where('name', $this->selectedCategory)->first();
+            if (!$cat) {
+                $cat = Category::where('name', 'like', '%' . $this->selectedCategory . '%')->first();
+            }
             if ($cat) {
                 $this->selectedCategory = $cat->id;
             } else {
