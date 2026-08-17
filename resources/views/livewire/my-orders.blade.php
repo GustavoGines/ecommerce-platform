@@ -196,7 +196,7 @@ new #[Layout('layouts.app')] class extends Component {
                                         <div class="flex items-center gap-2">
                                             <div class="w-8 h-8 rounded bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex-shrink-0 overflow-hidden">
                                                 @if($item->product && $item->product->image_url)
-                                                    <img src="{{ asset('storage/' . $item->product->image_url) }}" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity" @click.stop="previewImageUrl = '{{ asset('storage/' . $item->product->image_url) }}'; previewImageOpen = true">
+                                                    <img src="{{ tenant_asset($item->product->image_url) }}" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity" @click.stop="previewImageUrl = '{{ tenant_asset($item->product->image_url) }}'; previewImageOpen = true">
                                                 @endif
                                             </div>
                                             <div class="flex flex-col">
