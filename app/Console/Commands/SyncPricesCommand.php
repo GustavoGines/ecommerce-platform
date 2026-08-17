@@ -107,7 +107,7 @@ class SyncPricesCommand extends Command
                         'wholesale_price' => $cashPrice,
                         'cost_price'      => $costPrice,
                         'stock'           => 999,
-                        'category_id'     => $category->id,
+                        // Se omite 'category_id' para respetar la categoría manual que el admin haya asignado.
                     ]);
                     $updatedCount++;
                 } else {
