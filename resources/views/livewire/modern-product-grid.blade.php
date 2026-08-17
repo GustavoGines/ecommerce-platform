@@ -27,6 +27,9 @@ new class extends Component {
     #[Url(as: 'sort')]
     public $sort = 'default';
 
+    #[Url(as: 'stock')]
+    public $inStockOnly = false;
+
     public function mount()
     {
         if ($this->selectedCategory && !is_numeric($this->selectedCategory)) {
@@ -60,6 +63,9 @@ new class extends Component {
     public function with()
     {
         $applyCommonFilters = function ($query) {
+            if ($this->inStockOnly) {
+                $query->where('stock', '>', 0);
+            }
             if ($this->search) {
                 $query->where(function($q) {
                     $q->where('name', 'like', '%' . $this->search . '%')
@@ -298,6 +304,19 @@ new class extends Component {
                         </div>
                     </div>
                     @endif
+
+                    {{-- Stock Toggle --}}
+                    <div>
+                        <h4 class="text-gray-900 font-bold text-sm tracking-widest uppercase mb-4 pb-4 border-b border-gray-100">Disponibilidad</h4>
+                        <label x-data="{ inStock: $wire.entangle('inStockOnly').live }" class="flex items-center cursor-pointer gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <div class="relative">
+                                <input type="checkbox" x-model="inStock" class="sr-only">
+                                <div class="block w-10 h-6 rounded-full transition-colors duration-300" :class="inStock ? 'bg-[var(--color-primary)]' : 'bg-gray-300'"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 shadow-sm" :class="inStock ? 'translate-x-4' : ''"></div>
+                            </div>
+                            <span class="text-sm font-medium text-gray-700 select-none">Mostrar solo en stock</span>
+                        </label>
+                    </div>
 
                     {{-- Functional Price Range --}}
                     <div>
