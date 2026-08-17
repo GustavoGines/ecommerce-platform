@@ -64,7 +64,7 @@ new class extends Component {
     {
         $applyCommonFilters = function ($query) {
             if ($this->inStockOnly) {
-                $query->where('stock', '>', 0)->where('stock', '!=', 999);
+                $query->where('stock', '>', 0);
             }
             if ($this->search) {
                 $query->where(function($q) {
