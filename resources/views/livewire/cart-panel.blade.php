@@ -383,20 +383,31 @@ new class extends Component {
                                 @endif
 
                                 @if(tenant('id') === 'jcg')
-                                <div x-show="globalQuantity >= 10" class="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-center gap-2 shadow-inner" x-cloak>
-                                    <span class="text-lg">✨</span>
-                                    <span class="text-blue-600 dark:text-blue-400 font-bold text-sm">¡Estás comprando con Precio Mayorista!</span>
-                                </div>
-                                
-                                <div x-show="globalQuantity > 0 && globalQuantity < 10" class="mt-4 p-3 bg-gray-200/50 dark:bg-gray-800 rounded-xl flex flex-col gap-1 shadow-inner border border-gray-300 dark:border-gray-700" x-cloak>
-                                    <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-bold text-sm">
-                                        <span class="text-lg">💡</span>
-                                        <span x-text="`Agregá ${10 - globalQuantity} productos más para acceder al Precio Mayorista`"></span>
-                                    </div>
-                                    <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1.5 mt-1 overflow-hidden">
-                                        <div class="bg-[var(--color-primary)] h-1.5 rounded-full transition-all duration-500" :style="`width: ${(globalQuantity / 10) * 100}%`"></div>
-                                    </div>
-                                </div>
+                                    @php
+                                        $isPermanentWholesale = auth()->check() && auth()->user()->role === \App\Enums\UserRole::MAYORISTA;
+                                    @endphp
+
+                                    @if($isPermanentWholesale)
+                                        <div class="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-center gap-2 shadow-inner">
+                                            <span class="text-lg">✨</span>
+                                            <span class="text-blue-600 dark:text-blue-400 font-bold text-sm">¡Estás comprando con Precio Mayorista (Cliente VIP)!</span>
+                                        </div>
+                                    @else
+                                        <div x-show="globalQuantity >= 10" class="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-center gap-2 shadow-inner" x-cloak>
+                                            <span class="text-lg">✨</span>
+                                            <span class="text-blue-600 dark:text-blue-400 font-bold text-sm">¡Estás comprando con Precio Mayorista!</span>
+                                        </div>
+                                        
+                                        <div x-show="globalQuantity > 0 && globalQuantity < 10" class="mt-4 p-3 bg-gray-200/50 dark:bg-gray-800 rounded-xl flex flex-col gap-1 shadow-inner border border-gray-300 dark:border-gray-700" x-cloak>
+                                            <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-bold text-sm">
+                                                <span class="text-lg">💡</span>
+                                                <span x-text="`Agregá ${10 - globalQuantity} productos más para acceder al Precio Mayorista`"></span>
+                                            </div>
+                                            <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1.5 mt-1 overflow-hidden">
+                                                <div class="bg-[var(--color-primary)] h-1.5 rounded-full transition-all duration-500" :style="`width: ${(globalQuantity / 10) * 100}%`"></div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 @endif
                                 <div class="mt-6">
                                     <button wire:click="goToCheckout"
