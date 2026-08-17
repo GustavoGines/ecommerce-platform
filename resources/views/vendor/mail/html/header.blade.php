@@ -1,7 +1,7 @@
 @props(['url'])
 @php
     $settings = \App\Models\StoreSetting::getSettings();
-    $logoUrl = $settings && $settings->logo_url ? asset('storage/' . $settings->logo_url) : null;
+    $logoUrl = $settings && $settings->logo_url ? tenant_asset($settings->logo_url) : null;
 @endphp
 <tr>
 <td class="header">
