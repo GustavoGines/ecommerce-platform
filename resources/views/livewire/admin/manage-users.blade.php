@@ -308,12 +308,11 @@ new #[Layout('layouts.app')] class extends Component {
     <!-- Edit User Modal -->
     @if($showEditModal)
     <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
             <!-- Background overlay -->
             <div class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity" aria-hidden="true" wire:click="$set('showEditModal', false)"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             
-            <div class="relative inline-block align-bottom bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full max-h-[90vh] flex flex-col">
+            <div class="relative bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-lg w-full max-h-[90vh] flex flex-col z-10">
                 <form wire:submit.prevent="saveUser" class="flex flex-col overflow-hidden">
                     <div class="overflow-y-auto p-6">
                         <h3 class="text-lg leading-6 font-black text-gray-900 dark:text-white mb-4" id="modal-title">

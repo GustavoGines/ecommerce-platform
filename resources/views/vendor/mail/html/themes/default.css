@@ -295,3 +295,13 @@ img {
 .break-all {
     word-break: break-all;
 }
+
+@media (prefers-color-scheme: dark) {
+    body, .wrapper, .body { background-color: #0f0f11 !important; }
+    .inner-body { background-color: #18181b !important; border-color: #27272a !important; }
+    h1, h2, h3, p, .table td { color: #e4e4e7 !important; }
+}
+
+[data-ogsc] body, [data-ogsc] .wrapper, [data-ogsc] .body { background-color: #0f0f11 !important; }
+[data-ogsc] .inner-body { background-color: #18181b !important; }
+
