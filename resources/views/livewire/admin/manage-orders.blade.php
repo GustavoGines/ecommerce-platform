@@ -334,7 +334,7 @@ new #[Layout('layouts.app')] class extends Component {
                                                 <div class="font-medium text-gray-900 dark:text-white flex items-center gap-3">
                                                     <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden flex-shrink-0">
                                                         @if($item->product && $item->product->image_url)
-                                                            <img src="{{ asset('storage/' . $item->product->image_url) }}" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity" @click.stop="previewImageUrl = '{{ asset('storage/' . $item->product->image_url) }}'; previewImageOpen = true">
+                                                            <img src="{{ tenant_asset($item->product->image_url) }}" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity" @click.stop="previewImageUrl = '{{ tenant_asset($item->product->image_url) }}'; previewImageOpen = true">
                                                         @endif
                                                     </div>
                                                     <span>{{ $item->product ? $item->product->name : '⚠ Producto Eliminado' }}</span>
@@ -445,7 +445,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     <div class="flex items-center gap-2 max-w-[70%]">
                                         <div class="w-7 h-7 rounded bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex-shrink-0 overflow-hidden">
                                             @if($item->product && $item->product->image_url)
-                                                <img src="{{ asset('storage/' . $item->product->image_url) }}" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity" @click.stop="previewImageUrl = '{{ asset('storage/' . $item->product->image_url) }}'; previewImageOpen = true">
+                                                <img src="{{ tenant_asset($item->product->image_url) }}" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity" @click.stop="previewImageUrl = '{{ tenant_asset($item->product->image_url) }}'; previewImageOpen = true">
                                             @endif
                                         </div>
                                         <div class="text-[11px] font-medium text-gray-800 dark:text-gray-200 truncate">{{ $item->product ? $item->product->name : '⚠ Producto Eliminado' }}</div>
