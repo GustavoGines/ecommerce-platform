@@ -1,9 +1,9 @@
 <div x-data="{ open: @entangle('showImportModal').live }">
     <!-- Botón para abrir el modal -->
-    <button @click="open = true" class="group relative flex items-center justify-center p-2.5 rounded-full transition-all hover:bg-green-50 dark:hover:bg-green-900/30 border border-green-200 dark:border-green-700/50 shadow-sm text-green-700 dark:text-green-400 font-bold ml-2">
+    <button @click="open = true" class="group shrink-0 flex items-center justify-center p-2.5 rounded-full transition-all hover:bg-green-50 dark:hover:bg-green-900/30 border border-green-200 dark:border-green-700/50 shadow-sm text-green-700 dark:text-green-400 font-bold ml-2">
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-        <div class="absolute left-full ml-2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50 bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">
-            Importar Excel
+        <div class="grid grid-cols-[0fr] group-hover:grid-cols-[1fr] transition-all duration-300 ease-in-out">
+            <span class="overflow-hidden whitespace-nowrap text-sm"><span class="pl-2 pr-1">Importar Excel</span></span>
         </div>
     </button>
 
