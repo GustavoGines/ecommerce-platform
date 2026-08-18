@@ -127,7 +127,7 @@ new class extends Component
                 
                 <div class="flex items-center justify-between flex-1 relative z-10">
                     {{-- ── Izquierda: Links ── --}}
-                    <div class="hidden sm:flex items-center gap-4 xl:gap-6 shrink-0">
+                    <div class="hidden sm:flex items-center gap-6 flex-1">
                         <x-nav-link wire:navigate :href="route('home')" :active="request()->routeIs('home')" class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
                             {{ __('Inicio') }}
                         </x-nav-link>
