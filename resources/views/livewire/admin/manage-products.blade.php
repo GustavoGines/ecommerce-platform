@@ -777,7 +777,7 @@ new #[Layout('layouts.app')] class extends Component {
                                                     <button @click="if(!isProductLoading) { isProductLoading = true; modalOpen = true; $wire.edit(prod.id).then(() => isProductLoading = false); isOpen = false }" class="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-sm group">
                                                         <div class="flex items-center gap-3 truncate">
                                                             <template x-if="prod.img">
-                                                                <img :src="'{{ asset('') }}/' + prod.img" class="w-8 h-8 rounded bg-white dark:bg-black object-cover shrink-0 border border-gray-200 dark:border-gray-700">
+                                                                <img :src="'{{ rtrim(tenant_asset(''), '/') }}/' + prod.img" class="w-8 h-8 rounded bg-white dark:bg-black object-cover shrink-0 border border-gray-200 dark:border-gray-700">
                                                             </template>
                                                             <template x-if="!prod.img">
                                                                 <div class="w-8 h-8 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center shrink-0 border border-gray-200 dark:border-gray-700">
@@ -964,7 +964,7 @@ new #[Layout('layouts.app')] class extends Component {
                             @if($visibleColumns['image'])
                             <td class="px-6 py-4 whitespace-nowrap" @click.stop>
                                 @if($product->image_url)
-                                    <img @click="previewImageUrl = '{{ asset($product->image_url) }}'; previewImageOpen = true" src="{{ asset($product->image_url) }}" class="h-12 w-12 rounded-lg object-cover border border-gray-200 dark:border-gray-600 shadow-sm cursor-pointer hover:opacity-80 transition-opacity" title="Haz clic para agrandar">
+                                    <img @click="previewImageUrl = '{{ tenant_asset($product->image_url) }}'; previewImageOpen = true" src="{{ tenant_asset($product->image_url) }}" class="h-12 w-12 rounded-lg object-cover border border-gray-200 dark:border-gray-600 shadow-sm cursor-pointer hover:opacity-80 transition-opacity" title="Haz clic para agrandar">
                                 @else
                                     <div class="h-12 w-12 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-tighter">Sin img</div>
                                 @endif
@@ -1040,7 +1040,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <div class="flex items-center gap-2 shrink-0" @click.stop>
                             <input type="checkbox" value="{{ $product->id }}" wire:model.live="selectedProducts" class="rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)] w-4 h-4">
                             @if($product->image_url)
-                                <img src="{{ asset($product->image_url) }}" class="h-10 w-10 rounded-lg object-cover border border-gray-200 dark:border-gray-600 cursor-pointer" @click.stop="previewImageUrl = '{{ asset($product->image_url) }}'; previewImageOpen = true">
+                                <img src="{{ tenant_asset($product->image_url) }}" class="h-10 w-10 rounded-lg object-cover border border-gray-200 dark:border-gray-600 cursor-pointer" @click.stop="previewImageUrl = '{{ tenant_asset($product->image_url) }}'; previewImageOpen = true">
                             @else
                                 <div class="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 text-[8px] uppercase font-bold tracking-tighter shrink-0">Sin img</div>
                             @endif
@@ -1396,7 +1396,7 @@ new #[Layout('layouts.app')] class extends Component {
                                         @php
                                             $is_new = str_starts_with($item, 'n_');
                                             $idx = (int) str_replace(['e_', 'n_'], '', $item);
-                                            $url = $is_new ? (isset($images_array[$idx]) ? $images_array[$idx]->temporaryUrl() : '') : (isset($current_images[$idx]) ? asset($current_images[$idx]) : '');
+                                            $url = $is_new ? (isset($images_array[$idx]) ? $images_array[$idx]->temporaryUrl() : '') : (isset($current_images[$idx]) ? tenant_asset($current_images[$idx]) : '');
                                         @endphp
                                         @if($url)
                                         <div class="relative shrink-0 snap-center w-24 flex flex-col items-center bg-gray-50 dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700">

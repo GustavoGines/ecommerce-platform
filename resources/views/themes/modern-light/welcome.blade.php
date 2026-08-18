@@ -196,7 +196,7 @@
                             {{-- Contenedor de Imagen (Más compacto) --}}
                             <a href="{{ route('product.detail', $product->slug) }}" wire:navigate class="relative block aspect-square bg-white dark:bg-zinc-900 overflow-hidden p-3 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-center">
                                 @if($product->image_url)
-                                    <img src="{{ asset($product->image_url) }}"
+                                    <img src="{{ tenant_asset($product->image_url) }}"
                                          alt="{{ $product->name }}"
                                          class="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-sm"
                                          onerror="this.src='https://images.unsplash.com/photo-1591488320449-011701bb6704?q=80&w=400&auto=format&fit=crop'">

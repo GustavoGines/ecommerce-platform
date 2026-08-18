@@ -128,7 +128,7 @@ new class extends Component {
                             <a href="{{ route('product.detail', $product->slug) }}" wire:navigate @click="addHistory('{{ $search }}')" class="flex items-center px-4 py-3 transition-colors group {{ $this->theme === 'tech-dark' ? 'hover:bg-white/5' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50' }}">
                                 <div class="flex-shrink-0 h-10 w-10 rounded flex items-center justify-center overflow-hidden {{ $this->theme === 'tech-dark' ? 'bg-[#030712] border border-white/5' : 'bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700' }}">
                                     @if($product->image_url)
-                                        <img src="{{ asset($product->image_url) }}" alt="" class="h-full object-contain">
+                                        <img src="{{ tenant_asset($product->image_url) }}" alt="" class="h-full object-contain">
                                     @endif
                                 </div>
                                 <div class="ml-3 flex-1 overflow-hidden">
