@@ -206,7 +206,7 @@ new #[Layout('layouts.app')] class extends Component {
                     @endif
 
                     <h1 class="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight mb-4">{{ $product->name }}</h1>
-                    <p class="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-lg mb-8 leading-relaxed">{{ $product->description }}</p>
+                    <p class="text-gray-600 dark:text-gray-400 dark:text-gray-500 text-lg mb-8 leading-relaxed whitespace-pre-line">{{ $product->description }}</p>
 
                     <div class="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 mb-8">
                         <div class="flex justify-between items-end mb-4">
