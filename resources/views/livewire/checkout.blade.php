@@ -363,7 +363,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <div class="flex items-center">
                                     <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-gray-50 mr-4 p-1">
                                         @if($product->image_url)
-                                            <img src="{{ asset($product->image_url) }}" class="h-full w-full object-contain mix-blend-multiply">
+                                            <img src="{{ tenant_asset($product->image_url) }}" class="h-full w-full object-contain mix-blend-multiply">
                                         @endif
                                     </div>
                                     <div>
@@ -537,7 +537,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <div class="flex items-center">
                                     <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 mr-4">
                                         @if($product->image_url)
-                                            <img src="{{ asset($product->image_url) }}" class="h-full w-full object-cover">
+                                            <img src="{{ tenant_asset($product->image_url) }}" class="h-full w-full object-cover">
                                         @endif
                                     </div>
                                     <div>
