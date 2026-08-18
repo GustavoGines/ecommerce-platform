@@ -135,7 +135,7 @@ new #[Layout('layouts.app')] class extends Component {
                         </button>
 
                         <template x-if="images.length > 0">
-                            <img :src="'{{ asset('') }}/' + images[currentSlide]" alt="{{ $product->name }}" @click="lightboxOpen = true" class="object-contain w-full h-full transform group-hover:scale-105 transition-transform duration-500 relative z-0">
+                            <img :src="'{{ rtrim(tenant_asset(''), '/') }}/' + images[currentSlide]" alt="{{ $product->name }}" @click="lightboxOpen = true" class="object-contain w-full h-full transform group-hover:scale-105 transition-transform duration-500 relative z-0">
                         </template>
                         <template x-if="images.length === 0">
                             <svg class="h-32 w-32 text-gray-300 dark:text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -150,7 +150,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <div @click="currentSlide = index; if(interval) clearInterval(interval); interval = setInterval(() => { currentSlide = (currentSlide + 1) % images.length }, 5000)"
                                  :class="currentSlide === index ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
                                  class="w-20 h-20 shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all bg-white dark:bg-gray-900 snap-center">
-                                <img :src="'{{ asset('') }}/' + img" class="w-full h-full object-cover">
+                                <img :src="'{{ rtrim(tenant_asset(''), '/') }}/' + img" class="w-full h-full object-cover">
                             </div>
                         </template>
                     </div>
@@ -186,7 +186,7 @@ new #[Layout('layouts.app')] class extends Component {
 
                             <!-- Fullscreen Image -->
                             <template x-if="images.length > 0">
-                                <img @click.stop src="" :src="'{{ asset('') }}/' + images[currentSlide]" alt="{{ $product->name }}" style="max-height: 90vh; z-index: 99999;" class="object-contain max-w-full rounded-lg cursor-default shadow-2xl relative"
+                                <img @click.stop src="" :src="'{{ rtrim(tenant_asset(''), '/') }}/' + images[currentSlide]" alt="{{ $product->name }}" style="max-height: 90vh; z-index: 99999;" class="object-contain max-w-full rounded-lg cursor-default shadow-2xl relative"
                                      x-transition:enter="transition ease-out duration-300 transform delay-100"
                                      x-transition:enter-start="opacity-0 scale-95"
                                      x-transition:enter-end="opacity-100 scale-100">
