@@ -63,6 +63,11 @@ new class extends Component {
         $this->resetPage();
     }
 
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
     public function with()
     {
         $applyCommonFilters = function ($query) {
@@ -370,7 +375,7 @@ new class extends Component {
                             {{-- Contenedor de la Imagen (Más compacto) --}}
                             <a href="{{ route('product.detail', $product->slug) }}" wire:navigate class="relative block aspect-square bg-zinc-900 overflow-hidden p-3 border-b border-zinc-800 flex items-center justify-center">
                                 @if($product->image_url)
-                                    <img src="{{ asset('storage/' . $product->image_url) }}"
+                                    <img src="{{ asset($product->image_url) }}"
                                          alt="{{ $product->name }}"
                                          class="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 drop-shadow-md mix-blend-screen"
                                          onerror="this.src='https://images.unsplash.com/photo-1591488320449-011701bb6704?q=80&w=400&auto=format&fit=crop'">

@@ -83,7 +83,7 @@ new class extends Component {
                 <a href="{{ route('product.detail', $product->slug) }}" wire:navigate
                    class="relative block aspect-[4/3] bg-slate-100 dark:bg-slate-900/70 overflow-hidden">
                     @if($product->image_url)
-                        <img src="{{ asset('storage/' . $product->image_url) }}"
+                        <img src="{{ asset($product->image_url) }}"
                              alt="{{ $product->name }}"
                              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
                     @else

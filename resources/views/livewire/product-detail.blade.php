@@ -59,7 +59,7 @@ new #[Layout('layouts.app')] class extends Component {
       "name": "{{ $product->name }}",
       @if($product->image_url)
       "image": [
-        "{{ asset('storage/' . $product->image_url) }}"
+        "{{ asset($product->image_url) }}"
       ],
       @endif
       "description": "{{ $product->description }}",
@@ -101,29 +101,65 @@ new #[Layout('layouts.app')] class extends Component {
         <div class="bg-white dark:bg-zinc-900/80 dark:bg-gray-800/40 backdrop-blur-md border border-gray-200 dark:border-gray-700/50 shadow-xl dark:shadow-2xl sm:rounded-3xl p-8 mb-12">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
                 <!-- Image Gallery -->
-                <div class="relative group" x-data="{ lightboxOpen: false }">
-                    <!-- Thumbnail -->
-                    <div @click="lightboxOpen = true" class="cursor-pointer aspect-square bg-gray-100 dark:bg-gray-900/80 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700/50 flex items-center justify-center p-8 relative">
+                @php
+                    $images = $product->images;
+                    if (is_string($images)) {
+                        $images = json_decode($images, true);
+                    }
+                    if (!is_array($images) || empty($images)) {
+                        $images = $product->image_url ? [$product->image_url] : [];
+                    }
+                @endphp
+                <div class="relative group" x-data="{ lightboxOpen: false, currentSlide: 0, images: {{ Js::from($images) }}, interval: null }"
+                     x-init="
+                        if(images.length > 1) {
+                            interval = setInterval(() => { currentSlide = (currentSlide + 1) % images.length }, 5000);
+                        }
+                     ">
+                    <!-- Main Thumbnail -->
+                    <div class="cursor-pointer aspect-square bg-gray-100 dark:bg-gray-900/80 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700/50 flex items-center justify-center relative p-8"
+                         @mouseenter="if(interval) clearInterval(interval)"
+                         @mouseleave="if(images.length > 1) interval = setInterval(() => { currentSlide = (currentSlide + 1) % images.length }, 5000)">
+                        
                         <!-- Hint icon -->
-                        <div class="absolute top-4 right-4 bg-white dark:bg-zinc-900/50 dark:bg-black dark:bg-white/50 backdrop-blur-md p-2 rounded-full text-gray-700 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="absolute top-4 right-4 bg-white dark:bg-zinc-900/50 dark:bg-black dark:bg-white/50 backdrop-blur-md p-2 rounded-full text-gray-700 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity z-10" @click="lightboxOpen = true">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
                         </div>
 
-                        @if($product->image_url)
-                            <img src="{{ asset('storage/' . $product->image_url) }}" alt="{{ $product->name }}" class="object-contain w-full h-full transform group-hover:scale-105 transition-transform duration-500">
-                        @else
+                        <!-- Left/Right Arrows for Carousel -->
+                        <button x-show="images.length > 1" @click.stop="currentSlide = currentSlide === 0 ? images.length - 1 : currentSlide - 1" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-black/50 p-2 rounded-full shadow hover:bg-white dark:hover:bg-black transition z-10">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <button x-show="images.length > 1" @click.stop="currentSlide = (currentSlide + 1) % images.length" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-black/50 p-2 rounded-full shadow hover:bg-white dark:hover:bg-black transition z-10">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+
+                        <template x-if="images.length > 0">
+                            <img :src="'{{ asset('') }}/' + images[currentSlide]" alt="{{ $product->name }}" @click="lightboxOpen = true" class="object-contain w-full h-full transform group-hover:scale-105 transition-transform duration-500 relative z-0">
+                        </template>
+                        <template x-if="images.length === 0">
                             <svg class="h-32 w-32 text-gray-300 dark:text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                        @endif
+                        </template>
+                    </div>
+
+                    <!-- Thumbnails -->
+                    <div x-show="images.length > 1" class="flex gap-2 mt-4 overflow-x-auto pb-2 snap-x dark-scrollbar">
+                        <template x-for="(img, index) in images" :key="index">
+                            <div @click="currentSlide = index; if(interval) clearInterval(interval); interval = setInterval(() => { currentSlide = (currentSlide + 1) % images.length }, 5000)"
+                                 :class="currentSlide === index ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)]/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'"
+                                 class="w-20 h-20 shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all bg-white dark:bg-gray-900 snap-center">
+                                <img :src="'{{ asset('') }}/' + img" class="w-full h-full object-cover">
+                            </div>
+                        </template>
                     </div>
 
                     <!-- Lightbox Modal -->
                     <template x-teleport="body">
                         <div x-show="lightboxOpen" 
                              style="display: none; z-index: 99999;" 
-                             @click="lightboxOpen = false"
-                             class="fixed inset-0 flex items-center justify-center bg-black dark:bg-white bg-opacity-90 backdrop-blur-md p-4 sm:p-8 cursor-zoom-out"
+                             class="fixed inset-0 flex items-center justify-center bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md p-4 sm:p-8"
                              x-transition:enter="transition ease-out duration-300"
                              x-transition:enter-start="opacity-0"
                              x-transition:enter-end="opacity-100"
@@ -131,19 +167,30 @@ new #[Layout('layouts.app')] class extends Component {
                              x-transition:leave-start="opacity-100"
                              x-transition:leave-end="opacity-0"
                              @keydown.escape.window="lightboxOpen = false">
+                             
+                            <!-- Lightbox Click-away Area -->
+                            <div class="absolute inset-0 cursor-zoom-out" @click="lightboxOpen = false"></div>
                             
                             <!-- Close Button -->
-                            <button @click="lightboxOpen = false" style="z-index: 100000;" class="absolute top-6 right-6 sm:top-8 sm:right-8 text-white dark:text-black hover:text-red-500 transition-colors drop-shadow-lg">
+                            <button @click="lightboxOpen = false" style="z-index: 100000;" class="absolute top-6 right-6 sm:top-8 sm:right-8 text-black dark:text-white hover:text-red-500 transition-colors drop-shadow-lg">
                                 <svg class="w-8 h-8 sm:w-10 sm:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
 
+                            <!-- Left/Right Arrows for Lightbox -->
+                            <button x-show="images.length > 1" @click.stop="currentSlide = currentSlide === 0 ? images.length - 1 : currentSlide - 1" style="z-index: 100000;" class="absolute left-6 top-1/2 -translate-y-1/2 bg-black/50 dark:bg-white/50 text-black dark:text-white p-3 sm:p-4 rounded-full shadow hover:bg-black dark:hover:bg-white transition">
+                                <svg class="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                            <button x-show="images.length > 1" @click.stop="currentSlide = (currentSlide + 1) % images.length" style="z-index: 100000;" class="absolute right-6 top-1/2 -translate-y-1/2 bg-black/50 dark:bg-white/50 text-black dark:text-white p-3 sm:p-4 rounded-full shadow hover:bg-black dark:hover:bg-white transition">
+                                <svg class="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+
                             <!-- Fullscreen Image -->
-                            @if($product->image_url)
-                                <img @click.stop src="{{ asset('storage/' . $product->image_url) }}" alt="{{ $product->name }}" style="max-height: 90vh;" class="object-contain max-w-full rounded-lg cursor-default shadow-2xl"
+                            <template x-if="images.length > 0">
+                                <img @click.stop src="" :src="'{{ asset('') }}/' + images[currentSlide]" alt="{{ $product->name }}" style="max-height: 90vh; z-index: 99999;" class="object-contain max-w-full rounded-lg cursor-default shadow-2xl relative"
                                      x-transition:enter="transition ease-out duration-300 transform delay-100"
                                      x-transition:enter-start="opacity-0 scale-95"
                                      x-transition:enter-end="opacity-100 scale-100">
-                            @endif
+                            </template>
                         </div>
                     </template>
                 </div>
@@ -237,7 +284,11 @@ new #[Layout('layouts.app')] class extends Component {
                     <a href="{{ route('product.detail', $related->slug) }}" wire:navigate class="group bg-white dark:bg-gray-800/40 backdrop-blur-md border border-gray-200 dark:border-gray-700/50 rounded-2xl overflow-hidden hover:-translate-y-1 transition-all duration-300 block hover:shadow-xl dark:hover:shadow-[var(--color-primary-glow)]">
                         <div class="aspect-video bg-gray-100 dark:bg-gray-900/80 p-4 flex items-center justify-center border-b border-gray-200 dark:border-gray-700/50">
                             @if($related->image_url)
-                                <img src="{{ asset('storage/' . $related->image_url) }}" class="object-contain h-full transform group-hover:scale-105 transition-transform duration-500">
+                                <img src="{{ asset($related->image_url) }}" class="object-contain h-full transform group-hover:scale-105 transition-transform duration-500">
+                            @else
+                                <svg class="h-12 w-12 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
                             @endif
                         </div>
                         <div class="p-4">

@@ -131,7 +131,7 @@ new class extends Component
                         <x-nav-link wire:navigate :href="route('home')" :active="request()->routeIs('home')" class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
                             {{ __('Inicio') }}
                         </x-nav-link>
-                        <x-nav-link wire:navigate :href="route('shop')" :active="request()->routeIs('shop')" class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
+                        <x-nav-link :href="route('shop')" :active="request()->routeIs('shop')" class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
                             {{ __('Tienda') }}
                         </x-nav-link>
                         @if(auth()->check() && optional(auth()->user())->isAdmin())
@@ -247,7 +247,7 @@ new class extends Component
                         <x-nav-link wire:navigate :href="route('home')" :active="request()->routeIs('home')">
                             {{ __('Inicio') }}
                         </x-nav-link>
-                        <x-nav-link wire:navigate :href="route('shop')" :active="request()->routeIs('shop')">
+                        <x-nav-link :href="route('shop')" :active="request()->routeIs('shop')">
                             {{ __('Tienda') }}
                         </x-nav-link>
                         @if(auth()->check() && optional(auth()->user())->isAdmin())
@@ -365,7 +365,7 @@ new class extends Component
             <x-responsive-nav-link wire:navigate :href="route('home')" :active="request()->routeIs('home')">
                 <span class="w-5 text-center">🏠</span> <span>Inicio</span>
             </x-responsive-nav-link>
-            <x-responsive-nav-link wire:navigate :href="route('shop')" :active="request()->routeIs('shop')">
+            <x-responsive-nav-link :href="route('shop')" :active="request()->routeIs('shop')">
                 <span class="w-5 text-center">🛍️</span> <span>Tienda</span>
             </x-responsive-nav-link>
             @if(auth()->check() && optional(auth()->user())->isAdmin())
