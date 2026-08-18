@@ -1387,6 +1387,13 @@ new #[Layout('layouts.app')] class extends Component {
                                 </div>
                             </template>
 
+                                                        <!-- Descripción -->
+                            <div class="mb-4 sm:mb-5">
+                                <label class="block text-gray-700 dark:text-gray-400 text-[10px] sm:text-xs font-bold mb-2 uppercase tracking-wider">Detalles del Producto</label>
+                                <textarea wire:model="description" rows="3" class="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]" placeholder="Agregá las características, especificaciones y detalles del producto acá..."></textarea>
+                                @error('description') <span class="text-red-500 text-[9px] sm:text-[10px]">{{ $message }}</span> @enderror
+                            </div>
+
                             <label class="block text-gray-700 dark:text-gray-400 text-[10px] sm:text-xs font-bold mb-2 uppercase tracking-wider">Imágenes del Producto</label>
                             
                             <!-- Imágenes Actuales y Nuevas (Ordenables) -->
