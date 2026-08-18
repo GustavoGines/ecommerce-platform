@@ -28,9 +28,9 @@ new #[Layout('layouts.app')] class extends Component {
     public $wholesale_price = 0;
     public $stock = 0;
     public $min_stock = 2;
-    public $image;
-    public $current_image_url;
-    public $delete_image = false;
+    public $images_array = [];
+    public $current_images = [];
+    public $image_order = [];
     
     public $new_brand_name = '';
     
@@ -116,6 +116,14 @@ new #[Layout('layouts.app')] class extends Component {
     public function loadProducts()
     {
         $this->resetPage();
+    }
+
+    public function updatedSearch()
+    {
+        $this->resetPage();
+        if (trim($this->search) !== '') {
+            $this->dispatch('search-performed', query: trim($this->search));
+        }
     }
     
     public function updatedFilterCategoryId()
@@ -209,7 +217,21 @@ new #[Layout('layouts.app')] class extends Component {
         $this->wholesale_price = (float) $product->wholesale_price;
         $this->stock = $product->stock;
         $this->min_stock = $product->min_stock ?? 2;
-        $this->current_image_url = $product->image_url;
+        
+        $imgs = $product->images;
+        if (is_string($imgs)) {
+            $imgs = json_decode($imgs, true);
+        }
+        $this->current_images = is_array($imgs) && !empty($imgs) ? $imgs : ($product->image_url ? [$product->image_url] : []);
+        
+        $this->images_array = [];
+        $this->image_order = [];
+        foreach ($this->current_images as $idx => $path) {
+            $this->image_order[] = 'e_' . $idx;
+        }
+        
+        $this->dispatch('product-viewed', id: $product->id, name: $product->name, image: $product->image_url);
+        
         $this->showModal = true;
     }
 
@@ -229,7 +251,7 @@ new #[Layout('layouts.app')] class extends Component {
             'wholesale_price' => 'required|numeric|min:0|lte:retail_price',
             'stock' => 'required|integer|min:0',
             'min_stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|max:2048',
+            'images_array.*' => 'nullable|image|max:2048',
         ]);
 
         $data = [
@@ -248,17 +270,23 @@ new #[Layout('layouts.app')] class extends Component {
             'min_stock' => $this->min_stock,
         ];
 
-        if ($this->delete_image && $this->product_id) {
-            $p = Product::find($this->product_id);
-            if ($p && $p->image_url) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($p->image_url);
+        $final_images = [];
+        foreach ($this->image_order as $item) {
+            if (str_starts_with($item, 'e_')) {
+                $idx = (int) str_replace('e_', '', $item);
+                if (isset($this->current_images[$idx])) {
+                    $final_images[] = $this->current_images[$idx];
+                }
+            } elseif (str_starts_with($item, 'n_')) {
+                $idx = (int) str_replace('n_', '', $item);
+                if (isset($this->images_array[$idx])) {
+                    $final_images[] = $this->images_array[$idx]->store('products', 'public');
+                }
             }
-            $data['image_url'] = null;
         }
 
-        if ($this->image) {
-            $data['image_url'] = $this->image->store('products', 'public');
-        }
+        $data['images'] = $final_images;
+        $data['image_url'] = count($final_images) > 0 ? $final_images[0] : null;
 
         $product = Product::updateOrCreate(['id' => $this->product_id], $data);
         $product->brands()->sync($this->brand_ids);
@@ -328,16 +356,45 @@ new #[Layout('layouts.app')] class extends Component {
         $this->wholesale_price = 0;
         $this->stock = 0;
         $this->min_stock = 2;
-        $this->image = null;
-        $this->current_image_url = null;
-        $this->delete_image = false;
+        $this->images_array = [];
+        $this->current_images = [];
+        $this->image_order = [];
     }
 
-    public function removeImage()
+    public function updatedImagesArray()
     {
-        $this->current_image_url = null;
-        $this->image = null;
-        $this->delete_image = true;
+        $this->validate([
+            'images_array.*' => 'image|max:2048',
+        ]);
+        
+        $this->image_order = array_values(array_filter($this->image_order, fn($i) => !str_starts_with($i, 'n_')));
+        
+        foreach ($this->images_array as $idx => $file) {
+            $this->image_order[] = 'n_' . $idx;
+        }
+    }
+
+    public function removeImageItem($item)
+    {
+        $this->image_order = array_values(array_filter($this->image_order, fn($i) => $i !== $item));
+    }
+
+    public function moveImageLeft($index)
+    {
+        if ($index > 0) {
+            $temp = $this->image_order[$index - 1];
+            $this->image_order[$index - 1] = $this->image_order[$index];
+            $this->image_order[$index] = $temp;
+        }
+    }
+
+    public function moveImageRight($index)
+    {
+        if ($index < count($this->image_order) - 1) {
+            $temp = $this->image_order[$index + 1];
+            $this->image_order[$index + 1] = $this->image_order[$index];
+            $this->image_order[$index] = $temp;
+        }
     }
 
     public function updatedCostPrice() { $this->calculatePrices(); }
@@ -623,10 +680,49 @@ new #[Layout('layouts.app')] class extends Component {
                     <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full lg:w-auto">
                         <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight shrink-0">Catálogo</h3>
                         {{-- Buscador PERF-02: debounce 400ms para no disparar requests en cada tecla --}}
-                        <div class="relative flex-1 sm:flex-none">
+                        <div class="relative flex-1 sm:flex-none" 
+                             x-data="{
+                                 isOpen: false,
+                                 recentSearches: JSON.parse(localStorage.getItem('admin_recent_searches') || '[]'),
+                                 recentProducts: JSON.parse(localStorage.getItem('admin_recent_products') || '[]'),
+                                 saveSearch(query) {
+                                     if (!query || !query.trim()) return;
+                                     let s = this.recentSearches.filter(i => i !== query.trim());
+                                     s.unshift(query.trim());
+                                     this.recentSearches = s.slice(0, 3);
+                                     localStorage.setItem('admin_recent_searches', JSON.stringify(this.recentSearches));
+                                 },
+                                 saveProduct(id, name, img) {
+                                     let p = this.recentProducts.filter(i => i.id !== id);
+                                     p.unshift({id, name, img});
+                                     this.recentProducts = p.slice(0, 3);
+                                     localStorage.setItem('admin_recent_products', JSON.stringify(this.recentProducts));
+                                 },
+                                 selectSearch(query) {
+                                     $wire.set('search', query);
+                                     this.saveSearch(query);
+                                     this.isOpen = false;
+                                 },
+                                 removeSearch(query, e) {
+                                     e.stopPropagation();
+                                     this.recentSearches = this.recentSearches.filter(i => i !== query);
+                                     localStorage.setItem('admin_recent_searches', JSON.stringify(this.recentSearches));
+                                 },
+                                 removeProduct(id, e) {
+                                     e.stopPropagation();
+                                     this.recentProducts = this.recentProducts.filter(i => i.id !== id);
+                                     localStorage.setItem('admin_recent_products', JSON.stringify(this.recentProducts));
+                                 }
+                             }"
+                             @product-viewed.window="saveProduct($event.detail.id, $event.detail.name, $event.detail.image)"
+                             @search-performed.window="saveSearch($event.detail.query)"
+                             @click.away="isOpen = false">
                             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
                             <input wire:model.live.debounce.400ms="search"
                                    type="text"
+                                   autocomplete="off"
+                                   @focus="isOpen = true"
+                                   @keydown.enter="saveSearch($el.value); isOpen = false"
                                    placeholder="Buscar producto..."
                                    id="admin-product-search"
                                    class="pl-9 pr-9 py-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-gray-900 dark:text-white focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all w-full sm:w-52">
@@ -641,6 +737,64 @@ new #[Layout('layouts.app')] class extends Component {
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     </button>
                                 @endif
+                            </div>
+
+                            {{-- Combo Dropdown: Búsquedas Recientes y Productos Vistos --}}
+                            <div x-show="isOpen && (recentSearches.length > 0 || recentProducts.length > 0) && !$wire.search" 
+                                 x-transition
+                                 style="display: none;"
+                                 class="absolute z-50 left-0 mt-2 w-72 sm:w-80 bg-white dark:bg-gray-800/95 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden divide-y divide-gray-100 dark:divide-gray-700/50">
+                                
+                                {{-- Búsquedas Recientes --}}
+                                <template x-if="recentSearches.length > 0">
+                                    <div class="p-2">
+                                        <h4 class="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2 px-3 pt-2">Búsquedas Recientes</h4>
+                                        <ul class="space-y-1">
+                                            <template x-for="item in recentSearches" :key="item">
+                                                <li>
+                                                    <button @click="selectSearch(item)" class="w-full flex items-center justify-between px-3 py-2 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-colors group">
+                                                        <div class="flex items-center gap-3 truncate">
+                                                            <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                            <span x-text="item" class="truncate"></span>
+                                                        </div>
+                                                        <span @click="removeSearch(item, $event)" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1" title="Eliminar de historial">
+                                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                        </span>
+                                                    </button>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </template>
+
+                                {{-- Productos Vistos Recientemente --}}
+                                <template x-if="recentProducts.length > 0">
+                                    <div class="p-2 bg-gray-50/50 dark:bg-gray-900/30">
+                                        <h4 class="text-[10px] font-bold uppercase tracking-widest text-[var(--color-primary)] mb-2 px-3 pt-2">Editados Recientemente</h4>
+                                        <ul class="space-y-1">
+                                            <template x-for="prod in recentProducts" :key="prod.id">
+                                                <li>
+                                                    <button @click="if(!isProductLoading) { isProductLoading = true; modalOpen = true; $wire.edit(prod.id).then(() => isProductLoading = false); isOpen = false }" class="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-sm group">
+                                                        <div class="flex items-center gap-3 truncate">
+                                                            <template x-if="prod.img">
+                                                                <img :src="'{{ asset('') }}/' + prod.img" class="w-8 h-8 rounded bg-white dark:bg-black object-cover shrink-0 border border-gray-200 dark:border-gray-700">
+                                                            </template>
+                                                            <template x-if="!prod.img">
+                                                                <div class="w-8 h-8 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center shrink-0 border border-gray-200 dark:border-gray-700">
+                                                                    <span class="text-[8px] font-bold text-gray-400 uppercase">Sin img</span>
+                                                                </div>
+                                                            </template>
+                                                            <span x-text="prod.name" class="text-xs font-bold text-gray-700 dark:text-gray-300 truncate line-clamp-2"></span>
+                                                        </div>
+                                                        <span @click="removeProduct(prod.id, $event)" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 shrink-0" title="Eliminar de recientes">
+                                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                        </span>
+                                                    </button>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -810,7 +964,7 @@ new #[Layout('layouts.app')] class extends Component {
                             @if($visibleColumns['image'])
                             <td class="px-6 py-4 whitespace-nowrap" @click.stop>
                                 @if($product->image_url)
-                                    <img @click="previewImageUrl = '{{ asset('storage/' . $product->image_url) }}'; previewImageOpen = true" src="{{ asset('storage/' . $product->image_url) }}" class="h-12 w-12 rounded-lg object-cover border border-gray-200 dark:border-gray-600 shadow-sm cursor-pointer hover:opacity-80 transition-opacity" title="Haz clic para agrandar">
+                                    <img @click="previewImageUrl = '{{ asset($product->image_url) }}'; previewImageOpen = true" src="{{ asset($product->image_url) }}" class="h-12 w-12 rounded-lg object-cover border border-gray-200 dark:border-gray-600 shadow-sm cursor-pointer hover:opacity-80 transition-opacity" title="Haz clic para agrandar">
                                 @else
                                     <div class="h-12 w-12 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 text-[10px] uppercase font-bold tracking-tighter">Sin img</div>
                                 @endif
@@ -886,7 +1040,7 @@ new #[Layout('layouts.app')] class extends Component {
                         <div class="flex items-center gap-2 shrink-0" @click.stop>
                             <input type="checkbox" value="{{ $product->id }}" wire:model.live="selectedProducts" class="rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)] w-4 h-4">
                             @if($product->image_url)
-                                <img src="{{ asset('storage/' . $product->image_url) }}" class="h-10 w-10 rounded-lg object-cover border border-gray-200 dark:border-gray-600 cursor-pointer" @click.stop="previewImageUrl = '{{ asset('storage/' . $product->image_url) }}'; previewImageOpen = true">
+                                <img src="{{ asset($product->image_url) }}" class="h-10 w-10 rounded-lg object-cover border border-gray-200 dark:border-gray-600 cursor-pointer" @click.stop="previewImageUrl = '{{ asset($product->image_url) }}'; previewImageOpen = true">
                             @else
                                 <div class="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 text-[8px] uppercase font-bold tracking-tighter shrink-0">Sin img</div>
                             @endif
@@ -1222,97 +1376,73 @@ new #[Layout('layouts.app')] class extends Component {
                         </div>
 
 
-                        <div class="mb-4" x-data="{ expandedImage: false }">
-                            <label class="block text-gray-700 dark:text-gray-400 text-[10px] sm:text-xs font-bold mb-2 uppercase tracking-wider">Imagen del Producto</label>
-                            
-                            <div class="flex flex-col sm:flex-row gap-3">
-                                @if($image)
-                                    <div class="w-full sm:w-auto p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 transition-all duration-300 shrink-0">
-                                        <div class="flex items-center space-x-3">
-                                            <div class="relative shrink-0">
-                                                <img src="{{ $image->temporaryUrl() }}" alt="Nueva imagen" class="h-14 w-14 sm:h-16 sm:w-16 object-cover rounded-lg border border-blue-300 dark:border-blue-700 shadow-sm bg-white dark:bg-gray-900">
-                                                <div class="absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">NUEVA</div>
-                                            </div>
-                                            <div class="flex flex-col flex-1">
-                                                <h5 class="text-[10px] sm:text-xs font-bold text-gray-900 dark:text-white mb-0.5">Lista para guardar</h5>
-                                                <button type="button" wire:click="$set('image', null)" class="inline-flex items-center text-[10px] font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition-colors w-max mt-1">
-                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                    Descartar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @elseif($current_image_url)
-                                    <div class="w-full sm:w-auto p-2 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 transition-all duration-300 shrink-0">
-                                        <!-- Imagen expandida (al hacer click) -->
-                                        <div x-show="expandedImage" x-transition class="mb-2 cursor-pointer" @click="expandedImage = false" title="Clic para reducir" style="display: none;">
-                                            <img src="{{ asset('storage/' . $current_image_url) }}" alt="Imagen actual ampliada" class="w-full max-h-64 object-contain rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 shadow-md">
-                                            <p class="text-center text-[10px] text-gray-400 mt-1">Tocá para reducir</p>
-                                        </div>
-
-                                        <!-- Fila normal con miniatura + borrar -->
-                                        <div x-show="!expandedImage" x-transition class="flex items-center space-x-3">
-                                            <div class="relative group cursor-pointer shrink-0" @click="expandedImage = true" title="Clic para agrandar">
-                                                <img src="{{ asset('storage/' . $current_image_url) }}" alt="Imagen actual" class="h-14 w-14 sm:h-16 sm:w-16 object-cover rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm bg-white dark:bg-gray-900 hover:opacity-80 transition-opacity">
-                                                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity bg-black/10 rounded-lg">
-                                                    <svg class="w-5 h-5 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
-                                                </div>
-                                            </div>
-                                            <div class="flex flex-col flex-1">
-                                                <h5 class="text-[10px] sm:text-xs font-bold text-gray-900 dark:text-white mb-0.5">Imagen Actual</h5>
-                                                <button type="button" wire:click="removeImage" class="inline-flex items-center text-[10px] font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition-colors w-max mt-1">
-                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                    Borrar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <div class="relative group flex-1 w-full" x-data="{ isDragging: false }" @dragover.prevent="isDragging = true" @dragleave.prevent="isDragging = false" @drop.prevent="isDragging = false; if($event.dataTransfer.files.length) $refs.fileInput.files = $event.dataTransfer.files; $refs.fileInput.dispatchEvent(new Event('change', { bubbles: true }))">
-                                    <div class="grid grid-cols-2 gap-2 sm:block h-[76px] sm:h-[84px]">
-                                        <!-- Galería / Drop Zone (Desktop) -->
-                                        <label class="flex flex-col items-center justify-center w-full h-full px-2 transition-all bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 sm:border-2 sm:border-dashed rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/80 hover:border-[var(--color-primary)]"
-                                               :class="isDragging ? 'border-[var(--color-primary)] bg-blue-50/50 dark:bg-blue-900/10' : ''">
-                                            
-                                            <div class="flex flex-col items-center justify-center text-center">
-                                                <div wire:loading.remove wire:target="image" class="text-[var(--color-primary)] mb-1">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                                </div>
-                                                <div wire:loading wire:target="image" class="mb-1 text-[var(--color-primary)]">
-                                                    <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                                                </div>
-                                                <p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium leading-tight">
-                                                    <span class="text-[var(--color-primary)] font-bold sm:hidden">Galería</span>
-                                                    <span class="hidden sm:inline"><span class="text-[var(--color-primary)] font-bold">Subir</span> o soltar img.</span>
-                                                </p>
-                                            </div>
-                                            <input x-ref="fileInput" wire:model="image" type="file" accept="image/*" class="hidden" />
-                                        </label>
-                                        
-                                        <!-- Cámara Absolute Button (Desktop Only) -->
-                                        <label class="hidden sm:flex absolute bottom-1 right-1 cursor-pointer shrink-0 items-center justify-center p-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all shadow-sm" title="Cámara">
-                                            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                            <input wire:model="image" type="file" accept="image/*" capture="environment" class="hidden">
-                                        </label>
-
-                                        <!-- Cámara Full Button (Mobile Only) -->
-                                        <label class="sm:hidden flex flex-col items-center justify-center w-full h-full px-2 transition-all bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/80 hover:border-[var(--color-primary)]">
-                                            <div class="flex flex-col items-center justify-center text-center">
-                                                <div wire:loading.remove wire:target="image" class="text-gray-600 dark:text-gray-400 mb-1">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                                </div>
-                                                <div wire:loading wire:target="image" class="mb-1 text-gray-600 dark:text-gray-400">
-                                                    <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                                                </div>
-                                                <p class="text-[10px] text-gray-600 dark:text-gray-400 font-bold leading-tight">Cámara</p>
-                                            </div>
-                                            <input wire:model="image" type="file" accept="image/*" capture="environment" class="hidden">
-                                        </label>
-                                    </div>
+                        <div class="mb-4" x-data="{ expandedImage: null }">
+                            <!-- Imagen Agrandada Inline -->
+                            <template x-if="expandedImage">
+                                <div class="mb-3 bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 relative w-full flex items-center justify-center p-2">
+                                    <img :src="expandedImage" class="max-w-full object-contain rounded-lg" style="max-height: 400px;">
+                                    <button @click.stop="expandedImage = null" class="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1.5 hover:bg-red-500 transition-colors" title="Cerrar vista previa">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
                                 </div>
+                            </template>
+
+                            <label class="block text-gray-700 dark:text-gray-400 text-[10px] sm:text-xs font-bold mb-2 uppercase tracking-wider">Imágenes del Producto</label>
+                            
+                            <!-- Imágenes Actuales y Nuevas (Ordenables) -->
+                            @if(count($image_order) > 0)
+                                <div class="flex gap-3 overflow-x-auto pb-2 mb-3 snap-x">
+                                    @foreach($image_order as $index => $item)
+                                        @php
+                                            $is_new = str_starts_with($item, 'n_');
+                                            $idx = (int) str_replace(['e_', 'n_'], '', $item);
+                                            $url = $is_new ? (isset($images_array[$idx]) ? $images_array[$idx]->temporaryUrl() : '') : (isset($current_images[$idx]) ? asset($current_images[$idx]) : '');
+                                        @endphp
+                                        @if($url)
+                                        <div class="relative shrink-0 snap-center w-24 flex flex-col items-center bg-gray-50 dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700">
+                                            <div class="relative w-20 h-20 mb-2">
+                                                <img src="{{ $url }}" @click.stop="expandedImage = '{{ $url }}'" class="w-full h-full object-cover rounded shadow-sm cursor-pointer hover:opacity-80 transition-opacity" title="Haz clic para agrandar">
+                                                @if($is_new)
+                                                    <div class="absolute -top-2 -right-2 bg-blue-500 text-white text-[9px] font-bold px-1 py-0.5 rounded shadow">NUEVA</div>
+                                                @endif
+                                            </div>
+                                            
+                                            <!-- Controles de reorden y borrado -->
+                                            <div class="flex items-center justify-between w-full mt-auto">
+                                                <button type="button" wire:click="moveImageLeft({{ $index }})" @if($index === 0) disabled @endif class="p-1 text-gray-500 hover:text-gray-800 disabled:opacity-30">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                                                </button>
+                                                <button type="button" wire:click="removeImageItem('{{ $item }}')" class="p-1 text-red-500 hover:text-red-700">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                </button>
+                                                <button type="button" wire:click="moveImageRight({{ $index }})" @if($index === count($image_order) - 1) disabled @endif class="p-1 text-gray-500 hover:text-gray-800 disabled:opacity-30">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            <div class="relative group w-full" x-data="{ isDragging: false }" @dragover.prevent="isDragging = true" @dragleave.prevent="isDragging = false" @drop.prevent="isDragging = false; if($event.dataTransfer.files.length) $refs.fileInput.files = $event.dataTransfer.files; $refs.fileInput.dispatchEvent(new Event('change', { bubbles: true }))">
+                                <label class="flex flex-col items-center justify-center w-full h-20 px-2 transition-all bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 sm:border-2 sm:border-dashed rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/80 hover:border-[var(--color-primary)]"
+                                       :class="isDragging ? 'border-[var(--color-primary)] bg-blue-50/50 dark:bg-blue-900/10' : ''">
+                                    <div class="flex flex-col items-center justify-center text-center">
+                                        <div wire:loading.remove wire:target="images_array" class="text-[var(--color-primary)] mb-1">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                        </div>
+                                        <div wire:loading wire:target="images_array" class="mb-1 text-[var(--color-primary)]">
+                                            <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                        </div>
+                                        <p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium leading-tight">
+                                            <span class="text-[var(--color-primary)] font-bold">Subir imágenes</span> o soltar aquí
+                                        </p>
+                                    </div>
+                                    <input x-ref="fileInput" wire:model="images_array" type="file" accept="image/*" multiple class="hidden" />
+                                </label>
                             </div>
-                            @error('image') <span class="text-red-500 dark:text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
+                            @error('images_array.*') <span class="text-red-500 dark:text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
                         </div>
                         <div class="flex flex-row items-center justify-center gap-2 sm:gap-3 bg-gray-50 dark:bg-gray-900/50 -mx-4 sm:-mx-8 -mb-4 px-4 sm:px-8 py-3 sm:py-4 border-t border-gray-200 dark:border-gray-800">
                             <button type="button" wire:click="$set('showModal', false)" class="flex-1 sm:w-auto sm:flex-none text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-bold py-2 sm:py-2.5 px-3 sm:px-5 rounded-lg sm:rounded-full transition-colors border border-gray-200 bg-white sm:border-transparent text-sm">Cancelar</button>

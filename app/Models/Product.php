@@ -24,11 +24,13 @@ class Product extends Model
         'wholesale_price',
         'stock',
         'image_url',
+        'images',
         'category_id',
     ];
 
     protected $casts = [
         'technical_specs' => 'array',
+        'images' => 'array',
     ];
 
     protected static function boot()

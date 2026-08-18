@@ -327,7 +327,7 @@ new #[Layout('layouts.app')] class extends Component {
                             <li class="flex items-center gap-4 group">
                                 <div class="w-10 h-10 bg-gray-50 dark:bg-gray-900 rounded-xl flex items-center justify-center border border-gray-100 dark:border-gray-700 overflow-hidden shrink-0 transition-transform group-hover:scale-105">
                                     @if($item->product->image_url)
-                                        <img src="{{ asset('storage/' . $item->product->image_url) }}" class="w-full h-full object-contain p-1">
+                                        <img src="{{ asset($item->product->image_url) }}" class="w-full h-full object-contain p-1">
                                     @endif
                                 </div>
                                 <div class="flex-grow min-w-0">
@@ -373,7 +373,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 bg-white dark:bg-gray-800 rounded-lg flex items-center justify-center shadow-sm p-1">
                                             @if($product->image_url)
-                                                <img src="{{ asset('storage/' . $product->image_url) }}" class="max-w-full max-h-full object-contain">
+                                                <img src="{{ asset($product->image_url) }}" class="max-w-full max-h-full object-contain">
                                             @endif
                                         </div>
                                         <div>
