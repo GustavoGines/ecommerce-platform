@@ -1541,14 +1541,14 @@ new #[Layout('layouts.app')] class extends Component {
                             @if($massTarget === 'category')
                                 <select wire:model="massCategoryId" class="w-full py-2.5 px-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
                                     <option value="">Seleccione Categoría...</option>
-                                    @foreach($categories as $cat) <option wire:key="cat-opt-{{ $cat->id }}" value="{{ $cat->id }}">{{ $cat->name }}</option> @endforeach
+                                    @foreach($categories as $cat) <option wire:key="mass-cat-opt-{{ $cat->id }}" value="{{ $cat->id }}">{{ $cat->name }}</option> @endforeach
                                 </select>
                             @endif
 
                             @if($massTarget === 'brand')
                                 <select wire:model="massBrandId" class="w-full py-2.5 px-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
                                     <option value="">Seleccione Marca...</option>
-                                    @foreach($brands as $brand) <option wire:key="brand-opt-{{ $brand->id }}" value="{{ $brand->id }}">{{ $brand->name }}</option> @endforeach
+                                    @foreach($brands as $brand) <option wire:key="mass-brand-opt-{{ $brand->id }}" value="{{ $brand->id }}">{{ $brand->name }}</option> @endforeach
                                 </select>
                             @endif
                         </div>
