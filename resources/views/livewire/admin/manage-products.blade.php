@@ -101,6 +101,16 @@ new #[Layout('layouts.app')] class extends Component {
         }
     }
 
+    public function toggleSelection($id)
+    {
+        $idStr = (string) $id;
+        if (in_array($idStr, $this->selectedProducts)) {
+            $this->selectedProducts = array_values(array_diff($this->selectedProducts, [$idStr]));
+        } else {
+            $this->selectedProducts[] = $idStr;
+        }
+    }
+
     public function sortBy($field)
     {
         if ($this->sortField === $field) {
@@ -1000,7 +1010,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </thead>
                     <tbody class="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-700/50 transition-colors">
                         @foreach($products as $product)
-                        <tr wire:key="product-row-{{ $product->id }}" @click="if(!isProductLoading) { isProductLoading = true; modalOpen = true; $wire.edit({{ $product->id }}).then(() => isProductLoading = false) }" class="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer {{ in_array($product->id, $selectedProducts) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : '' }}">
+                        <tr wire:key="product-row-{{ $product->id }}" @click="if ($wire.selectedProducts.length > 0) { $wire.toggleSelection({{ $product->id }}) } else if (!isProductLoading) { isProductLoading = true; modalOpen = true; $wire.edit({{ $product->id }}).then(() => isProductLoading = false) }" class="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer {{ in_array($product->id, $selectedProducts) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : '' }}">
                             <td class="px-6 py-4 whitespace-nowrap" @click.stop>
                                 <input type="checkbox" value="{{ $product->id }}" wire:model.live="selectedProducts" class="rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]">
                             </td>
@@ -1077,7 +1087,7 @@ new #[Layout('layouts.app')] class extends Component {
                 @foreach($products as $product)
                 <div wire:key="product-card-{{ $product->id }}"
                     class="p-2.5 relative cursor-pointer hover:bg-gray-50 active:bg-gray-50 dark:hover:bg-gray-700/30 dark:active:bg-gray-700/50 transition-colors {{ in_array($product->id, $selectedProducts) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : '' }}"
-                    @click="if(!isProductLoading) { isProductLoading = true; modalOpen = true; $wire.edit({{ $product->id }}).then(() => isProductLoading = false) }"
+                    @click="if ($wire.selectedProducts.length > 0) { $wire.toggleSelection({{ $product->id }}) } else if (!isProductLoading) { isProductLoading = true; modalOpen = true; $wire.edit({{ $product->id }}).then(() => isProductLoading = false) }"
                 >
                     <div class="flex items-center gap-2.5">
                         <!-- Izquierda: Checkbox + Imagen -->
