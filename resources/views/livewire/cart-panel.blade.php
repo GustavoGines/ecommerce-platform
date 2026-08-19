@@ -357,28 +357,28 @@ new class extends Component {
                         </div>
 
                         @if(count($cart) > 0)
-                            <div class="border-t px-4 py-6 sm:px-6 transition-colors duration-300 border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50" x-show="!isClearing" x-transition.opacity.duration.300ms>
-                                <div class="flex justify-between text-base font-black text-xl text-gray-900 dark:text-white">
+                            <div class="border-t px-4 py-4 sm:py-6 sm:px-6 transition-colors duration-300 border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50" x-show="!isClearing" x-transition.opacity.duration.300ms>
+                                <div class="flex justify-between text-lg sm:text-xl font-black text-gray-900 dark:text-white">
                                     <p>{{ tenant('id') === 'g3' ? 'Total de Lista' : 'Subtotal' }}</p>
                                     <p x-text="`$${formatMoney(globalSubtotal)}`">${{ number_format($subtotal, 2) }}</p>
                                 </div>
                                 
                                 @if(tenant('id') === 'g3')
-                                <div class="flex justify-between items-start sm:items-center text-base font-black text-emerald-600 dark:text-emerald-400 mt-2 gap-2 flex-col sm:flex-row w-full overflow-hidden">
-                                    <div class="flex items-center gap-1.5 w-full sm:w-auto">
+                                <div class="flex justify-between items-center text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 mt-1 sm:mt-2 gap-2 flex-row w-full overflow-hidden">
+                                    <div class="flex items-center gap-1.5 w-auto">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
                                         <p class="truncate">Efectivo / Transf.</p>
                                     </div>
-                                    <p class="text-lg sm:text-base self-end sm:self-auto" x-text="`$${formatMoney(globalCashTotal)}`">${{ number_format($subtotalCash ?? 0, 2) }}</p>
+                                    <p class="text-base sm:text-lg" x-text="`$${formatMoney(globalCashTotal)}`">${{ number_format($subtotalCash ?? 0, 2) }}</p>
                                 </div>
 
-                                <div class="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl shadow-inner w-full overflow-hidden">
-                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                        <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
-                                            <span class="text-lg shrink-0">🔥</span>
+                                <div class="mt-2 sm:mt-4 p-2 sm:p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl shadow-inner w-full overflow-hidden">
+                                    <div class="flex flex-row items-center justify-between gap-2">
+                                        <div class="flex items-center gap-1.5 sm:gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs sm:text-sm">
+                                            <span class="text-base sm:text-lg shrink-0">🔥</span>
                                             <span class="leading-tight">¡Ahorras en Efectivo!</span>
                                         </div>
-                                        <span class="text-emerald-600 dark:text-emerald-400 font-black text-xl sm:text-lg self-end sm:self-auto" x-text="`$${formatMoney(globalSubtotal - globalCashTotal)}`"></span>
+                                        <span class="text-emerald-600 dark:text-emerald-400 font-black text-base sm:text-lg" x-text="`$${formatMoney(globalSubtotal - globalCashTotal)}`"></span>
                                     </div>
                                 </div>
                                 @endif
@@ -389,36 +389,36 @@ new class extends Component {
                                     @endphp
 
                                     @if($isPermanentWholesale)
-                                        <div class="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-center gap-2 shadow-inner">
-                                            <span class="text-lg">✨</span>
-                                            <span class="text-blue-600 dark:text-blue-400 font-bold text-sm">¡Estás comprando con Precio Mayorista (Cliente VIP)!</span>
+                                        <div class="mt-2 sm:mt-4 p-2 sm:p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-center gap-2 shadow-inner">
+                                            <span class="text-base sm:text-lg">✨</span>
+                                            <span class="text-blue-600 dark:text-blue-400 font-bold text-xs sm:text-sm">¡Estás comprando con Precio Mayorista (Cliente VIP)!</span>
                                         </div>
                                     @else
-                                        <div x-show="globalQuantity >= 10" class="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-center gap-2 shadow-inner" x-cloak>
-                                            <span class="text-lg">✨</span>
-                                            <span class="text-blue-600 dark:text-blue-400 font-bold text-sm">¡Estás comprando con Precio Mayorista!</span>
+                                        <div x-show="globalQuantity >= 10" class="mt-2 sm:mt-4 p-2 sm:p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-center gap-2 shadow-inner" x-cloak>
+                                            <span class="text-base sm:text-lg">✨</span>
+                                            <span class="text-blue-600 dark:text-blue-400 font-bold text-xs sm:text-sm">¡Estás comprando con Precio Mayorista!</span>
                                         </div>
                                         
-                                        <div x-show="globalQuantity > 0 && globalQuantity < 10" class="mt-4 p-3 bg-gray-200/50 dark:bg-gray-800 rounded-xl flex flex-col gap-1 shadow-inner border border-gray-300 dark:border-gray-700" x-cloak>
-                                            <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-bold text-sm">
-                                                <span class="text-lg">💡</span>
+                                        <div x-show="globalQuantity > 0 && globalQuantity < 10" class="mt-2 sm:mt-4 p-2 sm:p-3 bg-gray-200/50 dark:bg-gray-800 rounded-xl flex flex-col gap-1 shadow-inner border border-gray-300 dark:border-gray-700" x-cloak>
+                                            <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-bold text-xs sm:text-sm">
+                                                <span class="text-base sm:text-lg">💡</span>
                                                 <span x-text="`Agregá ${10 - globalQuantity} productos más para acceder al Precio Mayorista`"></span>
                                             </div>
-                                            <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1.5 mt-1 overflow-hidden">
-                                                <div class="bg-[var(--color-primary)] h-1.5 rounded-full transition-all duration-500" :style="`width: ${(globalQuantity / 10) * 100}%`"></div>
+                                            <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-1 sm:h-1.5 mt-1 overflow-hidden">
+                                                <div class="bg-[var(--color-primary)] h-1 sm:h-1.5 rounded-full transition-all duration-500" :style="`width: ${(globalQuantity / 10) * 100}%`"></div>
                                             </div>
                                         </div>
                                     @endif
                                 @endif
-                                <div class="mt-6">
+                                <div class="mt-3 sm:mt-6">
                                     <button wire:click="goToCheckout"
                                        @click="$store.cart.hide()"
-                                       class="flex items-center justify-center w-full rounded-full px-6 py-4 text-base font-bold text-white shadow-lg transition-all hover:opacity-90 hover:-translate-y-0.5 {{ empty($cart) ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' }}"
+                                       class="flex items-center justify-center w-full rounded-full px-4 py-3 sm:px-6 sm:py-4 text-sm sm:text-base font-bold text-white shadow-lg transition-all hover:opacity-90 hover:-translate-y-0.5 {{ empty($cart) ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' }}"
                                        style="background-color: var(--color-primary); box-shadow: 0 4px 14px 0 var(--color-primary-glow);">
                                         Finalizar Pedido
                                     </button>
                                 </div>
-                                <div class="mt-6 flex justify-center text-center text-sm">
+                                <div class="mt-3 sm:mt-6 flex justify-center text-center text-xs sm:text-sm">
                                     <p class="text-gray-500 dark:text-gray-400">
                                         o&nbsp;
                                         <button type="button" @click="$store.cart.hide()" class="font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white underline underline-offset-2 transition-colors">

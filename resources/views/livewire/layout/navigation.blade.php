@@ -71,9 +71,9 @@ new class extends Component
                     100% { transform: translateX(-50%); }
                 }
                 @keyframes writeReveal {
-                    0% { clip-path: inset(0 100% 0 0); opacity: 0; filter: drop-shadow(0 0 0 rgba(220,38,38,0)); }
-                    30% { opacity: 1; filter: drop-shadow(0 0 10px rgba(220,38,38,0.5)); }
-                    100% { clip-path: inset(0 0 0 0); opacity: 1; filter: drop-shadow(0 10px 20px rgba(220,38,38,0.3)); }
+                    0% { clip-path: inset(0 100% 0 0); opacity: 0; filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+                    30% { opacity: 1; filter: drop-shadow(0 0 10px rgba(0,0,0,0.3)); }
+                    100% { clip-path: inset(0 0 0 0); opacity: 1; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4)); }
                 }
             </style>
         </div>
@@ -149,7 +149,7 @@ new class extends Component
                         <a wire:navigate href="{{ url('/') }}" class="shrink-0 flex items-center justify-center relative h-20 w-48 sm:w-64 hover:scale-105 transition-transform pointer-events-auto">
                             @if(isset($settings) && $settings->logo_url)
                                 <img src="{{ tenant_asset($settings->logo_url) }}"
-                                     alt="Logo" class="absolute max-w-none pointer-events-none drop-shadow-[0_10px_20px_rgba(220,38,38,0.3)]" style="top: 72%; left: 50%; width: 220px; height: auto; transform: translate(-50%, -50%); animation: writeReveal 2.5s ease-out 0.5s both;">
+                                     alt="Logo" class="absolute max-w-none pointer-events-none drop-shadow-2xl" style="top: 72%; left: 50%; width: 220px; height: auto; transform: translate(-50%, -50%); animation: writeReveal 2.5s ease-out 0.5s both;">
                             @else
                                 <div class="flex items-center gap-2 text-white" style="animation: writeReveal 2.5s ease-out 0.5s both;">
                                     <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13h-13L12 6.5z"/></svg>
