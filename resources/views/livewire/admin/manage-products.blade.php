@@ -1265,7 +1265,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     </div>
                                 </label>
                                 
-                                <div class="relative" x-data="{
+                                <div class="relative" wire:key="brand-multiselect-{{ $brands->pluck('id')->join('-') }}-{{ $brands->pluck('updated_at')->join('-') }}" x-data="{
                                     open: false,
                                     search: '',
                                     options: [
