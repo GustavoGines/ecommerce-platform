@@ -190,7 +190,7 @@ new class extends Component {
                      x-transition:leave="transform transition ease-in-out duration-500 sm:duration-700" 
                      x-transition:leave-start="translate-x-0" 
                      x-transition:leave-end="translate-x-full" 
-                     class="pointer-events-auto w-screen max-w-md">
+                     class="pointer-events-auto w-full max-w-md">
                      
                      <div class="flex h-full flex-col relative shadow-2xl transition-colors duration-300 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800" >
                         <div class="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
@@ -373,7 +373,7 @@ new class extends Component {
                                     <p x-text="`$${formatMoney(globalCashTotal)}`">${{ number_format($subtotalCash ?? 0, 2) }}</p>
                                 </div>
 
-                                <div class="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between shadow-inner">
+                                <div class="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between shadow-inner flex-wrap gap-2">
                                     <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
                                         <span class="text-lg">🔥</span>
                                         <span>¡Ahorras pagando en Efectivo!</span>
