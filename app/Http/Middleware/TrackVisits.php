@@ -75,6 +75,16 @@ class TrackVisits
         'undici',                   // Node.js fetch underlying
         'httpie',
         'pycurl',
+
+        // ── Monitores, Scanners y Botnets Recientes ─────────────────
+        'internetmeasurement',
+        'cms-checker',
+        'google-read-aloud',
+        'oai-searchbot',
+        'palo alto networks',
+        'cortex-xpanse',
+        'iphone os 13_2_3',         // Botnet/Scanner genérico muy ruidoso
+        'iphone os 18_7_8',         // Botnet/Scanner detectado en logs
     ];
 
     /**
