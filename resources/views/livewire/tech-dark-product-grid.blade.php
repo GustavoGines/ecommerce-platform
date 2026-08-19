@@ -139,13 +139,13 @@ new class extends Component {
                 if ($this->selectedBrand) {
                     $q->whereHas('brands', fn($bq) => $bq->where('brands.id', $this->selectedBrand));
                 }
-            }])->having('products_count', '>', 0)->get(),
+            }])->having('products_count', '>', 0)->orderBy('name', 'asc')->get(),
             'brands' => Brand::withCount(['products' => function($q) use ($applyCommonFilters) {
                 $applyCommonFilters($q);
                 if ($this->selectedCategory) {
                     $q->where('category_id', $this->selectedCategory);
                 }
-            }])->having('products_count', '>', 0)->get()
+            }])->having('products_count', '>', 0)->orderBy('name', 'asc')->get()
         ];
     }
 }; ?>
