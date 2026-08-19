@@ -463,6 +463,36 @@ new #[Layout('layouts.app')] class extends Component {
         }
     }
 
+    public $bulkCategoryId = '';
+    public $bulkBrandId = '';
+
+    public function updatedBulkCategoryId()
+    {
+        if (count($this->selectedProducts) > 0 && !empty($this->bulkCategoryId)) {
+            Product::whereIn('id', $this->selectedProducts)->update(['category_id' => $this->bulkCategoryId]);
+            $this->dispatch('notify', message: 'Categoría actualizada para ' . count($this->selectedProducts) . ' productos.');
+            $this->bulkCategoryId = '';
+            $this->selectedProducts = [];
+            $this->selectAll = false;
+            $this->loadProducts();
+        }
+    }
+
+    public function updatedBulkBrandId()
+    {
+        if (count($this->selectedProducts) > 0 && !empty($this->bulkBrandId)) {
+            $products = Product::whereIn('id', $this->selectedProducts)->get();
+            foreach ($products as $product) {
+                $product->brands()->sync([$this->bulkBrandId]);
+            }
+            $this->dispatch('notify', message: 'Marca actualizada para ' . count($this->selectedProducts) . ' productos.');
+            $this->bulkBrandId = '';
+            $this->selectedProducts = [];
+            $this->selectAll = false;
+            $this->loadProducts();
+        }
+    }
+
 
 
 
@@ -661,14 +691,28 @@ new #[Layout('layouts.app')] class extends Component {
     <div class="w-full mx-auto py-10 px-4 sm:px-6 lg:px-8">
         <!-- Bulk Actions Bar -->
         @if(count($selectedProducts) > 0)
-        <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700/50 rounded-2xl mb-6 p-4 flex items-center justify-between shadow-sm animate-pulse-once">
+        <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700/50 rounded-2xl mb-6 p-4 flex flex-col sm:flex-row items-center justify-between shadow-sm animate-pulse-once gap-4">
             <div class="flex items-center text-indigo-800 dark:text-indigo-300 font-medium">
                 <span class="bg-indigo-100 dark:bg-indigo-800 px-3 py-1 rounded-full text-indigo-700 dark:text-indigo-300 text-sm font-bold mr-3">{{ count($selectedProducts) }}</span>
                 Productos seleccionados
             </div>
-            <div class="flex space-x-3">
-                <button wire:click="deleteSelected" wire:confirm="¿Estás seguro de eliminar los productos seleccionados?" class="text-xs font-bold bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm">
-                    🗑️ Eliminar Seleccionados
+            <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <select wire:model.live="bulkCategoryId" class="w-full sm:w-48 py-2 px-3 text-xs font-medium bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-sm truncate">
+                    <option value="">Cambiar Categoría a...</option>
+                    @foreach($categories as $cat)
+                        <option wire:key="bulk-cat-{{ $cat->id }}" value="{{ $cat->id }}">{{ $cat->name }}</option>
+                    @endforeach
+                </select>
+
+                <select wire:model.live="bulkBrandId" class="w-full sm:w-48 py-2 px-3 text-xs font-medium bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-sm truncate">
+                    <option value="">Cambiar Marca a...</option>
+                    @foreach($brands as $brand)
+                        <option wire:key="bulk-brand-{{ $brand->id }}" value="{{ $brand->id }}">{{ $brand->name }}</option>
+                    @endforeach
+                </select>
+
+                <button wire:click="deleteSelected" wire:confirm="¿Estás seguro de eliminar los productos seleccionados?" class="w-full sm:w-auto text-xs font-bold bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-1">
+                    🗑️ Eliminar
                 </button>
             </div>
         </div>
@@ -809,13 +853,13 @@ new #[Layout('layouts.app')] class extends Component {
                         <select wire:model.live="filter_category_id" class="flex-1 min-w-[140px] sm:w-40 py-1.5 px-3 text-xs font-medium bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] transition-colors">
                             <option value="">Todas las Categorías</option>
                             @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                <option wire:key="cat-opt-{{ $cat->id }}" value="{{ $cat->id }}">{{ $cat->name }}</option>
                             @endforeach
                         </select>
                         <select wire:model.live="filter_brand_id" class="flex-1 min-w-[140px] sm:w-40 py-1.5 px-3 text-xs font-medium bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-[var(--color-primary)] transition-colors">
                             <option value="">Todas las Marcas</option>
                             @foreach($brands as $brand)
-                                <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+                                <option wire:key="brand-opt-{{ $brand->id }}" value="{{ $brand->id }}">{{ $brand->name }}</option>
                             @endforeach
                         </select>
                         
@@ -956,7 +1000,7 @@ new #[Layout('layouts.app')] class extends Component {
                     </thead>
                     <tbody class="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-700/50 transition-colors">
                         @foreach($products as $product)
-                        <tr @click="if(!isProductLoading) { isProductLoading = true; modalOpen = true; $wire.edit({{ $product->id }}).then(() => isProductLoading = false) }" class="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer {{ in_array($product->id, $selectedProducts) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : '' }}">
+                        <tr wire:key="product-row-{{ $product->id }}" @click="if(!isProductLoading) { isProductLoading = true; modalOpen = true; $wire.edit({{ $product->id }}).then(() => isProductLoading = false) }" class="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer {{ in_array($product->id, $selectedProducts) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : '' }}">
                             <td class="px-6 py-4 whitespace-nowrap" @click.stop>
                                 <input type="checkbox" value="{{ $product->id }}" wire:model.live="selectedProducts" class="rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]">
                             </td>
@@ -1031,7 +1075,7 @@ new #[Layout('layouts.app')] class extends Component {
             <!-- Vista Móvil para Productos (Tarjetas) -->
             <div class="block md:hidden bg-white dark:bg-gray-800 sm:rounded-xl border-y sm:border border-gray-200 dark:border-gray-700 overflow-hidden divide-y divide-gray-100 dark:divide-gray-700/50 shadow-sm mb-4 -mx-4 sm:mx-0">
                 @foreach($products as $product)
-                <div 
+                <div wire:key="product-card-{{ $product->id }}"
                     class="p-2.5 relative cursor-pointer hover:bg-gray-50 active:bg-gray-50 dark:hover:bg-gray-700/30 dark:active:bg-gray-700/50 transition-colors {{ in_array($product->id, $selectedProducts) ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : '' }}"
                     @click="if(!isProductLoading) { isProductLoading = true; modalOpen = true; $wire.edit({{ $product->id }}).then(() => isProductLoading = false) }"
                 >
@@ -1192,7 +1236,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 <select wire:model="category_id" class="w-full py-2 px-1 sm:px-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-colors h-[38px]">
                                     <option value="">Categoría</option>
                                     @foreach($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                        <option wire:key="category-opt-{{ $category->id }}" value="{{ $category->id }}">{{ $category->name }}</option>
                                     @endforeach
                                 </select>
                                 @error('category_id') <span class="text-red-500 text-[10px] mt-1 block">{{ $message }}</span> @enderror
@@ -1487,14 +1531,14 @@ new #[Layout('layouts.app')] class extends Component {
                             @if($massTarget === 'category')
                                 <select wire:model="massCategoryId" class="w-full py-2.5 px-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
                                     <option value="">Seleccione Categoría...</option>
-                                    @foreach($categories as $cat) <option value="{{ $cat->id }}">{{ $cat->name }}</option> @endforeach
+                                    @foreach($categories as $cat) <option wire:key="cat-opt-{{ $cat->id }}" value="{{ $cat->id }}">{{ $cat->name }}</option> @endforeach
                                 </select>
                             @endif
 
                             @if($massTarget === 'brand')
                                 <select wire:model="massBrandId" class="w-full py-2.5 px-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
                                     <option value="">Seleccione Marca...</option>
-                                    @foreach($brands as $brand) <option value="{{ $brand->id }}">{{ $brand->name }}</option> @endforeach
+                                    @foreach($brands as $brand) <option wire:key="brand-opt-{{ $brand->id }}" value="{{ $brand->id }}">{{ $brand->name }}</option> @endforeach
                                 </select>
                             @endif
                         </div>
@@ -1566,7 +1610,7 @@ new #[Layout('layouts.app')] class extends Component {
             <div x-show="brandListOpen" 
                  x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
                  x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
-                 class="inline-block align-bottom bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full relative">
+                 class="inline-block align-bottom bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full relative">
                 
                 <div class="px-4 sm:px-8 pt-6 sm:pt-8 pb-6 sm:pb-8">
                     <div class="flex justify-between items-start sm:items-center mb-6">
@@ -1605,7 +1649,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 @endif
                                 @foreach($brands as $brand)
                                     @if($manageBrandId === $brand->id)
-                                    <tr class="bg-blue-50/50 dark:bg-blue-900/10">
+                                    <tr wire:key="brand-edit-{{ $brand->id }}" class="bg-blue-50/50 dark:bg-blue-900/10">
                                         <td class="px-3 sm:px-6 py-3" colspan="2">
                                             <input wire:model="manageBrandName" type="text" class="w-full py-2 px-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] dark:bg-gray-900 dark:text-white" @keydown.enter="$wire.saveBrand()" placeholder="Nombre de la marca">
                                             @error('manageBrandName') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
@@ -1618,8 +1662,8 @@ new #[Layout('layouts.app')] class extends Component {
                                         </td>
                                     </tr>
                                     @else
-                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-gray-900 dark:text-white">{{ $brand->name }}</td>
+                                    <tr wire:key="brand-row-{{ $brand->id }}" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                        <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm font-bold text-gray-900 dark:text-white">{{ $brand->name }}</td>
                                         <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-center font-bold text-gray-500 dark:text-gray-400">
                                             <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">{{ $brand->products()->count() }}</span>
                                         </td>
@@ -1665,7 +1709,7 @@ new #[Layout('layouts.app')] class extends Component {
             <div x-show="catListOpen" 
                  x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
                  x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
-                 class="inline-block align-bottom bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full relative">
+                 class="inline-block align-bottom bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full relative">
                 
                 <div class="px-4 sm:px-8 pt-6 sm:pt-8 pb-6 sm:pb-8">
                     <div class="flex justify-between items-start sm:items-center mb-6">
@@ -1704,7 +1748,7 @@ new #[Layout('layouts.app')] class extends Component {
                                 @endif
                                 @foreach($categories as $category)
                                     @if($manageCategoryId === $category->id)
-                                    <tr class="bg-blue-50/50 dark:bg-blue-900/10">
+                                    <tr wire:key="category-edit-{{ $category->id }}" class="bg-blue-50/50 dark:bg-blue-900/10">
                                         <td class="px-3 sm:px-6 py-3" colspan="2">
                                             <input wire:model="manageCategoryName" type="text" class="w-full py-2 px-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] dark:bg-gray-900 dark:text-white" @keydown.enter="$wire.saveCategory()" placeholder="Nombre de la categoría">
                                             @error('manageCategoryName') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
@@ -1717,8 +1761,8 @@ new #[Layout('layouts.app')] class extends Component {
                                         </td>
                                     </tr>
                                     @else
-                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-gray-900 dark:text-white">{{ $category->name }}</td>
+                                    <tr wire:key="category-row-{{ $category->id }}" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                        <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm font-bold text-gray-900 dark:text-white">{{ $category->name }}</td>
                                         <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-center font-bold text-gray-500 dark:text-gray-400">
                                             <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">{{ $category->products()->count() }}</span>
                                         </td>
@@ -1781,3 +1825,4 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
     </div>
 </div>
+

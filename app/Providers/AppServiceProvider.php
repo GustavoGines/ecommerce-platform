@@ -37,7 +37,7 @@ class AppServiceProvider extends ServiceProvider
         if (! app()->environment('testing')) {
             $host = request()->getHost();
             
-            if (str_contains($host, 'loca.lt') || str_contains($host, 'ngrok') || str_starts_with(config('app.url'), 'https://') || config('app.tunnel_active')) {
+            if (str_contains($host, 'loca.lt') || str_contains($host, 'ngrok') || str_contains($host, 'lhr.life') || str_starts_with(config('app.url'), 'https://') || config('app.tunnel_active')) {
                 URL::forceScheme('https');
             }
             

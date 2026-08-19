@@ -135,11 +135,11 @@ new class extends Component
                             {{ __('Tienda') }}
                         </x-nav-link>
                         @if(auth()->check() && optional(auth()->user())->isAdmin())
-                            <x-nav-link wire:navigate :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
-                                {{ __('Panel') }}
-                            </x-nav-link>
                             <x-nav-link wire:navigate :href="route('admin.products')" :active="request()->routeIs('admin.products')" class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
                                 {{ __('Productos') }}
+                            </x-nav-link>
+                            <x-nav-link wire:navigate :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" class="text-base font-bold text-white/90 hover:text-white border-transparent hover:border-white/50">
+                                {{ __('Panel') }}
                             </x-nav-link>
                         @endif
                     </div>
@@ -251,11 +251,11 @@ new class extends Component
                             {{ __('Tienda') }}
                         </x-nav-link>
                         @if(auth()->check() && optional(auth()->user())->isAdmin())
-                            <x-nav-link wire:navigate :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                                {{ __('Panel') }}
-                            </x-nav-link>
                             <x-nav-link wire:navigate :href="route('admin.products')" :active="request()->routeIs('admin.products')">
                                 {{ __('Productos') }}
+                            </x-nav-link>
+                            <x-nav-link wire:navigate :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
+                                {{ __('Panel') }}
                             </x-nav-link>
                         @endif
                     </div>
@@ -369,11 +369,11 @@ new class extends Component
                 <span class="w-5 text-center">🛍️</span> <span>Tienda</span>
             </x-responsive-nav-link>
             @if(auth()->check() && optional(auth()->user())->isAdmin())
-                <x-responsive-nav-link wire:navigate :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                    <span class="w-5 text-center">📊</span> <span>Panel</span>
-                </x-responsive-nav-link>
                 <x-responsive-nav-link wire:navigate :href="route('admin.products')" :active="request()->routeIs('admin.products')">
                     <span class="w-5 text-center">🏷️</span> <span>Productos</span>
+                </x-responsive-nav-link>
+                <x-responsive-nav-link wire:navigate :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
+                    <span class="w-5 text-center">📊</span> <span>Panel</span>
                 </x-responsive-nav-link>
             @endif
         </div>
