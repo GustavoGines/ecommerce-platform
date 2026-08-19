@@ -71,8 +71,8 @@
     </head>
         <body class="antialiased min-h-screen flex flex-col relative overflow-x-hidden selection:bg-[var(--color-primary)] selection:text-white bg-[#0f0f11] text-gray-900 transition-colors duration-300">
         
-        <!-- Subtle Background Glow -->
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] opacity-30 pointer-events-none" style="background: radial-gradient(circle, var(--color-primary-glow) 0%, transparent 70%);"></div>
+        <!-- Subtle Background Glow (Dark Mode Only) -->
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] max-w-[100vw] h-[500px] opacity-30 pointer-events-none" style="background: radial-gradient(circle, var(--color-primary-glow) 0%, transparent 70%);"></div>
 
         <div class="min-h-screen flex flex-col items-center pt-6 sm:pt-0 relative z-10 w-full">
             

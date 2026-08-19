@@ -100,7 +100,7 @@
         
 
         <!-- Subtle Background Glow (Dark Mode Only) -->
-        <div x-data="{}" x-show="$store.theme.dark && '{{ $settings->theme_name ?? 'modern-light' }}' !== 'modern-light'" x-transition.opacity.duration.500ms class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] opacity-20 pointer-events-none" style="background: radial-gradient(circle, var(--color-primary-glow) 0%, transparent 70%);"></div>
+        <div x-data="{}" x-show="$store.theme.dark && '{{ $settings->theme_name ?? 'modern-light' }}' !== 'modern-light'" x-transition.opacity.duration.500ms class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] max-w-[100vw] h-[500px] opacity-20 pointer-events-none" style="background: radial-gradient(circle, var(--color-primary-glow) 0%, transparent 70%);"></div>
 
         <div class="min-h-screen flex flex-col relative z-40 w-full">
             <livewire:layout.navigation />

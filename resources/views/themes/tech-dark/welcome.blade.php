@@ -16,10 +16,10 @@
         ════════════════════════════════════════════════════════ --}}
         <div class="relative bg-g3-dark overflow-hidden min-h-[600px] flex items-center border-b border-zinc-900">
             <!-- Efectos de iluminación de fondo -->
-            <div class="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-20 pointer-events-none">
+            <div class="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] max-w-[100vw] h-[600px] opacity-20 pointer-events-none">
                 <div class="absolute inset-0 bg-g3-blue blur-[120px] rounded-full mix-blend-screen"></div>
             </div>
-            <div class="absolute bottom-0 right-1/4 translate-x-1/4 translate-y-1/4 w-[500px] h-[500px] opacity-20 pointer-events-none">
+            <div class="absolute bottom-0 right-1/4 translate-x-1/4 translate-y-1/4 w-[500px] max-w-[100vw] h-[500px] opacity-20 pointer-events-none">
                 <div class="absolute inset-0 bg-g3-green blur-[120px] rounded-full mix-blend-screen"></div>
             </div>
             
