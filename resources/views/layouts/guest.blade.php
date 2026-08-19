@@ -63,9 +63,9 @@
             }
             [x-cloak] { display: none !important; }
             @keyframes writeReveal {
-                0% { clip-path: inset(0 100% 0 0); opacity: 0; filter: drop-shadow(0 0 0 rgba(220,38,38,0)); }
-                30% { opacity: 1; filter: drop-shadow(0 0 10px rgba(220,38,38,0.5)); }
-                100% { clip-path: inset(0 0 0 0); opacity: 1; filter: drop-shadow(0 10px 20px rgba(220,38,38,0.3)); }
+                0% { clip-path: inset(0 100% 0 0); opacity: 0; filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+                30% { opacity: 1; filter: drop-shadow(0 0 10px rgba(0,0,0,0.3)); }
+                100% { clip-path: inset(0 0 0 0); opacity: 1; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4)); }
             }
         </style>
     </head>
@@ -76,20 +76,12 @@
 
         <div class="min-h-screen flex flex-col items-center pt-6 sm:pt-0 relative z-10 w-full">
             
-            @if(($settings->theme_name ?? 'modern-light') !== 'modern-light')
-            <div class="absolute top-6 right-6 z-50">
-                <!-- Theme Toggle Button -->
-                <button @click="$store.theme.toggle()" class="p-2 rounded-full bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-[var(--color-primary)] transition-colors focus:outline-none shadow-md">
-                    <svg x-show="!$store.theme.dark" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-                    <svg x-show="$store.theme.dark" x-cloak class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                </button>
-            </div>
-            @endif
+
             
             <div class="flex flex-col items-center w-full animate-fade-in-up z-20 my-auto py-12">
                 <a href="/" wire:navigate class="-mb-6 sm:-mb-8 -translate-y-8 sm:-translate-y-10 block transition-transform hover:scale-105 hover:-translate-y-8 sm:hover:-translate-y-10 duration-300 relative z-20">
                     @if($logoUrl)
-                        <img src="{{ tenant_asset($logoUrl) }}" alt="Logo" class="w-56 sm:w-72 h-auto object-contain drop-shadow-[0_10px_20px_rgba(220,38,38,0.2)]" style="animation: writeReveal 2.5s ease-out 0.2s both;" />
+                        <img src="{{ tenant_asset($logoUrl) }}" alt="Logo" class="w-56 sm:w-72 h-auto object-contain drop-shadow-2xl" style="animation: writeReveal 2.5s ease-out 0.2s both;" />
                     @else
                         <x-application-logo class="w-32 h-auto fill-current text-gray-800 dark:text-white transition-colors" style="animation: writeReveal 2.5s ease-out 0.2s both;" />
                     @endif
