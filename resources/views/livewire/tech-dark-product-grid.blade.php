@@ -402,11 +402,6 @@ new class extends Component {
                                         @if($product->stock <= 0)
                                             <span class="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-red-900/50 text-red-400 border border-red-800 shadow-sm whitespace-nowrap">
                                                 Agotado
-                                            </span>
-                                        @elseif($product->stock == 999)
-                                            <span class="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-900/50 text-blue-400 border border-blue-800 shadow-sm whitespace-nowrap">
-                                                A Pedido
-                                            </span>
                                         @endif
                                     </div>
                                     @if($product->sku)
