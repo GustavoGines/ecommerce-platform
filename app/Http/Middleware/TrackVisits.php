@@ -83,6 +83,7 @@ class TrackVisits
         'oai-searchbot',
         'palo alto networks',
         'cortex-xpanse',
+        'dp-discover',              // Digital Pigeon Bot
         'iphone os 13_2_3',         // Botnet/Scanner genérico muy ruidoso
         'iphone os 18_7_8',         // Botnet/Scanner detectado en logs
     ];
