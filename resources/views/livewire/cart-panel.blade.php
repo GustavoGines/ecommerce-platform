@@ -365,20 +365,22 @@ new class extends Component {
                                 </div>
                                 
                                 @if(tenant('id') === 'g3')
-                                <div class="flex flex-wrap justify-between items-center text-base font-black text-emerald-600 dark:text-emerald-400 mt-2 gap-x-2">
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></span>
-                                        <p class="truncate">Efectivo / Transferencia</p>
+                                <div class="flex justify-between items-start sm:items-center text-base font-black text-emerald-600 dark:text-emerald-400 mt-2 gap-2 flex-col sm:flex-row w-full overflow-hidden">
+                                    <div class="flex items-center gap-1.5 w-full sm:w-auto">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                                        <p class="truncate">Efectivo / Transf.</p>
                                     </div>
-                                    <p x-text="`$${formatMoney(globalCashTotal)}`">${{ number_format($subtotalCash ?? 0, 2) }}</p>
+                                    <p class="text-lg sm:text-base self-end sm:self-auto" x-text="`$${formatMoney(globalCashTotal)}`">${{ number_format($subtotalCash ?? 0, 2) }}</p>
                                 </div>
 
-                                <div class="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between shadow-inner flex-wrap gap-2">
-                                    <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
-                                        <span class="text-lg flex-shrink-0">🔥</span>
-                                        <span class="truncate">¡Ahorras pagando en Efectivo!</span>
+                                <div class="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl shadow-inner w-full overflow-hidden">
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                        <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+                                            <span class="text-lg shrink-0">🔥</span>
+                                            <span class="leading-tight">¡Ahorras en Efectivo!</span>
+                                        </div>
+                                        <span class="text-emerald-600 dark:text-emerald-400 font-black text-xl sm:text-lg self-end sm:self-auto" x-text="`$${formatMoney(globalSubtotal - globalCashTotal)}`"></span>
                                     </div>
-                                    <span class="text-emerald-600 dark:text-emerald-400 font-black text-lg" x-text="`$${formatMoney(globalSubtotal - globalCashTotal)}`"></span>
                                 </div>
                                 @endif
 
