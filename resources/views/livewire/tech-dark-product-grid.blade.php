@@ -235,15 +235,37 @@ new class extends Component {
                         <h4 class="text-white font-bold text-sm tracking-widest uppercase mb-4 pb-4 border-b border-zinc-800">Categorías</h4>
                         <div x-data="{ expanded: false }">
                             <ul class="space-y-3">
-                                <li>
-                                    <button wire:click="setCategory(null)" class="w-full flex items-center justify-between text-sm transition-colors {{ $selectedCategory === null ? 'text-[var(--color-primary)] font-bold' : 'text-g3-silver hover:text-white' }}">
-                                        <span>Todas</span>
-                                        <span class="text-[10px] bg-zinc-800 text-gray-300 px-2 py-0.5 rounded-full font-bold">{{ $totalProductsCount }}</span>
-                                    </button>
-                                </li>
-                                @foreach($categories->take(5) as $category)
+                                @if($selectedCategory)
+                                    @php
+                                        $activeCategory = $categories->firstWhere('id', $selectedCategory);
+                                    @endphp
+                                    @if($activeCategory)
                                     <li>
-                                        <button wire:click="setCategory({{ $category->id }})" class="w-full flex items-center justify-between text-sm transition-colors {{ $selectedCategory == $category->id ? 'text-[var(--color-primary)] font-bold' : 'text-g3-silver hover:text-white' }}">
+                                        <button wire:click="setCategory(null)" class="w-full flex items-center justify-between text-sm transition-colors text-[var(--color-primary)] font-bold bg-[var(--color-primary)]/10 px-3 py-2 rounded-lg border border-[var(--color-primary)]/30 shadow-[0_0_10px_rgba(var(--color-primary-rgb),0.2)]">
+                                            <span class="flex items-center gap-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                {{ $activeCategory->name }}
+                                            </span>
+                                            <span class="text-[10px] bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-2 py-0.5 rounded-full font-bold">{{ $activeCategory->products_count }}</span>
+                                        </button>
+                                    </li>
+                                    @endif
+                                @else
+                                    <li>
+                                        <button wire:click="setCategory(null)" class="w-full flex items-center justify-between text-sm transition-colors text-[var(--color-primary)] font-bold">
+                                            <span>Todas</span>
+                                            <span class="text-[10px] bg-zinc-800 text-gray-300 px-2 py-0.5 rounded-full font-bold">{{ $totalProductsCount }}</span>
+                                        </button>
+                                    </li>
+                                @endif
+
+                                @php
+                                    $visibleCategories = $categories->filter(fn($c) => $c->id != $selectedCategory);
+                                @endphp
+
+                                @foreach($visibleCategories->take(5) as $category)
+                                    <li>
+                                        <button wire:click="setCategory({{ $category->id }})" @click="if(window.innerWidth < 1024) sidebarOpen = false" class="w-full flex items-center justify-between text-sm transition-colors text-g3-silver hover:text-white">
                                             <span>{{ $category->name }}</span>
                                             <span class="text-[10px] bg-zinc-800 text-gray-300 px-2 py-0.5 rounded-full font-bold">{{ $category->products_count }}</span>
                                         </button>
@@ -251,12 +273,12 @@ new class extends Component {
                                 @endforeach
                             </ul>
 
-                            @if($categories->count() > 5)
+                            @if($visibleCategories->count() > 5)
                                 <div x-show="expanded" x-collapse>
                                     <ul class="space-y-3 mt-3">
-                                        @foreach($categories->skip(5) as $category)
+                                        @foreach($visibleCategories->skip(5) as $category)
                                             <li>
-                                                <button wire:click="setCategory({{ $category->id }})" class="w-full flex items-center justify-between text-sm transition-colors {{ $selectedCategory == $category->id ? 'text-[var(--color-primary)] font-bold' : 'text-g3-silver hover:text-white' }}">
+                                                <button wire:click="setCategory({{ $category->id }})" @click="if(window.innerWidth < 1024) sidebarOpen = false" class="w-full flex items-center justify-between text-sm transition-colors text-g3-silver hover:text-white">
                                                     <span>{{ $category->name }}</span>
                                                     <span class="text-[10px] bg-zinc-800 text-gray-300 px-2 py-0.5 rounded-full font-bold">{{ $category->products_count }}</span>
                                                 </button>
@@ -265,7 +287,7 @@ new class extends Component {
                                     </ul>
                                 </div>
                                 <button @click="expanded = !expanded" class="w-full mt-4 flex items-center justify-center gap-1 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-[10px] font-black text-g3-silver uppercase tracking-widest hover:border-zinc-700 hover:text-white transition-all">
-                                    <span x-text="expanded ? '- VER MENOS' : '+ VER TODAS ({{ $categories->count() }})'"></span>
+                                    <span x-text="expanded ? '- VER MENOS' : '+ VER TODAS ({{ $visibleCategories->count() }})'"></span>
                                 </button>
                             @endif
                         </div>
@@ -277,14 +299,36 @@ new class extends Component {
                         <h4 class="text-white font-bold text-sm tracking-widest uppercase mb-4 pb-4 border-b border-zinc-800">Marcas</h4>
                         <div x-data="{ expanded: false }">
                             <ul class="space-y-3">
-                                <li>
-                                    <button wire:click="setBrand(null)" class="w-full flex items-center justify-between text-sm transition-colors {{ $selectedBrand === null ? 'text-[var(--color-primary)] font-bold' : 'text-g3-silver hover:text-white' }}">
-                                        <span>Todas</span>
-                                    </button>
-                                </li>
-                                @foreach($brands->take(5) as $brand)
+                                @if($selectedBrand)
+                                    @php
+                                        $activeBrand = $brands->firstWhere('id', $selectedBrand);
+                                    @endphp
+                                    @if($activeBrand)
                                     <li>
-                                        <button wire:click="setBrand({{ $brand->id }})" class="w-full flex items-center justify-between text-sm transition-colors {{ $selectedBrand == $brand->id ? 'text-[var(--color-primary)] font-bold' : 'text-g3-silver hover:text-white' }}">
+                                        <button wire:click="setBrand(null)" class="w-full flex items-center justify-between text-sm transition-colors text-[var(--color-primary)] font-bold bg-[var(--color-primary)]/10 px-3 py-2 rounded-lg border border-[var(--color-primary)]/30 shadow-[0_0_10px_rgba(var(--color-primary-rgb),0.2)]">
+                                            <span class="flex items-center gap-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                {{ $activeBrand->name }}
+                                            </span>
+                                            <span class="text-[10px] bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-2 py-0.5 rounded-full font-bold">{{ $activeBrand->products_count }}</span>
+                                        </button>
+                                    </li>
+                                    @endif
+                                @else
+                                    <li>
+                                        <button wire:click="setBrand(null)" class="w-full flex items-center justify-between text-sm transition-colors text-[var(--color-primary)] font-bold">
+                                            <span>Todas</span>
+                                        </button>
+                                    </li>
+                                @endif
+
+                                @php
+                                    $visibleBrands = $brands->filter(fn($b) => $b->id != $selectedBrand);
+                                @endphp
+
+                                @foreach($visibleBrands->take(5) as $brand)
+                                    <li>
+                                        <button wire:click="setBrand({{ $brand->id }})" @click="if(window.innerWidth < 1024) sidebarOpen = false" class="w-full flex items-center justify-between text-sm transition-colors text-g3-silver hover:text-white">
                                             <span>{{ $brand->name }}</span>
                                             <span class="text-[10px] bg-zinc-800 text-gray-300 px-2 py-0.5 rounded-full font-bold">{{ $brand->products_count }}</span>
                                         </button>
@@ -292,12 +336,12 @@ new class extends Component {
                                 @endforeach
                             </ul>
 
-                            @if($brands->count() > 5)
+                            @if($visibleBrands->count() > 5)
                                 <div x-show="expanded" x-collapse>
                                     <ul class="space-y-3 mt-3">
-                                        @foreach($brands->skip(5) as $brand)
+                                        @foreach($visibleBrands->skip(5) as $brand)
                                             <li>
-                                                <button wire:click="setBrand({{ $brand->id }})" class="w-full flex items-center justify-between text-sm transition-colors {{ $selectedBrand == $brand->id ? 'text-[var(--color-primary)] font-bold' : 'text-g3-silver hover:text-white' }}">
+                                                <button wire:click="setBrand({{ $brand->id }})" @click="if(window.innerWidth < 1024) sidebarOpen = false" class="w-full flex items-center justify-between text-sm transition-colors text-g3-silver hover:text-white">
                                                     <span>{{ $brand->name }}</span>
                                                     <span class="text-[10px] bg-zinc-800 text-gray-300 px-2 py-0.5 rounded-full font-bold">{{ $brand->products_count }}</span>
                                                 </button>
@@ -306,7 +350,7 @@ new class extends Component {
                                     </ul>
                                 </div>
                                 <button @click="expanded = !expanded" class="w-full mt-4 flex items-center justify-center gap-1 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-[10px] font-black text-g3-silver uppercase tracking-widest hover:border-zinc-700 hover:text-white transition-all">
-                                    <span x-text="expanded ? '- VER MENOS' : '+ VER TODAS ({{ $brands->count() }})'"></span>
+                                    <span x-text="expanded ? '- VER MENOS' : '+ VER TODAS ({{ $visibleBrands->count() }})'"></span>
                                 </button>
                             @endif
                         </div>
