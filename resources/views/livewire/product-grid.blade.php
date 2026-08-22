@@ -32,11 +32,12 @@ new class extends Component {
 
         // Cachear categorías y total en Redis: son queries costosas que no cambian
         // con cada filtro. Se invalidan automáticamente al sincronizar precios.
-        $categories = cache()->remember('shop.categories_with_count', now()->addMinutes(5), function () {
+        $tId = tenant('id');
+        $categories = cache()->remember("shop.categories_with_count.{$tId}", now()->addMinutes(5), function () {
             return Category::has('products')->withCount('products')->get();
         });
 
-        $totalProducts = cache()->remember('shop.total_products', now()->addMinutes(5), function () {
+        $totalProducts = cache()->remember("shop.total_products.{$tId}", now()->addMinutes(5), function () {
             return \App\Models\Product::count();
         });
 
