@@ -129,23 +129,39 @@ new class extends Component {
                                               });
         }
 
-        return [
-            'products' => $query->paginate(15),
-            'totalProductsCount' => $totalProductsCount,
-            'popularProducts' => \Illuminate\Support\Facades\Cache::remember('popularProducts', 3600, fn() => Product::latest()->take(3)->get()),
-            'recentlyViewedProducts' => $recentlyViewedProducts,
-            'categories' => Category::withCount(['products' => function($q) use ($applyCommonFilters) {
+        // Cachear categorías y marcas en Redis.
+        // Clave compuesta por filtros activos: sin filtros = 5 min, con filtros = 1 min.
+        $filterKey = md5(serialize([
+            $this->search, $this->minPrice, $this->maxPrice,
+            $this->inStockOnly, $this->selectedBrand, $this->selectedCategory
+        ]));
+        $hasActiveFilters = $this->search || $this->minPrice || $this->maxPrice || $this->inStockOnly;
+
+        $categories = cache()->remember("shop.categories.{$filterKey}", $hasActiveFilters ? 60 : 300, function () use ($applyCommonFilters) {
+            return Category::withCount(['products' => function($q) use ($applyCommonFilters) {
                 $applyCommonFilters($q);
                 if ($this->selectedBrand) {
                     $q->whereHas('brands', fn($bq) => $bq->where('brands.id', $this->selectedBrand));
                 }
-            }])->having('products_count', '>', 0)->orderBy('name', 'asc')->get(),
-            'brands' => Brand::withCount(['products' => function($q) use ($applyCommonFilters) {
+            }])->having('products_count', '>', 0)->orderBy('name', 'asc')->get();
+        });
+
+        $brands = cache()->remember("shop.brands.{$filterKey}", $hasActiveFilters ? 60 : 300, function () use ($applyCommonFilters) {
+            return Brand::withCount(['products' => function($q) use ($applyCommonFilters) {
                 $applyCommonFilters($q);
                 if ($this->selectedCategory) {
                     $q->where('category_id', $this->selectedCategory);
                 }
-            }])->having('products_count', '>', 0)->orderBy('name', 'asc')->get()
+            }])->having('products_count', '>', 0)->orderBy('name', 'asc')->get();
+        });
+
+        return [
+            'products'               => $query->paginate(15),
+            'totalProductsCount'     => $totalProductsCount,
+            'popularProducts'        => cache()->remember('popularProducts', 3600, fn() => Product::latest()->take(3)->get()),
+            'recentlyViewedProducts' => $recentlyViewedProducts,
+            'categories'             => $categories,
+            'brands'                 => $brands,
         ];
     }
 }; ?>
