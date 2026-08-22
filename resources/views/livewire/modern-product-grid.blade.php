@@ -70,42 +70,48 @@ new class extends Component {
 
     public function with()
     {
-        $applyCommonFilters = function ($query) {
-            if ($this->inStockOnly) {
+        $currentSearch = $this->search;
+        $currentMinPrice = $this->minPrice;
+        $currentMaxPrice = $this->maxPrice;
+        $currentInStockOnly = $this->inStockOnly;
+        $currentSelectedBrand = $this->selectedBrand;
+        $currentSelectedCategory = $this->selectedCategory;
+
+        $applyCommonFilters = function ($query) use ($currentInStockOnly, $currentSearch, $currentMinPrice, $currentMaxPrice) {
+            if ($currentInStockOnly) {
                 $query->where('stock', '>', 0);
             }
-            if ($this->search) {
-                $query->where(function($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('sku', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%');
+            if ($currentSearch) {
+                $query->where(function($q) use ($currentSearch) {
+                    $q->where('name', 'like', '%' . $currentSearch . '%')
+                      ->orWhere('sku', 'like', '%' . $currentSearch . '%')
+                      ->orWhere('description', 'like', '%' . $currentSearch . '%');
                 });
             }
-            if ($this->minPrice) {
-                $query->where('retail_price', '>=', $this->minPrice);
+            if ($currentMinPrice) {
+                $query->where('retail_price', '>=', $currentMinPrice);
             }
-            if ($this->maxPrice) {
-                $query->where('retail_price', '<=', $this->maxPrice);
+            if ($currentMaxPrice) {
+                $query->where('retail_price', '<=', $currentMaxPrice);
             }
         };
 
         $query = Product::with(['category', 'brands']);
-
         $applyCommonFilters($query);
 
         // Calculate total products matching filters (without category filter)
         $totalProductsQuery = clone $query;
-        if ($this->selectedBrand) {
-            $totalProductsQuery->whereHas('brands', fn($q) => $q->where('brands.id', $this->selectedBrand));
+        if ($currentSelectedBrand) {
+            $totalProductsQuery->whereHas('brands', fn($q) => $q->where('brands.id', $currentSelectedBrand));
         }
         $totalProductsCount = $totalProductsQuery->count();
 
-        if ($this->selectedCategory) {
-            $query->where('category_id', $this->selectedCategory);
+        if ($currentSelectedCategory) {
+            $query->where('category_id', $currentSelectedCategory);
         }
         
-        if ($this->selectedBrand) {
-            $query->whereHas('brands', fn($q) => $q->where('brands.id', $this->selectedBrand));
+        if ($currentSelectedBrand) {
+            $query->whereHas('brands', fn($q) => $q->where('brands.id', $currentSelectedBrand));
         }
         
         // Priorizar SIEMPRE los productos con stock, sin importar otros filtros
@@ -130,27 +136,27 @@ new class extends Component {
         }
 
         // Cachear categorías y marcas en Redis.
-        // Clave compuesta por filtros activos: sin filtros = 5 min, con filtros = 1 min.
         $filterKey = md5(serialize([
-            $this->search, $this->minPrice, $this->maxPrice,
-            $this->inStockOnly, $this->selectedBrand, $this->selectedCategory
+            $currentSearch, $currentMinPrice, $currentMaxPrice,
+            $currentInStockOnly, $currentSelectedBrand, $currentSelectedCategory
         ]));
-        $hasActiveFilters = $this->search || $this->minPrice || $this->maxPrice || $this->inStockOnly;
+        $hasActiveFilters = $currentSearch || $currentMinPrice || $currentMaxPrice || $currentInStockOnly;
+        $tId = tenant('id');
 
-        $categories = cache()->remember("shop.categories.{$filterKey}", $hasActiveFilters ? 60 : 300, function () use ($applyCommonFilters) {
-            return Category::withCount(['products' => function($q) use ($applyCommonFilters) {
+        $categories = cache()->remember("shop.categories.{$tId}.{$filterKey}", $hasActiveFilters ? 60 : 300, function () use ($applyCommonFilters, $currentSelectedBrand) {
+            return Category::withCount(['products' => function($q) use ($applyCommonFilters, $currentSelectedBrand) {
                 $applyCommonFilters($q);
-                if ($this->selectedBrand) {
-                    $q->whereHas('brands', fn($bq) => $bq->where('brands.id', $this->selectedBrand));
+                if ($currentSelectedBrand) {
+                    $q->whereHas('brands', fn($bq) => $bq->where('brands.id', $currentSelectedBrand));
                 }
             }])->having('products_count', '>', 0)->orderBy('name', 'asc')->get();
         });
 
-        $brands = cache()->remember("shop.brands.{$filterKey}", $hasActiveFilters ? 60 : 300, function () use ($applyCommonFilters) {
-            return Brand::withCount(['products' => function($q) use ($applyCommonFilters) {
+        $brands = cache()->remember("shop.brands.{$tId}.{$filterKey}", $hasActiveFilters ? 60 : 300, function () use ($applyCommonFilters, $currentSelectedCategory) {
+            return Brand::withCount(['products' => function($q) use ($applyCommonFilters, $currentSelectedCategory) {
                 $applyCommonFilters($q);
-                if ($this->selectedCategory) {
-                    $q->where('category_id', $this->selectedCategory);
+                if ($currentSelectedCategory) {
+                    $q->where('category_id', $currentSelectedCategory);
                 }
             }])->having('products_count', '>', 0)->orderBy('name', 'asc')->get();
         });
@@ -158,7 +164,7 @@ new class extends Component {
         return [
             'products'               => $query->paginate(15),
             'totalProductsCount'     => $totalProductsCount,
-            'popularProducts'        => cache()->remember('popularProducts', 3600, fn() => Product::latest()->take(3)->get()),
+            'popularProducts'        => cache()->remember("popularProducts.{$tId}", 3600, fn() => Product::latest()->take(3)->get()),
             'recentlyViewedProducts' => $recentlyViewedProducts,
             'categories'             => $categories,
             'brands'                 => $brands,
