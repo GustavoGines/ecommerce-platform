@@ -30,16 +30,9 @@ new class extends Component {
             $query->where('category_id', $this->selectedCategory);
         }
 
-        // Cachear categorías y total en Redis: son queries costosas que no cambian
-        // con cada filtro. Se invalidan automáticamente al sincronizar precios.
-        $tId = tenant('id');
-        $categories = cache()->remember("shop.categories_with_count.{$tId}", now()->addMinutes(5), function () {
-            return Category::has('products')->withCount('products')->get();
-        });
+        $categories = Category::has('products')->withCount('products')->get();
 
-        $totalProducts = cache()->remember("shop.total_products.{$tId}", now()->addMinutes(5), function () {
-            return \App\Models\Product::count();
-        });
+        $totalProducts = \App\Models\Product::count();
 
         return [
             'products'      => $query->paginate(12),
