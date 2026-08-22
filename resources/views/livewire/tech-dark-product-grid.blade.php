@@ -135,36 +135,24 @@ new class extends Component {
                                               });
         }
 
-        // Cachear categorías y marcas en Redis.
-        $filterKey = md5(serialize([
-            $currentSearch, $currentMinPrice, $currentMaxPrice,
-            $currentInStockOnly, $currentSelectedBrand, $currentSelectedCategory
-        ]));
-        $hasActiveFilters = $currentSearch || $currentMinPrice || $currentMaxPrice || $currentInStockOnly;
-        $tId = tenant('id');
+        $categories = Category::withCount(['products' => function($q) use ($applyCommonFilters, $currentSelectedBrand) {
+            $applyCommonFilters($q);
+            if ($currentSelectedBrand) {
+                $q->whereHas('brands', fn($bq) => $bq->where('brands.id', $currentSelectedBrand));
+            }
+        }])->having('products_count', '>', 0)->orderBy('name', 'asc')->get();
 
-        $categories = cache()->remember("shop.categories.{$tId}.{$filterKey}", $hasActiveFilters ? 60 : 300, function () use ($applyCommonFilters, $currentSelectedBrand) {
-            return Category::withCount(['products' => function($q) use ($applyCommonFilters, $currentSelectedBrand) {
-                $applyCommonFilters($q);
-                if ($currentSelectedBrand) {
-                    $q->whereHas('brands', fn($bq) => $bq->where('brands.id', $currentSelectedBrand));
-                }
-            }])->having('products_count', '>', 0)->orderBy('name', 'asc')->get();
-        });
-
-        $brands = cache()->remember("shop.brands.{$tId}.{$filterKey}", $hasActiveFilters ? 60 : 300, function () use ($applyCommonFilters, $currentSelectedCategory) {
-            return Brand::withCount(['products' => function($q) use ($applyCommonFilters, $currentSelectedCategory) {
-                $applyCommonFilters($q);
-                if ($currentSelectedCategory) {
-                    $q->where('category_id', $currentSelectedCategory);
-                }
-            }])->having('products_count', '>', 0)->orderBy('name', 'asc')->get();
-        });
+        $brands = Brand::withCount(['products' => function($q) use ($applyCommonFilters, $currentSelectedCategory) {
+            $applyCommonFilters($q);
+            if ($currentSelectedCategory) {
+                $q->where('category_id', $currentSelectedCategory);
+            }
+        }])->having('products_count', '>', 0)->orderBy('name', 'asc')->get();
 
         return [
             'products'               => $query->paginate(15),
             'totalProductsCount'     => $totalProductsCount,
-            'popularProducts'        => cache()->remember("popularProducts.{$tId}", 3600, fn() => Product::latest()->take(3)->get()),
+            'popularProducts'        => Product::latest()->take(3)->get(),
             'recentlyViewedProducts' => $recentlyViewedProducts,
             'categories'             => $categories,
             'brands'                 => $brands,
