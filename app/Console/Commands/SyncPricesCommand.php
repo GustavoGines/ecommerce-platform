@@ -29,7 +29,7 @@ class SyncPricesCommand extends Command
     public function handle()
     {
         // 1. Obtener URL (de argumento o del .env)
-        $url = $this->option('url') ?: env('GOOGLE_SHEETS_CSV_URL');
+        $url = $this->option('url') ?: config('shop.google_sheets_csv_url');
 
         if (!$url) {
             $this->error('No se ha configurado la URL del Google Sheet. Usa --url o configura GOOGLE_SHEETS_CSV_URL en tu .env');
