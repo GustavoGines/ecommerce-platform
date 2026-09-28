@@ -98,4 +98,68 @@ class CartTest extends TestCase
         $component->assertSet('subtotal', 0)
                   ->assertSet('subtotalCash', 0);
     }
+
+    public function test_cart_updates_subtotal_cash_on_quantity_change_and_removal()
+    {
+        $product1 = Product::factory()->create(['stock' => 10, 'retail_price' => 110]); // cash 100
+        $product2 = Product::factory()->create(['stock' => 10, 'retail_price' => 220]); // cash 200
+
+        $cartService = app(CartService::class);
+        $cartService->addItem($product1->id, 1);
+        $cartService->addItem($product2->id, 1);
+
+        $component = Volt::test('cart-panel');
+        // Total list = 330, Total cash = 300
+        $component->assertSet('subtotal', 330)
+                  ->assertSet('subtotalCash', 300.0);
+
+        // Increment product 1 (now 2 x 110 = 220 + 220 = 440 list -> 400 cash)
+        $component->call('updateQuantity', $product1->id, 'increment')
+                  ->call('loadCart');
+        $component->assertSet('subtotal', 440)
+                  ->assertSet('subtotalCash', 400.0);
+
+        // Remove product 1 (now only product 2: 220 list -> 200 cash)
+        $component->call('removeItem', $product1->id)
+                  ->call('loadCart');
+        $component->assertSet('subtotal', 220)
+                  ->assertSet('subtotalCash', 200.0);
+
+        // Clear cart -> resets to 0
+        $component->call('clearCart')
+                  ->assertSet('subtotal', 0)
+                  ->assertSet('subtotalCash', 0);
+    }
+
+    public function test_cart_renders_cash_price_and_savings_for_g3_tenant()
+    {
+        tenancy()->end();
+        if (file_exists(database_path('tenantg3'))) {
+            @unlink(database_path('tenantg3'));
+        }
+        $g3 = \App\Models\Tenant::create(['id' => 'g3']);
+        $g3->domains()->create(['domain' => 'g3.localhost']);
+        tenancy()->initialize($g3);
+
+        $product = Product::factory()->create(['stock' => 10, 'retail_price' => 110]);
+        $cartService = app(CartService::class);
+        $cartService->addItem($product->id, 2); // 2 x 110 = 220 list -> 200 cash
+
+        $component = Volt::test('cart-panel');
+
+        $component->assertSee('Total de Lista')
+                  ->assertSee('Efectivo / Transf.')
+                  ->assertSee('¡Ahorras en Efectivo!')
+                  ->assertSee('$200.00')
+                  ->assertSee('$20.00')
+                  ->assertDontSee('$198.00')
+                  ->assertDontSee('$22.00');
+
+        tenancy()->end();
+        $g3->delete();
+        if (file_exists(database_path('tenantg3'))) {
+            @unlink(database_path('tenantg3'));
+        }
+        tenancy()->initialize($this->tenant);
+    }
 }

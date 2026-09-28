@@ -126,6 +126,9 @@ class CartCashCalculationTest extends TestCase
         $this->assertSame(0.0, $this->pricingService->calculateCashPrice(null));
         $this->assertSame(0.0, $this->pricingService->calculateCashPrice(0.0));
         $this->assertSame(0.0, $this->pricingService->calculateCashPrice(-150.0));
+        $this->assertSame(0.0, $this->pricingService->calculateCashPrice(NAN));
+        $this->assertSame(0.0, $this->pricingService->calculateCashPrice(INF));
+        $this->assertSame(0.0, $this->pricingService->calculateCashPrice(-INF));
     }
 
     /**

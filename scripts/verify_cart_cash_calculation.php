@@ -122,6 +122,20 @@ assertCheck(
     $checks
 );
 
+assertCheck(
+    $pricingService->calculateCashPrice(NAN) === 0.0,
+    "Subtotal NAN devuelve 0.0",
+    $allPassed,
+    $checks
+);
+
+assertCheck(
+    $pricingService->calculateCashPrice(INF) === 0.0,
+    "Subtotal INF devuelve 0.0",
+    $allPassed,
+    $checks
+);
+
 echo "\n--------------------------------------------------------\n";
 echo " Total verificaciones: {$checks} | " . ($allPassed ? "TODAS EXITOSAS [OK]" : "HUBO FALLAS [ERROR]") . "\n";
 echo "========================================================\n";

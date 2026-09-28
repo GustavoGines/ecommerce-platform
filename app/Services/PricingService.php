@@ -69,7 +69,7 @@ class PricingService
      */
     public function calculateCashPrice(?float $listPrice = null): float
     {
-        if ($listPrice === null || $listPrice <= 0) {
+        if ($listPrice === null || $listPrice <= 0 || is_nan($listPrice) || is_infinite($listPrice)) {
             return 0.0;
         }
 

@@ -102,6 +102,7 @@ new class extends Component {
         $cartService->removeItem($productId);
         $this->loadCart();
         $this->dispatch('cart-badge-updated', count: array_sum($this->cart));
+        $this->dispatch('cart-updated');
     }
 
     public function clearCart()
@@ -110,6 +111,7 @@ new class extends Component {
         $cartService->clear();
         $this->loadCart();
         $this->dispatch('cart-badge-updated', count: array_sum($this->cart));
+        $this->dispatch('cart-updated');
     }
 
     public function goToCheckout()
@@ -203,7 +205,7 @@ new class extends Component {
                                 <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3" id="slide-over-title">
                                     Carrito de Compras
                                     @if(count($cart) > 0)
-                                        <button @click="isClearing = true; $dispatch('cart-cleared-local'); $wire.clearCart()" type="button" class="text-xs font-bold text-red-500 hover:text-red-400 transition-colors uppercase tracking-wider bg-red-50 dark:bg-red-500/10 px-2 py-1 rounded-lg border border-red-100 dark:border-red-500/20">
+                                        <button @click="isClearing = true; itemTotals = {}; itemQuantities = {}; $dispatch('cart-cleared-local'); $wire.clearCart()" type="button" class="text-xs font-bold text-red-500 hover:text-red-400 transition-colors uppercase tracking-wider bg-red-50 dark:bg-red-500/10 px-2 py-1 rounded-lg border border-red-100 dark:border-red-500/20">
                                             Vaciar Todo
                                         </button>
                                     @endif
@@ -337,7 +339,7 @@ new class extends Component {
                                                             </div>
 
                                                             <div class="flex">
-                                                                <button @click.prevent="isDeleted = true; $dispatch('cart-item-deleted-local', {qty: qty}); $wire.removeItem({{ $productId }})" type="button" class="font-medium text-red-500 hover:text-red-400 transition-colors inline-flex items-center gap-1">
+                                                                <button @click.prevent="isDeleted = true; delete itemTotals[{{ $productId }}]; delete itemQuantities[{{ $productId }}]; $dispatch('cart-item-deleted-local', {qty: qty}); $wire.removeItem({{ $productId }})" type="button" class="font-medium text-red-500 hover:text-red-400 transition-colors inline-flex items-center gap-1">
                                                                     <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                                     </svg>
