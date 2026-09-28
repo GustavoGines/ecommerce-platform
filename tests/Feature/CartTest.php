@@ -141,25 +141,59 @@ class CartTest extends TestCase
         $g3->domains()->create(['domain' => 'g3.localhost']);
         tenancy()->initialize($g3);
 
-        $product = Product::factory()->create(['stock' => 10, 'retail_price' => 110]);
+        try {
+            $product = Product::factory()->create(['stock' => 10, 'retail_price' => 110]);
+            $cartService = app(CartService::class);
+            $cartService->addItem($product->id, 2); // 2 x 110 = 220 list -> 200 cash
+
+            $component = Volt::test('cart-panel');
+
+            $component->assertSee('Total de Lista')
+                      ->assertSee('Efectivo / Transf.')
+                      ->assertSee('¡Ahorras en Efectivo!')
+                      ->assertSee('$200.00')
+                      ->assertSee('$20.00')
+                      ->assertDontSee('$198.00')
+                      ->assertDontSee('$22.00');
+        } finally {
+            if (tenancy()->initialized) {
+                tenancy()->end();
+            }
+            if (isset($g3)) {
+                $g3->delete();
+            }
+            if (file_exists(database_path('tenantg3'))) {
+                @unlink(database_path('tenantg3'));
+            }
+            if ($this->tenant) {
+                tenancy()->initialize($this->tenant);
+            }
+        }
+    }
+
+    public function test_cart_handles_product_with_zero_wholesale_price_without_errors()
+    {
+        $product = Product::factory()->create([
+            'stock' => 5,
+            'retail_price' => 150,
+            'wholesale_price' => 0,
+        ]);
+
         $cartService = app(CartService::class);
-        $cartService->addItem($product->id, 2); // 2 x 110 = 220 list -> 200 cash
+        $cartService->addItem($product->id, 1);
 
         $component = Volt::test('cart-panel');
 
-        $component->assertSee('Total de Lista')
-                  ->assertSee('Efectivo / Transf.')
-                  ->assertSee('¡Ahorras en Efectivo!')
-                  ->assertSee('$200.00')
-                  ->assertSee('$20.00')
-                  ->assertDontSee('$198.00')
-                  ->assertDontSee('$22.00');
+        $component->assertSet('subtotal', 150)
+                  ->assertSee($product->name);
+    }
 
-        tenancy()->end();
-        $g3->delete();
-        if (file_exists(database_path('tenantg3'))) {
-            @unlink(database_path('tenantg3'));
-        }
-        tenancy()->initialize($this->tenant);
+    public function test_cart_renders_zero_totals_and_handles_empty_state_without_errors()
+    {
+        $component = Volt::test('cart-panel');
+
+        $component->assertSet('subtotal', 0)
+                  ->assertSet('subtotalCash', 0)
+                  ->assertSee('Tu carrito está vacío.');
     }
 }

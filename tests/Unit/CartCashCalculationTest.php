@@ -186,4 +186,22 @@ class CartCashCalculationTest extends TestCase
         $checkoutCashTotal = round($subtotal / 1.10, 2);
         $this->assertEquals($checkoutCashTotal, $cashTotal, 'Cart panel cash total must match checkout formula');
     }
+
+    /**
+     * Verifica que el archivo de vista cart-panel.blade.php implemente las protecciones
+     * contra bucles reactivos en eliminación de items, redondeo exacto de centavos en Alpine.js
+     * y blindaje contra valores null en precios de producto.
+     */
+    public function test_cart_panel_blade_guards_against_null_prices_and_reactive_loops(): void
+    {
+        $path = dirname(__DIR__, 2) . '/resources/views/livewire/cart-panel.blade.php';
+        $this->assertFileExists($path);
+
+        $content = file_get_contents($path);
+
+        $this->assertStringContainsString('isDeleted || isClearing', $content, 'cart-panel should check isDeleted/isClearing in x-effect');
+        $this->assertStringContainsString('Math.round((this.globalSubtotal / 1.10) * 100) / 100', $content, 'cart-panel should round globalCashTotal to 2 decimals in Alpine');
+        $this->assertStringContainsString('(float) ($product->retail_price ?? 0)', $content, 'cart-panel should guard retail_price against null');
+        $this->assertStringContainsString('(float) ($product->wholesale_price ?? 0)', $content, 'cart-panel should guard wholesale_price against null');
+    }
 }

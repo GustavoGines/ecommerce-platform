@@ -99,6 +99,27 @@ assertCheck(
     $checks
 );
 
+assertCheck(
+    strpos($cartPanelContent, 'isDeleted || isClearing') !== false,
+    "Protege contra bucle reactivo de eliminación en x-effect (isDeleted || isClearing)",
+    $allPassed,
+    $checks
+);
+
+assertCheck(
+    strpos($cartPanelContent, 'Math.round((this.globalSubtotal / 1.10) * 100) / 100') !== false,
+    "Redondea a 2 decimales en Alpine.js getter globalCashTotal",
+    $allPassed,
+    $checks
+);
+
+assertCheck(
+    strpos($cartPanelContent, '(float) ($product->wholesale_price ?? 0)') !== false,
+    "Blindaje contra null en wholesalePrice en Blade Alpine x-data",
+    $allPassed,
+    $checks
+);
+
 // 4. Casos límite
 echo "\n4. Casos límite:\n";
 assertCheck(

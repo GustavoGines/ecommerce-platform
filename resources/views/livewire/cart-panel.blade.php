@@ -149,7 +149,7 @@ new class extends Component {
             return Object.values(this.itemQuantities).reduce((a, b) => Number(a) + Number(b), 0);
         },
         get globalCashTotal() {
-            return this.globalSubtotal > 0 ? this.globalSubtotal / 1.10 : 0;
+            return this.globalSubtotal > 0 ? Math.round((this.globalSubtotal / 1.10) * 100) / 100 : 0;
         },
         formatMoney(value) {
             return new Intl.NumberFormat('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(value);
@@ -239,8 +239,8 @@ new class extends Component {
                                                         isDeleted: false,
                                                         isVip: {{ (auth()->user() && auth()->user()->isWholesaleCustomer()) ? 'true' : 'false' }},
                                                         minWholesaleQty: {{ \App\Services\PricingService::GLOBAL_WHOLESALE_MIN }},
-                                                        retailPrice: {{ $product->retail_price }},
-                                                        wholesalePrice: {{ $product->wholesale_price }},
+                                                        retailPrice: {{ (float) ($product->retail_price ?? 0) }},
+                                                        wholesalePrice: {{ (float) ($product->wholesale_price ?? 0) }},
                                                         timeout: null,
                                                         
                                                         get isWholesale() {
@@ -282,8 +282,13 @@ new class extends Component {
                                                         });
                                                     "
                                                     x-effect="
-                                                        itemQuantities[{{ $productId }}] = parseInt(qty) || 0;
-                                                        itemTotals[{{ $productId }}] = itemTotal;
+                                                        if (isDeleted || isClearing) {
+                                                            delete itemQuantities[{{ $productId }}];
+                                                            delete itemTotals[{{ $productId }}];
+                                                        } else {
+                                                            itemQuantities[{{ $productId }}] = parseInt(qty) || 0;
+                                                            itemTotals[{{ $productId }}] = itemTotal;
+                                                        }
                                                     "
                                                 >
                                                     <div class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2">
