@@ -56,7 +56,7 @@ new class extends Component {
         return app(PricingService::class)->unitPrice($product, $quantity, auth()->user(), $cartTotalQuantity);
     }
 
-    public function calculateCashPrice(float $price): float
+    public function calculateCashPrice(?float $price = null): float
     {
         return app(PricingService::class)->calculateCashPrice($price);
     }
@@ -72,7 +72,7 @@ new class extends Component {
                 $this->subtotal += $price * $quantity;
             }
         }
-        $this->subtotalCash = app(PricingService::class)->calculateCashPrice($this->subtotal);
+        $this->subtotalCash = $this->calculateCashPrice($this->subtotal);
     }
 
     public function updateQuantity($productId, $action)
@@ -384,7 +384,7 @@ new class extends Component {
                                             <span class="text-base sm:text-lg shrink-0">🔥</span>
                                             <span class="leading-tight">¡Ahorras en Efectivo!</span>
                                         </div>
-                                        <span class="text-emerald-600 dark:text-emerald-400 font-black text-base sm:text-lg" x-text="`$${formatMoney(globalSubtotal - globalCashTotal)}`"></span>
+                                        <span class="text-emerald-600 dark:text-emerald-400 font-black text-base sm:text-lg" x-text="`$${formatMoney(globalSubtotal - globalCashTotal)}`">${{ number_format(max(0, $subtotal - ($subtotalCash ?? 0)), 2) }}</span>
                                     </div>
                                 </div>
                                 @endif

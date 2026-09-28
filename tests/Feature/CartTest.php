@@ -74,4 +74,28 @@ class CartTest extends TestCase
             
         $this->assertArrayNotHasKey($product1->id, session('cart', []));
     }
+
+    public function test_cart_calculates_subtotal_cash_by_dividing_by_1_10()
+    {
+        // Producto con precio de lista $110 (base original $100 + 10% recargo)
+        $product = Product::factory()->create(['stock' => 10, 'retail_price' => 110]);
+
+        $cartService = app(CartService::class);
+        $cartService->addItem($product->id, 2); // 2 unidades -> subtotal lista $220
+
+        $component = Volt::test('cart-panel');
+
+        // Subtotal de lista debe ser 220
+        $component->assertSet('subtotal', 220);
+        // Subtotal en efectivo debe ser exactamente 200 (220 / 1.10 = 200 exactos, NO 220 * 0.90 = 198)
+        $component->assertSet('subtotalCash', 200.0);
+    }
+
+    public function test_cart_resets_subtotal_cash_to_zero_when_cart_is_empty()
+    {
+        $component = Volt::test('cart-panel');
+
+        $component->assertSet('subtotal', 0)
+                  ->assertSet('subtotalCash', 0);
+    }
 }

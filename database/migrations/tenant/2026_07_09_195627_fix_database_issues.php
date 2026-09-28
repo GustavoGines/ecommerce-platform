@@ -33,11 +33,20 @@ return new class extends Migration
         });
 
         // Populate order_items product_name and sku from existing products if any
-        DB::statement("
-            UPDATE order_items oi
-            INNER JOIN products p ON oi.product_id = p.id
-            SET oi.product_name = p.name, oi.product_sku = p.sku
-        ");
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement("
+                UPDATE order_items
+                SET product_name = (SELECT name FROM products WHERE products.id = order_items.product_id),
+                    product_sku = (SELECT sku FROM products WHERE products.id = order_items.product_id)
+                WHERE EXISTS (SELECT 1 FROM products WHERE products.id = order_items.product_id)
+            ");
+        } else {
+            DB::statement("
+                UPDATE order_items oi
+                INNER JOIN products p ON oi.product_id = p.id
+                SET oi.product_name = p.name, oi.product_sku = p.sku
+            ");
+        }
     }
 
     /**

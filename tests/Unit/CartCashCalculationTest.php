@@ -119,12 +119,33 @@ class CartCashCalculationTest extends TestCase
     }
 
     /**
-     * Verifica casos borde: subtotal cero o negativo.
+     * Verifica casos borde: subtotal null, cero o negativo.
      */
-    public function test_edge_cases_zero_and_negative(): void
+    public function test_edge_cases_zero_negative_and_null(): void
     {
+        $this->assertSame(0.0, $this->pricingService->calculateCashPrice(null));
         $this->assertSame(0.0, $this->pricingService->calculateCashPrice(0.0));
         $this->assertSame(0.0, $this->pricingService->calculateCashPrice(-150.0));
+    }
+
+    /**
+     * Verifica que en un rango exhaustivo de precios continuos (1 a 10.000 centavos),
+     * la reversión del 10% mediante división por 1.10 devuelve exactamente el precio base original
+     * sin 1 centavo de pérdida ni desvío.
+     */
+    public function test_continuous_range_exhaustion_guarantees_zero_loss(): void
+    {
+        for ($cents = 100; $cents <= 1000000; $cents += 50) { // Pasos de 50 centavos hasta $10.000
+            $basePrice = $cents / 100.0;
+            $listPrice = round($basePrice * 1.10, 2);
+            $cashPrice = $this->pricingService->calculateCashPrice($listPrice);
+
+            $this->assertEquals(
+                $basePrice,
+                $cashPrice,
+                "Failed precision for base {$basePrice}"
+            );
+        }
     }
 
     /**

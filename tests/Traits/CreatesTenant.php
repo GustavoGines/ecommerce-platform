@@ -10,8 +10,11 @@ trait CreatesTenant
 
     protected function setUpTenancy(): void
     {
-        // Limpiar tenants viejos en DB temporal
-        Tenant::query()->delete();
+        if (file_exists(database_path('tenanttest-tenant'))) {
+            @unlink(database_path('tenanttest-tenant'));
+        }
+
+        Tenant::all()->each->delete();
 
         $this->tenant = Tenant::create([
             'id' => 'test-tenant',
@@ -20,5 +23,22 @@ trait CreatesTenant
         $this->tenant->domains()->create(['domain' => 'test.localhost']);
         
         tenancy()->initialize($this->tenant);
+    }
+
+    protected function tearDown(): void
+    {
+        if (tenancy()->initialized) {
+            tenancy()->end();
+        }
+
+        if ($this->tenant) {
+            $this->tenant->delete();
+        }
+
+        if (file_exists(database_path('tenanttest-tenant'))) {
+            @unlink(database_path('tenanttest-tenant'));
+        }
+
+        parent::tearDown();
     }
 }

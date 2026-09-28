@@ -102,6 +102,13 @@ assertCheck(
 // 4. Casos límite
 echo "\n4. Casos límite:\n";
 assertCheck(
+    $pricingService->calculateCashPrice(null) === 0.0,
+    "Subtotal null devuelve 0.0 sin error",
+    $allPassed,
+    $checks
+);
+
+assertCheck(
     $pricingService->calculateCashPrice(0.0) === 0.0,
     "Subtotal 0 devuelve 0.0",
     $allPassed,
