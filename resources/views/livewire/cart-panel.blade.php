@@ -28,6 +28,7 @@ new class extends Component {
         
         if (count($this->cart) == 0) {
             $this->subtotal = 0;
+            $this->subtotalCash = 0;
         }
     }
 
@@ -55,6 +56,11 @@ new class extends Component {
         return app(PricingService::class)->unitPrice($product, $quantity, auth()->user(), $cartTotalQuantity);
     }
 
+    public function calculateCashPrice(?float $price = null): float
+    {
+        return app(PricingService::class)->calculateCashPrice($price);
+    }
+
     public function calculateSubtotal($products)
     {
         $this->subtotal = 0;
@@ -66,7 +72,7 @@ new class extends Component {
                 $this->subtotal += $price * $quantity;
             }
         }
-        $this->subtotalCash = $this->subtotal * 0.90;
+        $this->subtotalCash = $this->calculateCashPrice($this->subtotal);
     }
 
     public function updateQuantity($productId, $action)
@@ -96,6 +102,7 @@ new class extends Component {
         $cartService->removeItem($productId);
         $this->loadCart();
         $this->dispatch('cart-badge-updated', count: array_sum($this->cart));
+        $this->dispatch('cart-updated');
     }
 
     public function clearCart()
@@ -104,6 +111,7 @@ new class extends Component {
         $cartService->clear();
         $this->loadCart();
         $this->dispatch('cart-badge-updated', count: array_sum($this->cart));
+        $this->dispatch('cart-updated');
     }
 
     public function goToCheckout()
@@ -141,7 +149,7 @@ new class extends Component {
             return Object.values(this.itemQuantities).reduce((a, b) => Number(a) + Number(b), 0);
         },
         get globalCashTotal() {
-            return this.globalSubtotal * 0.90;
+            return this.globalSubtotal > 0 ? Math.round((this.globalSubtotal / 1.10) * 100) / 100 : 0;
         },
         formatMoney(value) {
             return new Intl.NumberFormat('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(value);
@@ -197,7 +205,7 @@ new class extends Component {
                                 <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3" id="slide-over-title">
                                     Carrito de Compras
                                     @if(count($cart) > 0)
-                                        <button @click="isClearing = true; $dispatch('cart-cleared-local'); $wire.clearCart()" type="button" class="text-xs font-bold text-red-500 hover:text-red-400 transition-colors uppercase tracking-wider bg-red-50 dark:bg-red-500/10 px-2 py-1 rounded-lg border border-red-100 dark:border-red-500/20">
+                                        <button @click="isClearing = true; itemTotals = {}; itemQuantities = {}; $dispatch('cart-cleared-local'); $wire.clearCart()" type="button" class="text-xs font-bold text-red-500 hover:text-red-400 transition-colors uppercase tracking-wider bg-red-50 dark:bg-red-500/10 px-2 py-1 rounded-lg border border-red-100 dark:border-red-500/20">
                                             Vaciar Todo
                                         </button>
                                     @endif
@@ -231,8 +239,8 @@ new class extends Component {
                                                         isDeleted: false,
                                                         isVip: {{ (auth()->user() && auth()->user()->isWholesaleCustomer()) ? 'true' : 'false' }},
                                                         minWholesaleQty: {{ \App\Services\PricingService::GLOBAL_WHOLESALE_MIN }},
-                                                        retailPrice: {{ $product->retail_price }},
-                                                        wholesalePrice: {{ $product->wholesale_price }},
+                                                        retailPrice: {{ (float) ($product->retail_price ?? 0) }},
+                                                        wholesalePrice: {{ (float) ($product->wholesale_price ?? 0) }},
                                                         timeout: null,
                                                         
                                                         get isWholesale() {
@@ -274,8 +282,13 @@ new class extends Component {
                                                         });
                                                     "
                                                     x-effect="
-                                                        itemQuantities[{{ $productId }}] = parseInt(qty) || 0;
-                                                        itemTotals[{{ $productId }}] = itemTotal;
+                                                        if (isDeleted || isClearing) {
+                                                            delete itemQuantities[{{ $productId }}];
+                                                            delete itemTotals[{{ $productId }}];
+                                                        } else {
+                                                            itemQuantities[{{ $productId }}] = parseInt(qty) || 0;
+                                                            itemTotals[{{ $productId }}] = itemTotal;
+                                                        }
                                                     "
                                                 >
                                                     <div class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2">
@@ -331,7 +344,7 @@ new class extends Component {
                                                             </div>
 
                                                             <div class="flex">
-                                                                <button @click.prevent="isDeleted = true; $dispatch('cart-item-deleted-local', {qty: qty}); $wire.removeItem({{ $productId }})" type="button" class="font-medium text-red-500 hover:text-red-400 transition-colors inline-flex items-center gap-1">
+                                                                <button @click.prevent="isDeleted = true; delete itemTotals[{{ $productId }}]; delete itemQuantities[{{ $productId }}]; $dispatch('cart-item-deleted-local', {qty: qty}); $wire.removeItem({{ $productId }})" type="button" class="font-medium text-red-500 hover:text-red-400 transition-colors inline-flex items-center gap-1">
                                                                     <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                                     </svg>
@@ -378,7 +391,7 @@ new class extends Component {
                                             <span class="text-base sm:text-lg shrink-0">🔥</span>
                                             <span class="leading-tight">¡Ahorras en Efectivo!</span>
                                         </div>
-                                        <span class="text-emerald-600 dark:text-emerald-400 font-black text-base sm:text-lg" x-text="`$${formatMoney(globalSubtotal - globalCashTotal)}`"></span>
+                                        <span class="text-emerald-600 dark:text-emerald-400 font-black text-base sm:text-lg" x-text="`$${formatMoney(globalSubtotal - globalCashTotal)}`">${{ number_format(max(0, $subtotal - ($subtotalCash ?? 0)), 2) }}</span>
                                     </div>
                                 </div>
                                 @endif

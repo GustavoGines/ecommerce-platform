@@ -28,7 +28,7 @@ class EmailVerificationTest extends TestCase
     {
         $user = User::factory()->unverified()->create();
 
-        Event::fake();
+        Event::fake([Verified::class]);
 
         $verificationUrl = URL::temporarySignedRoute(
             'verification.verify',

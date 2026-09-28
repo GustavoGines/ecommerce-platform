@@ -52,11 +52,27 @@ class PricingService
             if ($user && method_exists($user, 'isWholesaleCustomer') && $user->isWholesaleCustomer()) {
                 return (float) $product->wholesale_price;
             }
-            if ($totalCartQuantity >= self::GLOBAL_WHOLESALE_MIN) {
+            $effectiveQuantity = max($quantity, $totalCartQuantity);
+            if ($effectiveQuantity >= self::GLOBAL_WHOLESALE_MIN) {
                 return (float) $product->wholesale_price;
             }
         }
 
         return (float) $product->retail_price;
+    }
+
+    /**
+     * Calcula el precio en efectivo/transferencia revirtiendo el recargo del 10% sobre el precio de lista.
+     *
+     * @param  float|null  $listPrice  Precio de lista con recargo del 10%.
+     * @return float  Precio base en efectivo/transferencia.
+     */
+    public function calculateCashPrice(?float $listPrice = null): float
+    {
+        if ($listPrice === null || $listPrice <= 0 || is_nan($listPrice) || is_infinite($listPrice)) {
+            return 0.0;
+        }
+
+        return round($listPrice / 1.10, 2);
     }
 }
