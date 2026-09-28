@@ -28,6 +28,7 @@ new class extends Component {
         
         if (count($this->cart) == 0) {
             $this->subtotal = 0;
+            $this->subtotalCash = 0;
         }
     }
 
@@ -55,6 +56,11 @@ new class extends Component {
         return app(PricingService::class)->unitPrice($product, $quantity, auth()->user(), $cartTotalQuantity);
     }
 
+    public function calculateCashPrice(float $price): float
+    {
+        return app(PricingService::class)->calculateCashPrice($price);
+    }
+
     public function calculateSubtotal($products)
     {
         $this->subtotal = 0;
@@ -66,7 +72,7 @@ new class extends Component {
                 $this->subtotal += $price * $quantity;
             }
         }
-        $this->subtotalCash = $this->subtotal * 0.90;
+        $this->subtotalCash = app(PricingService::class)->calculateCashPrice($this->subtotal);
     }
 
     public function updateQuantity($productId, $action)
@@ -141,7 +147,7 @@ new class extends Component {
             return Object.values(this.itemQuantities).reduce((a, b) => Number(a) + Number(b), 0);
         },
         get globalCashTotal() {
-            return this.globalSubtotal * 0.90;
+            return this.globalSubtotal > 0 ? this.globalSubtotal / 1.10 : 0;
         },
         formatMoney(value) {
             return new Intl.NumberFormat('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(value);

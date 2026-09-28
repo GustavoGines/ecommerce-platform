@@ -59,4 +59,19 @@ class PricingService
 
         return (float) $product->retail_price;
     }
+
+    /**
+     * Calcula el precio en efectivo/transferencia revirtiendo el recargo del 10% sobre el precio de lista.
+     *
+     * @param  float  $listPrice  Precio de lista con recargo del 10%.
+     * @return float  Precio base en efectivo/transferencia.
+     */
+    public function calculateCashPrice(float $listPrice): float
+    {
+        if ($listPrice <= 0) {
+            return 0.0;
+        }
+
+        return round($listPrice / 1.10, 2);
+    }
 }
