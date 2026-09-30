@@ -28,6 +28,7 @@ new #[Layout('layouts.app')] class extends Component {
     public $wholesale_price = 0;
     public $stock = 0;
     public $min_stock = 2;
+    public $new_uploads = [];
     public $images_array = [];
     public $current_images = [];
     public $image_order = [];
@@ -234,6 +235,7 @@ new #[Layout('layouts.app')] class extends Component {
         }
         $this->current_images = is_array($imgs) && !empty($imgs) ? $imgs : ($product->image_url ? [$product->image_url] : []);
         
+        $this->new_uploads = [];
         $this->images_array = [];
         $this->image_order = [];
         foreach ($this->current_images as $idx => $path) {
@@ -366,22 +368,28 @@ new #[Layout('layouts.app')] class extends Component {
         $this->wholesale_price = 0;
         $this->stock = 0;
         $this->min_stock = 2;
+        $this->new_uploads = [];
         $this->images_array = [];
         $this->current_images = [];
         $this->image_order = [];
     }
 
-    public function updatedImagesArray()
+    public function updatedNewUploads()
     {
         $this->validate([
-            'images_array.*' => 'image|max:2048',
+            'new_uploads.*' => 'image|max:2048',
         ]);
         
-        $this->image_order = array_values(array_filter($this->image_order, fn($i) => !str_starts_with($i, 'n_')));
-        
-        foreach ($this->images_array as $idx => $file) {
-            $this->image_order[] = 'n_' . $idx;
+        // Acumular las nuevas imágenes en images_array (en vez de reemplazar)
+        $startIndex = count($this->images_array);
+        foreach ($this->new_uploads as $file) {
+            $this->images_array[] = $file;
+            $this->image_order[] = 'n_' . $startIndex;
+            $startIndex++;
         }
+        
+        // Limpiar el buffer para la próxima subida
+        $this->new_uploads = [];
     }
 
     public function removeImageItem($item)
@@ -1490,20 +1498,20 @@ new #[Layout('layouts.app')] class extends Component {
                                 <label class="flex flex-col items-center justify-center w-full h-20 px-2 transition-all bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 sm:border-2 sm:border-dashed rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/80 hover:border-[var(--color-primary)]"
                                        :class="isDragging ? 'border-[var(--color-primary)] bg-blue-50/50 dark:bg-blue-900/10' : ''">
                                     <div class="flex flex-col items-center justify-center text-center">
-                                        <div wire:loading.remove wire:target="images_array" class="text-[var(--color-primary)] mb-1">
+                                        <div wire:loading.remove wire:target="new_uploads" class="text-[var(--color-primary)] mb-1">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                         </div>
-                                        <div wire:loading wire:target="images_array" class="mb-1 text-[var(--color-primary)]">
+                                        <div wire:loading wire:target="new_uploads" class="mb-1 text-[var(--color-primary)]">
                                             <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                                         </div>
                                         <p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium leading-tight">
                                             <span class="text-[var(--color-primary)] font-bold">Subir imágenes</span> o soltar aquí
                                         </p>
                                     </div>
-                                    <input x-ref="fileInput" wire:model="images_array" type="file" accept="image/*" multiple class="hidden" />
+                                    <input x-ref="fileInput" wire:model="new_uploads" @click="$el.value = null" type="file" accept="image/*" multiple class="hidden" />
                                 </label>
                             </div>
-                            @error('images_array.*') <span class="text-red-500 dark:text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
+                            @error('new_uploads.*') <span class="text-red-500 dark:text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
                         </div>
                         <div class="flex flex-row items-center justify-center gap-2 sm:gap-3 bg-gray-50 dark:bg-gray-900/50 -mx-4 sm:-mx-8 -mb-4 px-4 sm:px-8 py-3 sm:py-4 border-t border-gray-200 dark:border-gray-800">
                             <button type="button" wire:click="$set('showModal', false)" class="flex-1 sm:w-auto sm:flex-none text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-bold py-2 sm:py-2.5 px-3 sm:px-5 rounded-lg sm:rounded-full transition-colors border border-gray-200 bg-white sm:border-transparent text-sm">Cancelar</button>
