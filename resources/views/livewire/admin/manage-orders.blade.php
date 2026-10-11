@@ -88,6 +88,13 @@ new #[Layout('layouts.app')] class extends Component {
                         \Illuminate\Support\Facades\Mail::to($order->user->email)->queue(new \App\Mail\OrderPaid($order));
                     }
                 }
+
+                // Despachar al POS si corresponde
+                try {
+                    app(\App\Services\PosWebhookService::class)->dispatchOrder($order, 'order.paid');
+                } catch (\Throwable $e) {
+                    Log::error('POS Webhook error al actualizar estado manual: ' . $e->getMessage());
+                }
             }
 
             // BUG-03 FIX: Restaurar stock si la orden se cancela manualmente desde el panel
@@ -101,6 +108,23 @@ new #[Layout('layouts.app')] class extends Component {
 
             $this->loadOrders();
             $this->dispatch('notify', message: 'Estado actualizado correctamente');
+        }
+    }
+
+    public function syncOrderToPos($orderId)
+    {
+        $order = Order::with('items.product')->find($orderId);
+        if ($order) {
+            try {
+                app(\App\Services\PosWebhookService::class)->dispatchOrder(
+                    $order, 
+                    $order->status === 'pagado' ? 'order.paid' : 'order.created'
+                );
+                $this->dispatch('notify', message: 'Orden encolada para sincronización con el POS.');
+            } catch (\Throwable $e) {
+                $this->dispatch('notify', message: 'Error: ' . $e->getMessage(), type: 'error');
+            }
+            $this->loadOrders();
         }
     }
 
@@ -318,9 +342,33 @@ new #[Layout('layouts.app')] class extends Component {
                                                     <span class="text-gray-500 italic text-xs">No especificado</span>
                                                 @endif
                                             </div>
-                                        </div>
+                                        {{-- Sincronización con Sistema POS Local --}}
+                                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
+                                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Sistema POS Local</h4>
+                                            @if($order->pos_sync_status === 'synced')
+                                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 mb-1.5">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                    Sincronizado con POS
+                                                </div>
+                                                <p class="text-[11px] text-gray-400">{{ $order->pos_synced_at?->format('d/m/Y H:i') }}</p>
+                                            @elseif($order->pos_sync_status === 'failed')
+                                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 mb-1.5">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                    Envío Fallido
+                                                </div>
+                                            @else
+                                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 mb-1.5">
+                                                    Sin sincronizar
+                                                </div>
+                                            @endif
 
-                                        {{-- El bloque de MercadoPago fue removido temporalmente --}}
+                                            <div>
+                                                <button type="button" wire:click="syncOrderToPos({{ $order->id }})" wire:loading.attr="disabled" class="mt-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                                    Reenviar / Sincronizar a POS
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {{-- Productos --}}
