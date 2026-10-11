@@ -464,21 +464,46 @@ new #[Layout('layouts.app')] class extends Component {
                 <!-- Configuración Sistema POS Local -->
                 <div class="bg-white dark:bg-gray-800 shadow sm:rounded-xl mb-8 border border-gray-200 dark:border-gray-700">
                     <div class="px-4 py-5 sm:p-6 border-b border-gray-200 dark:border-gray-700">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                Integración con Sistema POS Local (Tienda Física)
-                            </h3>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" wire:model.live="pos_sync_enabled" class="sr-only peer">
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
-                                <span class="ml-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                    {{ $pos_sync_enabled ? 'Activado' : 'Desactivado' }}
-                                </span>
-                            </label>
-                        </div>
-                        <div class="mt-2 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
-                            <p>Sincronización bidireccional automática de inventario y órdenes con el Sistema POS local. Descuenta stock físico ante compras web y actualiza el stock disponible ante ventas en mostrador.</p>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    Integración con Sistema POS Local (Tienda Física)
+                                </h3>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                    Sincronización bidireccional automática de inventario y órdenes con el Sistema POS local. Descuenta stock físico ante compras web y actualiza el stock disponible ante ventas en mostrador.
+                                </p>
+                            </div>
+
+                            <!-- Botón Interruptor Toggle Diferenciado (ON/OFF) -->
+                            <div class="flex items-center gap-3 shrink-0">
+                                <button type="button"
+                                        wire:click="$toggle('pos_sync_enabled')"
+                                        class="group relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full p-1 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-gray-900 shadow-inner"
+                                        style="background-color: {{ $pos_sync_enabled ? '#10b981' : '#374151' }}; border: 1px solid {{ $pos_sync_enabled ? '#059669' : '#4b5563' }};"
+                                        role="switch"
+                                        aria-checked="{{ $pos_sync_enabled ? 'true' : 'false' }}"
+                                        title="Haga clic para {{ $pos_sync_enabled ? 'desactivar' : 'activar' }} la sincronización con el POS">
+                                    
+                                    <!-- Bolita deslizante con sombra e icono -->
+                                    <span class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition-all duration-300 ease-in-out flex items-center justify-center"
+                                          style="transform: translateX({{ $pos_sync_enabled ? '24px' : '0px' }});">
+                                        @if($pos_sync_enabled)
+                                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                        @else
+                                            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        @endif
+                                    </span>
+                                </button>
+
+                                <!-- Etiqueta / Badge de estado con color vivo y punto animado -->
+                                <button type="button" 
+                                        wire:click="$toggle('pos_sync_enabled')" 
+                                        class="cursor-pointer select-none inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black tracking-wide uppercase transition-all duration-200 {{ $pos_sync_enabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm shadow-emerald-500/20' : 'bg-gray-800 text-gray-400 border border-gray-700' }}">
+                                    <span class="w-2 h-2 rounded-full {{ $pos_sync_enabled ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500' }}"></span>
+                                    {{ $pos_sync_enabled ? 'ACTIVADO' : 'DESACTIVADO' }}
+                                </button>
+                            </div>
                         </div>
                     </div>
 
