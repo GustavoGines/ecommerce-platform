@@ -584,13 +584,22 @@ new #[Layout('layouts.app')] class extends Component {
                                 </select>
                             </div>
 
-                            <!-- Botón de Prueba de Conexión -->
+                            <!-- Botón de Prueba de Conexión (Alineación Estable con wire:loading.flex) -->
                             <div class="sm:col-span-3 flex items-end">
-                                <button type="button" wire:click="testPosWebhook" wire:loading.attr="disabled" class="w-full py-2.5 px-4 rounded-xl border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-semibold text-sm transition-all flex items-center justify-center gap-2">
-                                    <span wire:loading.remove wire:target="testPosWebhook">Probar Conexión al POS</span>
-                                    <span wire:loading wire:target="testPosWebhook" class="flex items-center gap-1.5">
-                                        <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                                        Probando conexión...
+                                <button type="button" 
+                                        wire:click="testPosWebhook" 
+                                        wire:loading.attr="disabled" 
+                                        class="w-full h-[42px] px-4 rounded-xl border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-wait">
+                                    <span wire:loading.remove wire:target="testPosWebhook" class="inline-flex items-center justify-center gap-2">
+                                        <svg class="w-4 h-4 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                        Probar Conexión al POS
+                                    </span>
+                                    <span wire:loading.flex wire:target="testPosWebhook" class="items-center justify-center gap-2">
+                                        <svg class="animate-spin h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                        </svg>
+                                        <span>Probando conexión...</span>
                                     </span>
                                 </button>
                             </div>
