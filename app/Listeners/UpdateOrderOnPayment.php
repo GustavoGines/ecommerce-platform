@@ -91,5 +91,14 @@ class UpdateOrderOnPayment implements ShouldQueue
                 Log::error('No se pudo enviar email de OrderPaid', ['error' => $e->getMessage()]);
             }
         }
+
+        // Despachar Webhook al POS si la orden pasó a estar pagada
+        if ($order) {
+            try {
+                app(\App\Services\PosWebhookService::class)->dispatchOrder($order, 'order.paid');
+            } catch (\Throwable $e) {
+                Log::error('POS Webhook: Error al despachar order.paid al POS', ['error' => $e->getMessage()]);
+            }
+        }
     }
 }

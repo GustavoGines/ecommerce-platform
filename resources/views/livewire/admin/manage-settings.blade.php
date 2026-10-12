@@ -1,11 +1,15 @@
 <?php
 
 use App\Models\StoreSetting;
+use App\Models\PosSyncLog;
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 new #[Layout('layouts.app')] class extends Component {
     use WithFileUploads;
@@ -24,6 +28,16 @@ new #[Layout('layouts.app')] class extends Component {
     // Credenciales de Mercado Pago
     public $mp_access_token = '';
     public $mp_public_key = '';
+
+    // Integración Sistema POS Local
+    public bool $pos_sync_enabled = false;
+    public string $pos_api_token = '';
+    public string $pos_webhook_url = '';
+    public string $pos_webhook_secret = '';
+    public string $pos_sync_on_event = 'order.created';
+    public array $pos_logs = [];
+    public ?string $pos_test_result = null;
+    public bool $pos_test_success = false;
 
     public $favicon;
     public $current_favicon_url;
@@ -51,9 +65,78 @@ new #[Layout('layouts.app')] class extends Component {
             $this->mp_access_token = $settings->mp_access_token ?? '';
             $this->mp_public_key = $settings->mp_public_key ?? '';
 
+            $this->pos_sync_enabled = (bool) ($settings->pos_sync_enabled ?? false);
+            $this->pos_api_token = $settings->pos_api_token ?? '';
+            $this->pos_webhook_url = $settings->pos_webhook_url ?? '';
+            $this->pos_webhook_secret = $settings->pos_webhook_secret ?? '';
+            $this->pos_sync_on_event = $settings->pos_sync_on_event ?? 'order.created';
+            $this->loadPosLogs();
+
             $this->current_favicon_url = $settings->favicon_url;
             $this->current_logo_url = $settings->logo_url;
         }
+    }
+
+    public function loadPosLogs()
+    {
+        if (\Illuminate\Support\Facades\Schema::hasTable('pos_sync_logs')) {
+            $this->pos_logs = \App\Models\PosSyncLog::latest()->take(6)->get()->toArray();
+        }
+    }
+
+    public function generatePosApiToken()
+    {
+        $this->pos_api_token = 'pos_' . bin2hex(random_bytes(20));
+    }
+
+    public function generatePosWebhookSecret()
+    {
+        $this->pos_webhook_secret = 'sec_pos_' . bin2hex(random_bytes(16));
+    }
+
+    public function testPosWebhook()
+    {
+        if (empty($this->pos_webhook_url) || empty($this->pos_webhook_secret)) {
+            $this->pos_test_result = 'Debes configurar la URL del Webhook y el Secret antes de realizar la prueba.';
+            $this->pos_test_success = false;
+            return;
+        }
+
+        try {
+            $timestamp = time();
+            $payload = [
+                'event_type'   => 'ping',
+                'event_id'     => 'evt_ping_' . $timestamp,
+                'timestamp'    => $timestamp,
+                'store_name'   => $this->store_name,
+                'tenant_id'    => tenant('id'),
+                'message'      => 'Prueba de conexión desde Ecommerce-Platform hacia Sistema POS',
+            ];
+            $rawBody = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $signature = hash_hmac('sha256', $rawBody, $this->pos_webhook_secret);
+
+            $response = \Illuminate\Support\Facades\Http::timeout(5)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'X-Signature'  => $signature,
+                    'X-Timestamp'  => (string) $timestamp,
+                ])
+                ->withBody($rawBody, 'application/json')
+                ->post($this->pos_webhook_url);
+
+            if ($response->successful()) {
+                $this->pos_test_result = "¡Conexión exitosa! El POS respondió HTTP {$response->status()} OK.";
+                $this->pos_test_success = true;
+            } else {
+                $this->pos_test_result = "El POS respondió con código HTTP {$response->status()}: " . \Illuminate\Support\Str::limit($response->body(), 120);
+                $this->pos_test_success = false;
+            }
+        } catch (\Throwable $e) {
+            $this->pos_test_result = "Error de red al conectar con el POS: " . $e->getMessage();
+            $this->pos_test_success = false;
+        }
+
+        $this->loadPosLogs();
     }
 
     public function removeFavicon()
@@ -109,8 +192,13 @@ new #[Layout('layouts.app')] class extends Component {
             'social_whatsapp'  => 'nullable|string|max:50',
             'favicon'          => 'nullable|image|max:1024',
             'logo'             => 'nullable|image|max:2048',
-            'mp_access_token'  => 'nullable|string',
-            'mp_public_key'    => 'nullable|string',
+            'mp_access_token'    => 'nullable|string',
+            'mp_public_key'      => 'nullable|string',
+            'pos_sync_enabled'   => 'nullable|boolean',
+            'pos_api_token'      => 'nullable|string|max:255',
+            'pos_webhook_url'    => 'nullable|url|max:255',
+            'pos_webhook_secret' => 'nullable|string|max:255',
+            'pos_sync_on_event'  => 'nullable|string|in:order.created,order.paid',
         ]);
 
         $settings = StoreSetting::first() ?? new StoreSetting();
@@ -129,6 +217,12 @@ new #[Layout('layouts.app')] class extends Component {
         
         $settings->mp_access_token = $this->mp_access_token;
         $settings->mp_public_key = $this->mp_public_key;
+
+        $settings->pos_sync_enabled   = (bool) $this->pos_sync_enabled;
+        $settings->pos_api_token      = $this->pos_api_token;
+        $settings->pos_webhook_url    = $this->pos_webhook_url;
+        $settings->pos_webhook_secret = $this->pos_webhook_secret;
+        $settings->pos_sync_on_event  = $this->pos_sync_on_event;
 
         $settings->save();
 
@@ -368,6 +462,230 @@ new #[Layout('layouts.app')] class extends Component {
                                 @error('mp_public_key') <p class="mt-2 text-sm font-bold text-red-500">{{ $message }}</p> @enderror
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Configuración Sistema POS Local -->
+                <div class="bg-white dark:bg-gray-800 shadow sm:rounded-xl mb-8 border border-gray-200 dark:border-gray-700">
+                    <div class="px-4 py-5 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    Integración con Sistema POS Local (Tienda Física)
+                                </h3>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                    Sincronización bidireccional automática de inventario y órdenes con el Sistema POS local. Descuenta stock físico ante compras web y actualiza el stock disponible ante ventas en mostrador.
+                                </p>
+                            </div>
+
+                            <!-- Botón Interruptor Toggle Diferenciado (ON/OFF) -->
+                            <div class="flex items-center gap-3 shrink-0">
+                                <button type="button"
+                                        wire:click="$toggle('pos_sync_enabled')"
+                                        class="group relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full p-1 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-gray-900 shadow-inner"
+                                        style="background-color: {{ $pos_sync_enabled ? '#10b981' : '#374151' }}; border: 1px solid {{ $pos_sync_enabled ? '#059669' : '#4b5563' }};"
+                                        role="switch"
+                                        aria-checked="{{ $pos_sync_enabled ? 'true' : 'false' }}"
+                                        title="Haga clic para {{ $pos_sync_enabled ? 'desactivar' : 'activar' }} la sincronización con el POS">
+                                    
+                                    <!-- Bolita deslizante con sombra e icono -->
+                                    <span class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition-all duration-300 ease-in-out flex items-center justify-center"
+                                          style="transform: translateX({{ $pos_sync_enabled ? '24px' : '0px' }});">
+                                        @if($pos_sync_enabled)
+                                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                        @else
+                                            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        @endif
+                                    </span>
+                                </button>
+
+                                <!-- Etiqueta / Badge de estado con color vivo y punto animado -->
+                                <button type="button" 
+                                        wire:click="$toggle('pos_sync_enabled')" 
+                                        class="cursor-pointer select-none inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black tracking-wide uppercase transition-all duration-200 {{ $pos_sync_enabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm shadow-emerald-500/20' : 'bg-gray-800 text-gray-400 border border-gray-700' }}">
+                                    <span class="w-2 h-2 rounded-full {{ $pos_sync_enabled ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500' }}"></span>
+                                    {{ $pos_sync_enabled ? 'ACTIVADO' : 'DESACTIVADO' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-4 py-5 sm:p-6 space-y-6">
+                        <!-- Parámetros para cargar en el Sistema POS -->
+                        <div class="p-4 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-xl border border-indigo-100 dark:border-indigo-900/50">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 mb-3 flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Parámetros para vincular en los Ajustes del Sistema POS
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                <div class="p-2.5 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+                                    <span class="text-gray-500 block">URL Base del E-Commerce:</span>
+                                    <code class="text-indigo-600 dark:text-indigo-400 font-mono font-bold select-all">{{ request()->getSchemeAndHttpHost() }}</code>
+                                </div>
+                                <div class="p-2.5 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+                                    <span class="text-gray-500 block">Store ID / Tenant ID:</span>
+                                    <code class="text-indigo-600 dark:text-indigo-400 font-mono font-bold select-all">{{ tenant('id') ?? 'g3' }}</code>
+                                </div>
+                                <div class="p-2.5 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+                                    <span class="text-gray-500 block">Endpoint Health (Estado):</span>
+                                    <code class="text-indigo-600 dark:text-indigo-400 font-mono font-bold select-all">{{ url('/api/v1/health') }}</code>
+                                </div>
+                                <div class="p-2.5 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+                                    <span class="text-gray-500 block">Endpoint Actualización Stock:</span>
+                                    <code class="text-indigo-600 dark:text-indigo-400 font-mono font-bold select-all">{{ url('/api/v1/inventory/update') }}</code>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Credenciales y Configuración de Webhook -->
+                        <div class="grid grid-cols-1 gap-y-5 gap-x-4 sm:grid-cols-6">
+                            <!-- URL de Destino del Webhook (Web ➔ POS) -->
+                            <div class="sm:col-span-6">
+                                <label for="pos_webhook_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    URL de Webhook del POS (Ruta a donde la web avisará las ventas)
+                                </label>
+                                <input type="url" wire:model="pos_webhook_url" id="pos_webhook_url" class="w-full py-2.5 px-4 bg-gray-50 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all shadow-sm dark:shadow-none" placeholder="https://<URL_DEL_POS>/api/webhooks/ecommerce/ecommerce_platform">
+                                @error('pos_webhook_url') <p class="mt-1 text-xs font-bold text-red-500">{{ $message }}</p> @enderror
+                            </div>
+
+                            <!-- Webhook Secret (HMAC-SHA256) -->
+                            <div class="sm:col-span-6">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label for="pos_webhook_secret" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Webhook Secret (Clave Criptográfica HMAC-SHA256)
+                                    </label>
+                                    <button type="button" wire:click="generatePosWebhookSecret" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                                        Generar nueva clave
+                                    </button>
+                                </div>
+                                <input type="text" wire:model="pos_webhook_secret" id="pos_webhook_secret" class="w-full py-2.5 px-4 font-mono text-sm bg-gray-50 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all shadow-sm dark:shadow-none" placeholder="sec_pos_...">
+                                @error('pos_webhook_secret') <p class="mt-1 text-xs font-bold text-red-500">{{ $message }}</p> @enderror
+                            </div>
+
+                            <!-- API Access Token (POS ➔ Web) -->
+                            <div class="sm:col-span-6">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label for="pos_api_token" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        API Access Token (Token Bearer que usará el POS para actualizar stock)
+                                    </label>
+                                    <button type="button" wire:click="generatePosApiToken" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                                        Generar nuevo token
+                                    </button>
+                                </div>
+                                <input type="text" wire:model="pos_api_token" id="pos_api_token" class="w-full py-2.5 px-4 font-mono text-sm bg-gray-50 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all shadow-sm dark:shadow-none" placeholder="pos_...">
+                                @error('pos_api_token') <p class="mt-1 text-xs font-bold text-red-500">{{ $message }}</p> @enderror
+                            </div>
+
+                            <!-- Disparador de Webhook -->
+                            <div class="sm:col-span-3">
+                                <label for="pos_sync_on_event" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Disparador de Webhook
+                                </label>
+                                <select wire:model="pos_sync_on_event" id="pos_sync_on_event" class="w-full py-2.5 px-4 bg-gray-50 dark:bg-gray-900/80 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all shadow-sm dark:shadow-none">
+                                    <option value="order.created">Al confirmar el pedido (order.created)</option>
+                                    <option value="order.paid">Al acreditarse el pago (order.paid)</option>
+                                </select>
+                            </div>
+
+                            <!-- Botón de Prueba de Conexión (Alineación Estable con wire:loading.flex) -->
+                            <div class="sm:col-span-3 flex items-end">
+                                <button type="button" 
+                                        wire:click="testPosWebhook" 
+                                        wire:loading.attr="disabled" 
+                                        class="w-full h-[42px] px-4 rounded-xl border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-wait">
+                                    <span wire:loading.remove wire:target="testPosWebhook" class="inline-flex items-center justify-center gap-2">
+                                        <svg class="w-4 h-4 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                        Probar Conexión al POS
+                                    </span>
+                                    <span wire:loading.flex wire:target="testPosWebhook" class="items-center justify-center gap-2">
+                                        <svg class="animate-spin h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                        </svg>
+                                        <span>Probando conexión...</span>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Alerta con Resultado de Prueba (Alta Visibilidad y Contraste) -->
+                        @if($pos_test_result)
+                            <div class="p-4 rounded-xl shadow-lg transition-all duration-300 flex items-start justify-between gap-3"
+                                 style="background-color: {{ $pos_test_success ? '#064e3b' : '#7f1d1d' }}; border: 1px solid {{ $pos_test_success ? '#10b981' : '#ef4444' }}; color: #ffffff;">
+                                <div class="flex items-start gap-3">
+                                    <div class="p-1.5 rounded-lg shrink-0 mt-0.5" 
+                                         style="background-color: {{ $pos_test_success ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)' }};">
+                                        @if($pos_test_success)
+                                            <svg class="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        @else
+                                            <svg class="w-5 h-5 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <h5 class="text-sm font-black tracking-wide" style="color: #ffffff;">
+                                            {{ $pos_test_success ? '¡Conexión Exitosa con el POS!' : 'Aviso al Conectar con el POS' }}
+                                        </h5>
+                                        <p class="text-xs sm:text-sm font-medium mt-0.5 leading-relaxed" 
+                                           style="color: {{ $pos_test_success ? '#d1fae5' : '#fee2e2' }};">
+                                            {{ $pos_test_result }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button type="button" 
+                                        wire:click="$set('pos_test_result', null)" 
+                                        class="shrink-0 p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                                        title="Cerrar notificación">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        @endif
+
+                        <!-- Tabla de Logs Recientes -->
+                        @if(!empty($pos_logs))
+                            <div class="mt-6 pt-5 border-t border-gray-200 dark:border-gray-700">
+                                <h4 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Últimos Eventos de Sincronización POS
+                                </h4>
+                                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-xs text-left">
+                                        <thead class="bg-gray-50 dark:bg-gray-900/60 text-gray-500">
+                                            <tr>
+                                                <th class="px-3 py-2">Fecha</th>
+                                                <th class="px-3 py-2">Dirección</th>
+                                                <th class="px-3 py-2">Evento</th>
+                                                <th class="px-3 py-2">Estado</th>
+                                                <th class="px-3 py-2">Detalle</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                                            @foreach($pos_logs as $log)
+                                                <tr>
+                                                    <td class="px-3 py-2 whitespace-nowrap">{{ \Carbon\Carbon::parse($log['created_at'])->setTimezone('America/Argentina/Buenos_Aires')->format('d/m H:i:s') }}</td>
+                                                    <td class="px-3 py-2 font-mono uppercase">{{ $log['direction'] === 'inbound' ? 'POS ➔ Web' : 'Web ➔ POS' }}</td>
+                                                    <td class="px-3 py-2 font-mono">{{ $log['event_type'] }}</td>
+                                                    <td class="px-3 py-2">
+                                                        <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold {{ $log['status'] === 'success' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' }}">
+                                                            {{ strtoupper($log['status']) }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-3 py-2 max-w-xs truncate text-gray-500 dark:text-gray-400">
+                                                        {{ $log['error_message'] ?: ($log['response_code'] ? 'HTTP ' . $log['response_code'] : 'OK') }}
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
 

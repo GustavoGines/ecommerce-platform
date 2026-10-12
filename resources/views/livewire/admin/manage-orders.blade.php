@@ -3,8 +3,13 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Order;
+use App\Mail\OrderPaid;
+use App\Services\PricingService;
+use App\Services\PosWebhookService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Cache;
 use Livewire\WithPagination;
 
 new #[Layout('layouts.app')] class extends Component {
@@ -88,6 +93,13 @@ new #[Layout('layouts.app')] class extends Component {
                         \Illuminate\Support\Facades\Mail::to($order->user->email)->queue(new \App\Mail\OrderPaid($order));
                     }
                 }
+
+                // Despachar al POS si corresponde
+                try {
+                    app(\App\Services\PosWebhookService::class)->dispatchOrder($order, 'order.paid');
+                } catch (\Throwable $e) {
+                    Log::error('POS Webhook error al actualizar estado manual: ' . $e->getMessage());
+                }
             }
 
             // BUG-03 FIX: Restaurar stock si la orden se cancela manualmente desde el panel
@@ -101,6 +113,24 @@ new #[Layout('layouts.app')] class extends Component {
 
             $this->loadOrders();
             $this->dispatch('notify', message: 'Estado actualizado correctamente');
+        }
+    }
+
+    public function syncOrderToPos($orderId)
+    {
+        $order = Order::with('items.product')->find($orderId);
+        if ($order) {
+            try {
+                app(\App\Services\PosWebhookService::class)->dispatchOrder(
+                    $order, 
+                    $order->status === 'pagado' ? 'order.paid' : 'order.created',
+                    sync: true
+                );
+                $this->dispatch('notify', message: 'Orden sincronizada exitosamente con el POS.');
+            } catch (\Throwable $e) {
+                $this->dispatch('notify', message: 'Error: ' . $e->getMessage(), type: 'error');
+            }
+            $this->loadOrders();
         }
     }
 
@@ -233,7 +263,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $order->created_at->format('d/m/Y H:i') }}
+                                    {{ $order->created_at->setTimezone('America/Argentina/Buenos_Aires')->format('d/m/Y H:i') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
                                     <div class="flex items-center justify-end gap-2">
@@ -320,7 +350,33 @@ new #[Layout('layouts.app')] class extends Component {
                                             </div>
                                         </div>
 
-                                        {{-- El bloque de MercadoPago fue removido temporalmente --}}
+                                        {{-- Sincronización con Sistema POS Local --}}
+                                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
+                                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Sistema POS Local</h4>
+                                            @if($order->pos_sync_status === 'synced')
+                                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 mb-1.5">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                    Sincronizado con POS
+                                                </div>
+                                                <p class="text-[11px] text-gray-400">{{ $order->pos_synced_at?->setTimezone('America/Argentina/Buenos_Aires')->format('d/m/Y H:i') }}</p>
+                                            @elseif($order->pos_sync_status === 'failed')
+                                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 mb-1.5">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                    Envío Fallido
+                                                </div>
+                                            @else
+                                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 mb-1.5">
+                                                    Sin sincronizar
+                                                </div>
+                                            @endif
+
+                                            <div>
+                                                <button type="button" wire:click="syncOrderToPos({{ $order->id }})" wire:loading.attr="disabled" class="mt-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                                    Reenviar / Sincronizar a POS
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {{-- Productos --}}
@@ -403,7 +459,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     <option value="completado" {{ $order->status === 'completado' ? 'selected' : '' }}>Completado</option>
                                     <option value="cancelado" {{ $order->status === 'cancelado' ? 'selected' : '' }}>Cancelado</option>
                                 </select>
-                                <span class="text-[10px] text-gray-400 whitespace-nowrap">{{ $order->created_at->format('d/m/y H:i') }}</span>
+                                <span class="text-[10px] text-gray-400 whitespace-nowrap">{{ $order->created_at->setTimezone('America/Argentina/Buenos_Aires')->format('d/m/y H:i') }}</span>
                             </div>
                             <button wire:click="deleteOrder({{ $order->id }})" wire:confirm="¿Seguro que querés eliminar esta orden?" class="ml-2 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 py-1 px-2 rounded-md transition-colors flex items-center shrink-0">
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>

@@ -40,10 +40,13 @@ class Order extends Model
         'mp_payment_id',
         'updated_by',
         'status_updated_at',
+        'pos_synced_at',
+        'pos_sync_status',
     ];
 
     protected $casts = [
         'status_updated_at' => 'datetime',
+        'pos_synced_at'     => 'datetime',
         'total'             => 'decimal:2',
     ];
 

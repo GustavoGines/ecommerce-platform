@@ -248,6 +248,13 @@ new #[Layout('layouts.app')] class extends Component {
                     }
                 }
 
+                // Despachar Webhook al Sistema POS si la sincronización está activa
+                try {
+                    app(\App\Services\PosWebhookService::class)->dispatchOrder($order, 'order.created');
+                } catch (\Throwable $e) {
+                    Log::error('Error al despachar webhook de orden al POS: ' . $e->getMessage());
+                }
+
                 if ($this->payment_method === 'transfer') {
                     $settings = \App\Models\StoreSetting::getSettings();
                     $social = is_string($settings->social_links) ? json_decode($settings->social_links, true) : ($settings->social_links ?? []);

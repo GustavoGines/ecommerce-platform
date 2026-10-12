@@ -21,11 +21,27 @@ class StoreSetting extends Model
         'social_links',
         'mp_access_token',
         'mp_public_key',
+        'pos_sync_enabled',
+        'pos_api_token',
+        'pos_webhook_url',
+        'pos_webhook_secret',
+        'pos_sync_on_event',
     ];
 
     protected $casts = [
         'social_links' => 'array',
+        'pos_sync_enabled' => 'boolean',
     ];
+
+    public function isPosConfigured(): bool
+    {
+        return !empty($this->pos_webhook_url) && !empty($this->pos_webhook_secret);
+    }
+
+    public function isPosSyncEnabled(): bool
+    {
+        return (bool) $this->pos_sync_enabled && $this->isPosConfigured();
+    }
 
     public static function getSettings()
     {
@@ -49,10 +65,10 @@ class StoreSetting extends Model
         });
 
         if (empty($attributes)) {
-            return new static;
+            return new self;
         }
 
-        $instance = new static;
+        $instance = new self;
         $instance->setRawAttributes($attributes);
         $instance->exists = true;
         return $instance;

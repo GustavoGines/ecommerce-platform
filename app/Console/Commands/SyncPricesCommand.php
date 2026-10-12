@@ -55,10 +55,17 @@ class SyncPricesCommand extends Command
 
             $this->info("Procesando " . count($lines) . " líneas...");
 
-            // 2.5 "Borrón y cuenta nueva": Poner todo en stock 0 (Agotado)
-            // Esto asegura que lo que el proveedor haya borrado del Excel ya no se pueda comprar.
-            Product::query()->update(['stock' => 0]);
-            $this->info("Stock de todos los productos reseteado a 0.");
+            $settings = \App\Models\StoreSetting::getSettings();
+            $isPosSyncActive = $settings->isPosSyncEnabled();
+
+            if ($isPosSyncActive) {
+                $this->info("Integración POS activa: Se respetará el stock físico real gestionado por el POS.");
+            } else {
+                // 2.5 "Borrón y cuenta nueva": Poner todo en stock 0 (Agotado)
+                // Esto asegura que lo que el proveedor haya borrado del Excel ya no se pueda comprar.
+                Product::query()->update(['stock' => 0]);
+                $this->info("Stock de todos los productos reseteado a 0.");
+            }
 
             // 3. Procesar Líneas
             foreach ($lines as $index => $line) {
@@ -102,13 +109,16 @@ class SyncPricesCommand extends Command
                 $product = Product::where('name', $productName)->first();
 
                 if ($product) {
-                    $product->update([
+                    $updateData = [
                         'retail_price'    => $webPrice,
                         'wholesale_price' => $cashPrice,
                         'cost_price'      => $costPrice,
-                        'stock'           => 999,
                         // Se omite 'category_id' para respetar la categoría manual que el admin haya asignado.
-                    ]);
+                    ];
+                    if (! $isPosSyncActive) {
+                        $updateData['stock'] = 999;
+                    }
+                    $product->update($updateData);
                     $updatedCount++;
                 } else {
                     Product::create([
@@ -116,7 +126,7 @@ class SyncPricesCommand extends Command
                         'retail_price'    => $webPrice,
                         'wholesale_price' => $cashPrice,
                         'cost_price'      => $costPrice,
-                        'stock'           => 999,
+                        'stock'           => $isPosSyncActive ? 0 : 999,
                         'category_id'     => $category->id,
                         'profit_margin'   => 10,
                         'wholesale_discount' => 0,

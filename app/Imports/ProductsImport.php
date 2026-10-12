@@ -8,10 +8,9 @@ use Illuminate\Support\Str;
 use Maatwebsite\Excel\Row;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithTransactions;
 use App\Models\Brand;
 
-class ProductsImport implements OnEachRow, WithHeadingRow, WithTransactions
+class ProductsImport implements OnEachRow, WithHeadingRow
 {
     public $importedCount = 0;
     private $allBrands = [];
