@@ -668,7 +668,7 @@ new #[Layout('layouts.app')] class extends Component {
                                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
                                             @foreach($pos_logs as $log)
                                                 <tr>
-                                                    <td class="px-3 py-2 whitespace-nowrap">{{ \Carbon\Carbon::parse($log['created_at'])->format('d/m H:i:s') }}</td>
+                                                    <td class="px-3 py-2 whitespace-nowrap">{{ \Carbon\Carbon::parse($log['created_at'])->setTimezone('America/Argentina/Buenos_Aires')->format('d/m H:i:s') }}</td>
                                                     <td class="px-3 py-2 font-mono uppercase">{{ $log['direction'] === 'inbound' ? 'POS ➔ Web' : 'Web ➔ POS' }}</td>
                                                     <td class="px-3 py-2 font-mono">{{ $log['event_type'] }}</td>
                                                     <td class="px-3 py-2">

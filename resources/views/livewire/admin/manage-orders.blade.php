@@ -263,7 +263,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $order->created_at->format('d/m/Y H:i') }}
+                                    {{ $order->created_at->setTimezone('America/Argentina/Buenos_Aires')->format('d/m/Y H:i') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
                                     <div class="flex items-center justify-end gap-2">
@@ -358,7 +358,7 @@ new #[Layout('layouts.app')] class extends Component {
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                                     Sincronizado con POS
                                                 </div>
-                                                <p class="text-[11px] text-gray-400">{{ $order->pos_synced_at?->format('d/m/Y H:i') }}</p>
+                                                <p class="text-[11px] text-gray-400">{{ $order->pos_synced_at?->setTimezone('America/Argentina/Buenos_Aires')->format('d/m/Y H:i') }}</p>
                                             @elseif($order->pos_sync_status === 'failed')
                                                 <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 mb-1.5">
                                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -459,7 +459,7 @@ new #[Layout('layouts.app')] class extends Component {
                                     <option value="completado" {{ $order->status === 'completado' ? 'selected' : '' }}>Completado</option>
                                     <option value="cancelado" {{ $order->status === 'cancelado' ? 'selected' : '' }}>Cancelado</option>
                                 </select>
-                                <span class="text-[10px] text-gray-400 whitespace-nowrap">{{ $order->created_at->format('d/m/y H:i') }}</span>
+                                <span class="text-[10px] text-gray-400 whitespace-nowrap">{{ $order->created_at->setTimezone('America/Argentina/Buenos_Aires')->format('d/m/y H:i') }}</span>
                             </div>
                             <button wire:click="deleteOrder({{ $order->id }})" wire:confirm="¿Seguro que querés eliminar esta orden?" class="ml-2 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 py-1 px-2 rounded-md transition-colors flex items-center shrink-0">
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
