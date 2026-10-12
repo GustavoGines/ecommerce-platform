@@ -596,11 +596,41 @@ new #[Layout('layouts.app')] class extends Component {
                             </div>
                         </div>
 
-                        <!-- Alerta con Resultado de Prueba -->
+                        <!-- Alerta con Resultado de Prueba (Alta Visibilidad y Contraste) -->
                         @if($pos_test_result)
-                            <div class="p-3.5 rounded-xl border {{ $pos_test_success ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300' : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300' }} text-sm flex items-start gap-2">
-                                <span class="font-bold">{{ $pos_test_success ? 'Éxito:' : 'Aviso:' }}</span>
-                                <span>{{ $pos_test_result }}</span>
+                            <div class="p-4 rounded-xl shadow-lg transition-all duration-300 flex items-start justify-between gap-3"
+                                 style="background-color: {{ $pos_test_success ? '#064e3b' : '#7f1d1d' }}; border: 1px solid {{ $pos_test_success ? '#10b981' : '#ef4444' }}; color: #ffffff;">
+                                <div class="flex items-start gap-3">
+                                    <div class="p-1.5 rounded-lg shrink-0 mt-0.5" 
+                                         style="background-color: {{ $pos_test_success ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)' }};">
+                                        @if($pos_test_success)
+                                            <svg class="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        @else
+                                            <svg class="w-5 h-5 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <h5 class="text-sm font-black tracking-wide" style="color: #ffffff;">
+                                            {{ $pos_test_success ? '¡Conexión Exitosa con el POS!' : 'Aviso al Conectar con el POS' }}
+                                        </h5>
+                                        <p class="text-xs sm:text-sm font-medium mt-0.5 leading-relaxed" 
+                                           style="color: {{ $pos_test_success ? '#d1fae5' : '#fee2e2' }};">
+                                            {{ $pos_test_result }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button type="button" 
+                                        wire:click="$set('pos_test_result', null)" 
+                                        class="shrink-0 p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                                        title="Cerrar notificación">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
                             </div>
                         @endif
 
