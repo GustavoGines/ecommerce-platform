@@ -21,9 +21,18 @@ class PosWebhookService
             return;
         }
 
-        // Si ya fue sincronizada como pagada y se intenta re-despachar un created, ignorar
-        if ($order->pos_sync_status === 'synced' && $eventType === 'order.created') {
-            Log::info("POS Webhook: Orden #{$order->id} ya se encuentra sincronizada con el POS. Omitiendo duplicado.");
+        $configuredTrigger = $settings->pos_sync_on_event ?? 'order.created';
+
+        // Si la tienda está configurada para sincronizar únicamente cuando la orden se paga,
+        // no despachar el evento de creación inicial
+        if (! $sync && $configuredTrigger === 'order.paid' && $eventType === 'order.created') {
+            Log::info("POS Webhook: Tienda configurada para sincronizar en 'order.paid'. Omitiendo 'order.created' para orden #{$order->id}.");
+            return;
+        }
+
+        // Si ya fue sincronizada previamente y llega otro evento (created o paid), no duplicar despacho
+        if (! $sync && $order->pos_sync_status === 'synced') {
+            Log::info("POS Webhook: Orden #{$order->id} ya se encuentra sincronizada con el POS. Omitiendo duplicado ({$eventType}).");
             return;
         }
 
