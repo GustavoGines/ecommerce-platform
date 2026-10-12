@@ -13,7 +13,7 @@ class PosWebhookService
     /**
      * Construye y encola el webhook de una orden hacia el POS físico.
      */
-    public function dispatchOrder(Order $order, string $eventType = 'order.created'): void
+    public function dispatchOrder(Order $order, string $eventType = 'order.created', bool $sync = false): void
     {
         $settings = StoreSetting::getSettings();
 
@@ -54,7 +54,11 @@ class PosWebhookService
 
         $tenantId = tenant('id');
 
-        SendPosOrderWebhookJob::dispatch($order->id, $payload, $tenantId);
+        if ($sync) {
+            SendPosOrderWebhookJob::dispatchSync($order->id, $payload, $tenantId);
+        } else {
+            SendPosOrderWebhookJob::dispatch($order->id, $payload, $tenantId);
+        }
 
         Log::info("POS Webhook: Encolado job para orden #{$order->id} ({$eventType})", [
             'tenant'   => $tenantId,

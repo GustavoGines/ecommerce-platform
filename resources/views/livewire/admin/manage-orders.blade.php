@@ -123,9 +123,10 @@ new #[Layout('layouts.app')] class extends Component {
             try {
                 app(\App\Services\PosWebhookService::class)->dispatchOrder(
                     $order, 
-                    $order->status === 'pagado' ? 'order.paid' : 'order.created'
+                    $order->status === 'pagado' ? 'order.paid' : 'order.created',
+                    sync: true
                 );
-                $this->dispatch('notify', message: 'Orden encolada para sincronización con el POS.');
+                $this->dispatch('notify', message: 'Orden sincronizada exitosamente con el POS.');
             } catch (\Throwable $e) {
                 $this->dispatch('notify', message: 'Error: ' . $e->getMessage(), type: 'error');
             }

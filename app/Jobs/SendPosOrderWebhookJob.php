@@ -58,9 +58,11 @@ class SendPosOrderWebhookJob implements ShouldQueue
             return;
         }
 
+        $currentTimestamp = time();
+        $this->payload['timestamp'] = $currentTimestamp;
         $rawBody = json_encode($this->payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $signature = hash_hmac('sha256', $rawBody, $secret);
-        $timestamp = (string) ($this->payload['timestamp'] ?? time());
+        $timestamp = (string) $currentTimestamp;
 
         $headers = [
             'Content-Type' => 'application/json',
