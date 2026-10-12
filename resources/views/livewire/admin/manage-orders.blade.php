@@ -3,8 +3,13 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Order;
+use App\Mail\OrderPaid;
+use App\Services\PricingService;
+use App\Services\PosWebhookService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Cache;
 use Livewire\WithPagination;
 
 new #[Layout('layouts.app')] class extends Component {
@@ -342,6 +347,8 @@ new #[Layout('layouts.app')] class extends Component {
                                                     <span class="text-gray-500 italic text-xs">No especificado</span>
                                                 @endif
                                             </div>
+                                        </div>
+
                                         {{-- Sincronización con Sistema POS Local --}}
                                         <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
                                             <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Sistema POS Local</h4>

@@ -65,10 +65,10 @@ class StoreSetting extends Model
         });
 
         if (empty($attributes)) {
-            return new static;
+            return new self;
         }
 
-        $instance = new static;
+        $instance = new self;
         $instance->setRawAttributes($attributes);
         $instance->exists = true;
         return $instance;
