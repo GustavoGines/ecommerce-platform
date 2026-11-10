@@ -144,6 +144,7 @@ class TenancyServiceProvider extends ServiceProvider
                     'web',
                     Middleware\InitializeTenancyByDomain::class,
                     Middleware\PreventAccessFromCentralDomains::class,
+                    \App\Http\Middleware\CheckTenantSuspended::class,
                 ]);
         });
     }
