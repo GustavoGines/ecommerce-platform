@@ -73,6 +73,22 @@ class AuthenticatePosApi
             }
         }
 
+        // 1.5. Bloquear acceso API si el tenant se encuentra suspendido temporalmente
+        if (! empty(tenant('maintenance_mode'))) {
+            $maintenance = is_array(tenant('maintenance_mode')) ? tenant('maintenance_mode') : [];
+
+            if (empty($maintenance['allowed']) || ! \Symfony\Component\HttpFoundation\IpUtils::checkIp((string) $request->ip(), (array) $maintenance['allowed'])) {
+                $message = ! empty($maintenance['message'])
+                    ? (string) $maintenance['message']
+                    : 'Esta tienda se encuentra temporalmente fuera de servicio.';
+
+                return response()->json([
+                    'error'   => 'Tienda suspendida temporalmente',
+                    'message' => $message,
+                ], 503);
+            }
+        }
+
         // 2. Validación de Token Bearer
         $token = $request->bearerToken();
         if (empty($token)) {
